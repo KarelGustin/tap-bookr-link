@@ -1,7 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+
 export const Hero = () => {
+  const [userInput, setUserInput] = useState("");
+  const prefix = "TapBookr.com/";
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.startsWith(prefix)) {
+      setUserInput(value.slice(prefix.length));
+    } else {
+      setUserInput(value);
+    }
+  };
   return (
     <section 
       className="relative min-h-screen overflow-hidden px-6 py-16" 
@@ -27,11 +40,19 @@ export const Hero = () => {
           </p>
           
           <div className="space-y-4 max-w-lg pt-8">
-            <input 
-              type="text" 
-              placeholder="bookr.io/yourname" 
-              className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg" 
-            />
+            <div className="relative">
+              <span className="absolute left-8 top-1/2 transform -translate-y-1/2 text-gray-900 text-xl font-semibold pointer-events-none">
+                {prefix}
+              </span>
+              <input 
+                type="text" 
+                value={userInput}
+                onChange={handleInputChange}
+                placeholder="yourname" 
+                className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg"
+                style={{ paddingLeft: `${prefix.length * 0.6 + 2}rem` }}
+              />
+            </div>
             <Button 
               asChild 
               size="lg" 
