@@ -87,7 +87,7 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/50 to-accent/20">
-      <div className="w-full">
+      <div className="w-full px-2 space-y-2 pb-2">
         {/* Default Mobile-First Hero Section */}
         <Card className="border-0 shadow-none bg-transparent rounded-none overflow-hidden">
           <div className="relative w-full aspect-[4/3] sm:aspect-[16/9]">
@@ -103,7 +103,7 @@ export default function PublicProfile() {
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background/95" />
           </div>
-          <CardContent className="p-0">
+          <CardContent className="pt-0 px-2 pb-2">
             <div className="text-center">
               <h1 className="text-3xl font-extrabold tracking-tight">{profile.name || 'Your Business Name'}</h1>
               {profile.slogan && (
@@ -113,11 +113,11 @@ export default function PublicProfile() {
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-3">
+        <div className="grid gap-2 lg:grid-cols-3">
           {/* Profile Card */}
           <div className="lg:col-span-1">
             <Card className="border-0 shadow-none bg-transparent">
-              <CardContent className="p-0">
+              <CardContent className="p-2">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={profile.avatar_url} alt={`${profile.name || "Profile"} avatar`} />
@@ -148,11 +148,11 @@ export default function PublicProfile() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-2">
             {/* About */}
             {profile.about?.description && (
               <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-0">
+                <CardContent className="p-2">
                   <h2 className="text-xl font-semibold mb-4">About</h2>
                   <p className="text-muted-foreground leading-relaxed">
                     {profile.about.description}
@@ -164,7 +164,7 @@ export default function PublicProfile() {
             {/* Contact Information */}
             {(profile.contact?.email || profile.contact?.phone || profile.contact?.location) && (
               <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-0">
+                <CardContent className="p-2">
                   <h2 className="text-xl font-semibold mb-4">Contact</h2>
                   <div className="space-y-3">
                     {profile.contact?.email && (
@@ -203,7 +203,7 @@ export default function PublicProfile() {
             {/* Social Links */}
             {profile.socials && Object.keys(profile.socials).length > 0 && (
               <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-0">
+                <CardContent className="p-2">
                   <h2 className="text-xl font-semibold mb-4">Connect</h2>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(profile.socials).map(([platform, url]: [string, any]) => (
