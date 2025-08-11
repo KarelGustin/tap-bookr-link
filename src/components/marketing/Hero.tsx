@@ -26,16 +26,15 @@ export const Hero = () => {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <span className="text-gray-600 text-sm">Products</span>
-              <span className="text-gray-600 text-sm">Templates</span>
-              <span className="text-gray-600 text-sm">Marketplace</span>
-              <span className="text-gray-600 text-sm">Learn</span>
-              <span className="text-gray-600 text-sm">Pricing</span>
+              <a href="#why-bookr" className="text-gray-600 text-sm">Why Bookr</a>
+              <a href="#how-it-works" className="text-gray-600 text-sm">How it works</a>
+              <a href="#testimonials" className="text-gray-600 text-sm">Testimonials</a>
+              <a href="#faq" className="text-gray-600 text-sm">FAQ</a>
             </div>
             
             {/* Mobile + Desktop Actions */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-gray-600 text-sm px-3 py-2 hidden sm:inline-flex">
+              <Button variant="ghost" className="text-gray-600 text-sm px-3 py-2">
                 Log in
               </Button>
               <Button className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
@@ -45,7 +44,7 @@ export const Hero = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                className="md:hidden p-2"
+                className="md:hidden p-2 rounded-sm"
                 onClick={() => setShowMenu(!showMenu)}
               >
                 <Menu className="w-5 h-5 text-gray-600" />
@@ -57,14 +56,10 @@ export const Hero = () => {
           {showMenu && (
             <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
               <div className="flex flex-col gap-2">
-                <span className="text-gray-600 text-sm py-2">Products</span>
-                <span className="text-gray-600 text-sm py-2">Templates</span>
-                <span className="text-gray-600 text-sm py-2">Marketplace</span>
-                <span className="text-gray-600 text-sm py-2">Learn</span>
-                <span className="text-gray-600 text-sm py-2">Pricing</span>
-                <Button variant="ghost" className="text-gray-600 text-sm py-2 justify-start">
-                  Log in
-                </Button>
+                <a href="#why-bookr" className="text-gray-600 text-sm py-2">Why Bookr</a>
+                <a href="#how-it-works" className="text-gray-600 text-sm py-2">How it works</a>
+                <a href="#testimonials" className="text-gray-600 text-sm py-2">Testimonials</a>
+                <a href="#faq" className="text-gray-600 text-sm py-2">FAQ</a>
               </div>
             </div>
           )}

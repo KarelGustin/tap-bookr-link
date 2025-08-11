@@ -3,35 +3,35 @@ import { Card, CardContent } from "@/components/ui/card";
 export const WhyBookr = () => {
   const features = [
     {
-      title: "Show your business, your way.",
-      description: "Your Bookr page is your personal mini-site — share services, offers, and updates in one beautiful place.",
-      bgColor: "hsl(var(--accent))",
+      title: "Instantly look professional",
+      description: "Drop your name, logo and a few photos. Bookr turns your plain booking link into a clean, mobile page clients trust—no web skills needed.",
+      bgColor: "hsl(var(--primary))",
       textColor: "text-gray-900"
     },
     {
-      title: "Sell and get paid, effortlessly.",
-      description: "Link your booking or payment platform and start taking appointments or payments instantly.",
-      bgColor: "hsl(var(--orange))",
-      textColor: "text-white"
+      title: "Works with what you already use",
+      description: "Paste your Salonized, Treatwell or Calendly link. We embed it beautifully inside your page—no code, no setup, just paste and publish.",
+      bgColor: "hsl(var(--primary))",
+      textColor: "text-gray-900"
     },
     {
-      title: "Turn visitors into loyal clients.",
-      description: "Build trust, showcase your work, and make it easy for people to book with you — all in one page.",
+      title: "More bookings, less back-and-forth",
+      description: "Clear services, social links and a one-tap “Book now.” Fewer DMs, fewer no-shows, more clients on your calendar.",
       bgColor: "hsl(var(--primary))",
-      textColor: "text-white"
+      textColor: "text-gray-900"
     }
   ];
 
   return (
-    <section className="py-24 bg-white">
-      <div className="container mx-auto px-6">
+    <section id="why-bookr" className="py-24 bg-white">
+      <div className="container mx-auto px-2">
         {/* Section header */}
         <div className="text-center mb-20">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
             Why Bookr?
           </h2>
           <p className="text-xl md:text-2xl text-gray-600 font-semibold max-w-3xl mx-auto">
-            The fast, friendly and powerful booking tool.
+            A simple, beautiful page that makes your booking link work harder.
           </p>
         </div>
 
