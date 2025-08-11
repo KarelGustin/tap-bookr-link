@@ -2,63 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Linktree-inspired design system with vibrant palette
-FFBE0B, FB5607, FF006E, 8338EC, 3A86FF, 000000, FFFFFF
-*/
+/* Modern TapBookr design system with warm and trustworthy colors */
 
 @layer base {
   :root {
-    /* Neutral base colors */
-    --background: 0 0% 98%; /* Soft off-white */
-    --foreground: 0 0% 9%; /* Near black */
+    /* Light neutral background */
+    --background: 210 20% 98%; /* Light neutral #F9FAFB */
+    --foreground: 222 84% 5%; /* Near black */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 222 84% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 222 84% 5%;
 
-    /* Vibrant palette - main colors */
-    --primary: 260 91% 58%; /* Purple #8338EC */
+    /* Primary accent: Warm orange #FB5607 for CTA buttons */
+    --primary: 14 100% 51%; /* Warm orange #FB5607 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 100% 62%; /* Blue #3A86FF */
+    /* Secondary accent: Deep blue #2563EB for trust and contrast */
+    --secondary: 217 91% 60%; /* Deep blue #2563EB */
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 44 100% 52%; /* Yellow #FFBE0B */
-    --accent-foreground: 0 0% 9%;
+    /* Accent: Warm gradient background */
+    --accent: 36 100% 93%; /* Soft gradient #FFF7E6 */
+    --accent-foreground: 222 84% 5%;
 
     /* Additional brand colors */
     --orange: 14 100% 51%; /* Orange #FB5607 */
-    --pink: 328 100% 50%; /* Pink #FF006E */
+    --blue: 217 91% 60%; /* Blue #2563EB */
 
     /* UI Colors */
-    --muted: 0 0% 95%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 16% 47%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 260 91% 58%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 14 100% 51%;
 
-    --radius: 1.25rem; /* Slightly more rounded for Linktree feel */
+    --radius: 1rem; /* Rounded for friendly feel */
 
     /* Sidebar colors */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 15%;
-    --sidebar-primary: 260 91% 58%;
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 222 84% 15%;
+    --sidebar-primary: 14 100% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95%;
-    --sidebar-accent-foreground: 0 0% 15%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 260 91% 58%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 222 84% 15%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 14 100% 51%;
     
-    /* Trust builder colors */
-    --trust-blue: 210 100% 62%; /* #3A86FF */
-    --warm-yellow: 44 100% 52%; /* #FFBE0B */
-    --energetic-orange: 14 100% 51%; /* #FB5607*/
+    /* Gradient backgrounds */
+    --gradient-primary: linear-gradient(135deg, hsl(36 100% 93%), hsl(0 0% 100%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%), hsl(14 100% 51%));
   }
 
   .dark {
