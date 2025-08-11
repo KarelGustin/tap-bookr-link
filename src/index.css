@@ -8,29 +8,29 @@ FFBE0B, FB5607, FF006E, 8338EC, 3A86FF, 000000, FFFFFF
 
 @layer base {
   :root {
-    /* Neutral base colors */
-    --background: 0 0% 98%; /* Soft off-white */
-    --foreground: 0 0% 9%; /* Near black */
+    /* Bookr brand neutral base */
+    --background: 210 20% 98%; /* #F9FAFB */
+    --foreground: 220 13% 9%; /* #111827 */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
+    --card-foreground: 220 13% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 9%;
+    --popover-foreground: 220 13% 9%;
 
-    /* Vibrant palette - main colors */
-    --primary: 260 91% 58%; /* Purple #8338EC */
-    --primary-foreground: 0 0% 100%;
+    /* Bookr brand colors */
+    --primary: 44 100% 52%; /* #FFBE0B */
+    --primary-foreground: 220 13% 9%;
 
-    --secondary: 210 100% 62%; /* Blue #3A86FF */
+    --secondary: 217 91% 60%; /* #3A86FF */
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 44 100% 52%; /* Yellow #FFBE0B */
-    --accent-foreground: 0 0% 9%;
+    --accent: 14 100% 51%; /* #FB5607 */
+    --accent-foreground: 0 0% 100%;
 
-    /* Additional brand colors */
-    --orange: 14 100% 51%; /* Orange #FB5607 */
-    --pink: 328 100% 50%; /* Pink #FF006E */
+    /* Bookr brand additional colors */
+    --warning: 44 100% 52%; /* #FFBE0B */
+    --success: 217 91% 60%; /* #3A86FF */
 
     /* UI Colors */
     --muted: 0 0% 95%;
