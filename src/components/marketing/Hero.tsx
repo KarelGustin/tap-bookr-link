@@ -1,36 +1,37 @@
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Hero = () => {
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/50 to-accent/20">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center space-y-8 text-center">
-          <div className="space-y-2">
-            <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm">
-              <Sparkles className="inline-block w-4 h-4 mr-2" />
-              Professional Profiles Made Simple
-            </div>
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-              Create Your Perfect
-              <span className="text-primary"> Booking Profile</span>
-            </h1>
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              Build beautiful, professional profiles that convert visitors into customers. 
-              Share your expertise and make booking appointments effortless.
-            </p>
-          </div>
-          <div className="space-x-4">
-            <Button size="lg" className="h-12">
-              Get Started Free
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="lg" className="h-12">
-              View Examples
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-secondary/20 to-accent">
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center max-w-4xl mx-auto">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
+            Turn your booking link into a website in{" "}
+            <span className="bg-gradient-to-r from-accent to-white bg-clip-text text-transparent">
+              5 minutes
+            </span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            Bookr wraps your Salonized, Treatwell or Calendly page in a premium, mobile‑first lander—no designer needed.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" variant="accent" className="text-lg px-8">
+              <Link to="/login">
+                Claim your Bookr
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
       </div>
+      
+      <div className="absolute -top-10 -right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-10 -left-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-3xl"></div>
     </section>
   );
 };
