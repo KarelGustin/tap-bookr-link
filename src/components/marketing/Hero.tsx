@@ -11,10 +11,11 @@ export const Hero = () => {
         {/* Left Content */}
         <div className="flex-1 space-y-8 text-left max-w-2xl">
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-tight tracking-tight">
-            All your bookings.{' '}
+            Turn Your Booking Link into a{' '}
             <span style={{ color: 'hsl(var(--accent))' }}>
-              In one smart link.
+              Real Website
             </span>
+            .
           </h1>
           
           <p className="text-xl sm:text-2xl md:text-3xl text-white leading-relaxed font-semibold opacity-95">
