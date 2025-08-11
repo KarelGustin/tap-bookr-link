@@ -41,6 +41,9 @@ export const WhyBookr = () => {
                   <h3 className={`text-xl font-bold mb-2 ${feature.textColor}`}>
                     {feature.title}
                   </h3>
+                  <p className={`text-base ${feature.textColor} opacity-80`}>
+                    {feature.description}
+                  </p>
                 </div>
               </CardContent>
             </Card>
