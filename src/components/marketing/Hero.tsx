@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
 export const Hero = () => {
   const [userInput, setUserInput] = useState("");
+  const [showMenu, setShowMenu] = useState(false);
   const prefix = "TapBookr.com/";
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -16,44 +17,75 @@ export const Hero = () => {
     }
   };
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-secondary via-secondary to-secondary/90 px-3 py-4">
-      {/* Header placeholder - keeping same structure */}
-      <div className="container mx-auto max-w-7xl">
-        <div className="bg-white rounded-full p-4 mb-8 lg:mb-16">
+    <section className="relative min-h-screen overflow-hidden bg-secondary px-2 py-4">
+      {/* Floating Header */}
+      <div className="container mx-auto max-w-7xl px-2">
+        <div className="bg-white rounded-full p-3 mb-6">
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-black text-gray-900">Bookr</div>
+            <div className="text-xl font-black text-gray-900">Bookr</div>
+            
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <span className="text-gray-600">Products</span>
-              <span className="text-gray-600">Templates</span>
-              <span className="text-gray-600">Marketplace</span>
-              <span className="text-gray-600">Learn</span>
-              <span className="text-gray-600">Pricing</span>
+              <span className="text-gray-600 text-sm">Products</span>
+              <span className="text-gray-600 text-sm">Templates</span>
+              <span className="text-gray-600 text-sm">Marketplace</span>
+              <span className="text-gray-600 text-sm">Learn</span>
+              <span className="text-gray-600 text-sm">Pricing</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" className="text-gray-600">Log in</Button>
-              <Button className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-6">
+            
+            {/* Mobile + Desktop Actions */}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" className="text-gray-600 text-sm px-3 py-2 hidden sm:inline-flex">
+                Log in
+              </Button>
+              <Button className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
                 Sign up free
+              </Button>
+              {/* Mobile Hamburger */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="md:hidden p-2"
+                onClick={() => setShowMenu(!showMenu)}
+              >
+                <Menu className="w-5 h-5 text-gray-600" />
               </Button>
             </div>
           </div>
+          
+          {/* Mobile Menu Dropdown */}
+          {showMenu && (
+            <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
+              <div className="flex flex-col gap-2">
+                <span className="text-gray-600 text-sm py-2">Products</span>
+                <span className="text-gray-600 text-sm py-2">Templates</span>
+                <span className="text-gray-600 text-sm py-2">Marketplace</span>
+                <span className="text-gray-600 text-sm py-2">Learn</span>
+                <span className="text-gray-600 text-sm py-2">Pricing</span>
+                <Button variant="ghost" className="text-gray-600 text-sm py-2 justify-start">
+                  Log in
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Hero Content */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[80vh]">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 min-h-[calc(100vh-120px)]">
           {/* Left Content */}
-          <div className="flex-1 space-y-6 text-left max-w-2xl">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-primary leading-tight tracking-tight">
+          <div className="flex-1 space-y-4 sm:space-y-6 text-left max-w-2xl px-2">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
               Everything you are. In one, simple link in bio.
             </h1>
             
-            <p className="text-lg sm:text-xl md:text-2xl text-white leading-relaxed font-medium">
+            <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
               Join 70M+ people using Bookr for their link in bio. One link to help you share everything you create, curate and sell from your Instagram, TikTok, Twitter, YouTube and other social media profiles.
             </p>
             
-            <div className="space-y-4 max-w-lg pt-6">
+            <div className="space-y-3 max-w-lg pt-4">
               <div className="bg-white rounded-lg p-1">
                 <div className="flex items-center">
-                  <span className="px-4 py-3 text-gray-500 font-medium text-lg">
+                  <span className="px-3 py-2 sm:px-4 sm:py-3 text-gray-500 font-medium text-base sm:text-lg">
                     TapBookr.com/
                   </span>
                   <input 
@@ -61,14 +93,14 @@ export const Hero = () => {
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="yourname" 
-                    className="flex-1 px-2 py-3 bg-transparent text-gray-900 placeholder-gray-400 text-lg font-medium focus:outline-none"
+                    className="flex-1 px-2 py-2 sm:py-3 bg-transparent text-gray-900 placeholder-gray-400 text-base sm:text-lg font-medium focus:outline-none"
                   />
                 </div>
               </div>
               
               <Button 
                 asChild 
-                className="w-full bg-purple-400 hover:bg-purple-500 text-gray-900 font-black text-lg py-6 rounded-full transition-all"
+                className="w-full bg-purple-400 hover:bg-purple-500 text-gray-900 font-black text-base sm:text-lg py-4 sm:py-6 rounded-full transition-all"
               >
                 <Link to="/login">
                   Claim your Bookr
@@ -78,41 +110,41 @@ export const Hero = () => {
           </div>
           
           {/* Right Content - Phone Mockup */}
-          <div className="flex-1 flex justify-center items-center mt-8 lg:mt-0">
-            <div className="relative">
+          <div className="flex-1 flex justify-center items-center mt-6 lg:mt-0 px-2">
+            <div className="relative max-w-[280px] sm:max-w-[320px]">
               {/* Phone mockup with yellow background */}
-              <div className="w-80 h-[600px] bg-primary rounded-[3rem] p-4 shadow-2xl transform rotate-12 hover:rotate-6 transition-transform duration-300">
-                <div className="w-full h-full bg-white rounded-[2rem] p-6 flex flex-col overflow-hidden">
+              <div className="w-full aspect-[9/16] bg-primary rounded-[2.5rem] sm:rounded-[3rem] p-3 sm:p-4 shadow-2xl transform rotate-6 sm:rotate-12 hover:rotate-3 sm:hover:rotate-6 transition-transform duration-300">
+                <div className="w-full h-full bg-white rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-6 flex flex-col overflow-hidden">
                   {/* Status bar */}
-                  <div className="flex justify-between items-center mb-4 text-xs text-gray-500">
+                  <div className="flex justify-between items-center mb-3 sm:mb-4 text-xs text-gray-500">
                     <span>15:21</span>
                     <span>5G</span>
                   </div>
                   
                   {/* Profile header */}
-                  <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-blue-600 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <span className="text-white font-bold text-xl">★</span>
+                  <div className="text-center mb-4 sm:mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 rounded-full mx-auto mb-2 sm:mb-3 flex items-center justify-center">
+                      <span className="text-white font-bold text-lg sm:text-xl">★</span>
                     </div>
-                    <h3 className="font-bold text-gray-900">Pride Pals</h3>
-                    <p className="text-sm text-gray-600">Upcoming events</p>
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-base">Pride Pals</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">Upcoming events</p>
                   </div>
                   
                   {/* Links */}
-                  <div className="space-y-3 flex-1">
-                    <div className="bg-primary/20 rounded-lg p-4 text-center">
-                      <span className="font-medium text-gray-900">Latest additions</span>
+                  <div className="space-y-2 sm:space-y-3 flex-1">
+                    <div className="bg-primary/20 rounded-lg p-3 sm:p-4 text-center">
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm">Latest additions</span>
                     </div>
-                    <div className="bg-orange-100 rounded-lg p-4 text-center">
-                      <span className="font-medium text-gray-900">Podcast</span>
+                    <div className="bg-orange-100 rounded-lg p-3 sm:p-4 text-center">
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm">Podcast</span>
                     </div>
-                    <div className="bg-green-100 rounded-lg p-4 text-center">
-                      <span className="font-medium text-gray-900">Newsletter</span>
+                    <div className="bg-green-100 rounded-lg p-3 sm:p-4 text-center">
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm">Newsletter</span>
                     </div>
                   </div>
                   
                   {/* Footer */}
-                  <div className="text-center text-xs text-gray-400 mt-4">
+                  <div className="text-center text-xs text-gray-400 mt-3 sm:mt-4">
                     TapBookr.com
                   </div>
                 </div>
