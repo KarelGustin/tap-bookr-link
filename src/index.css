@@ -107,6 +107,20 @@ FFBE0B, FB5607, FF006E, 8338EC, 3A86FF, 000000, FFFFFF
   }
 }
 
+/* Marquee animation for hero iPhone mockups */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
 @layer base {
   * {
     @apply border-border;

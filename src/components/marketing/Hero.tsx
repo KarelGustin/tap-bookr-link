@@ -50,32 +50,147 @@ export const Hero = () => {
           </div>
         </div>
         
-        {/* Right Content - Clean Phone Mockup */}
-        <div className="flex-1 flex justify-center items-center mt-8 lg:mt-0 w-full">
-          <div className="relative w-64 h-[500px] sm:w-72 sm:h-[550px] lg:w-80 lg:h-[650px] rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--accent))' }}>
-            <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl lg:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 flex flex-col">
-              {/* Header */}
-              <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                  <span className="text-white font-black text-lg sm:text-xl lg:text-2xl">B</span>
-                </div>
-                <div>
-                  <h3 className="text-gray-900 font-black text-sm sm:text-lg lg:text-xl">Your Brand</h3>
-                  <p className="text-gray-600 font-medium text-xs sm:text-sm lg:text-base">Professional booking</p>
+        {/* Right Content - iPhone Mockup Marquee */}
+        <div className="flex-1 flex justify-center items-center mt-8 lg:mt-0 w-full overflow-hidden">
+          <div className="relative w-full max-w-lg lg:max-w-2xl">
+            {/* Marquee Container */}
+            <div className="flex animate-marquee space-x-6">
+              {/* iPhone Mockup 1 - Salon */}
+              <div className="flex-shrink-0 relative w-64 h-[500px] sm:w-72 sm:h-[550px] rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+                <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl flex flex-col p-4 sm:p-6">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--pink))' }}>
+                      <span className="text-white font-black text-lg sm:text-xl">✂️</span>
+                    </div>
+                    <div>
+                      <h3 className="text-gray-900 font-black text-sm sm:text-base">Bella Salon</h3>
+                      <p className="text-gray-600 font-medium text-xs sm:text-sm">Hair & Beauty</p>
+                    </div>
+                  </div>
+                  
+                  {/* Services */}
+                  <div className="space-y-3 mb-6">
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--pink) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Haircuts & Styling</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Color & Highlights</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Facial Treatments</span>
+                    </div>
+                  </div>
+                  
+                  {/* CTA */}
+                  <div className="mt-auto">
+                    <div className="h-10 sm:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--pink))' }}>
+                      <span className="text-white font-black text-sm sm:text-base">Book Appointment</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Content blocks */}
-              <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
-                <div className="h-10 sm:h-12 lg:h-16 rounded-xl sm:rounded-2xl" style={{ backgroundColor: 'hsl(var(--accent) / 0.2)' }}></div>
-                <div className="h-10 sm:h-12 lg:h-16 rounded-xl sm:rounded-2xl" style={{ backgroundColor: 'hsl(var(--orange) / 0.2)' }}></div>
-                <div className="h-10 sm:h-12 lg:h-16 rounded-xl sm:rounded-2xl" style={{ backgroundColor: 'hsl(var(--primary) / 0.2)' }}></div>
+
+              {/* iPhone Mockup 2 - Fitness Trainer */}
+              <div className="flex-shrink-0 relative w-64 h-[500px] sm:w-72 sm:h-[550px] rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--orange))' }}>
+                <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl flex flex-col p-4 sm:p-6">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--orange))' }}>
+                      <span className="text-white font-black text-lg sm:text-xl">💪</span>
+                    </div>
+                    <div>
+                      <h3 className="text-gray-900 font-black text-sm sm:text-base">FitCoach Mike</h3>
+                      <p className="text-gray-600 font-medium text-xs sm:text-sm">Personal Training</p>
+                    </div>
+                  </div>
+                  
+                  {/* Services */}
+                  <div className="space-y-3 mb-6">
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--orange) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">1-on-1 Training</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--secondary) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Group Classes</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Nutrition Coaching</span>
+                    </div>
+                  </div>
+                  
+                  {/* CTA */}
+                  <div className="mt-auto">
+                    <div className="h-10 sm:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--orange))' }}>
+                      <span className="text-white font-black text-sm sm:text-base">Start Training</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              {/* CTA Button */}
-              <div className="mt-auto">
-                <div className="h-10 sm:h-12 lg:h-16 rounded-xl sm:rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
-                  <span className="text-white font-black text-sm sm:text-base lg:text-lg">Book Now</span>
+
+              {/* iPhone Mockup 3 - Life Coach */}
+              <div className="flex-shrink-0 relative w-64 h-[500px] sm:w-72 sm:h-[550px] rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl flex flex-col p-4 sm:p-6">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                      <span className="text-white font-black text-lg sm:text-xl">🧠</span>
+                    </div>
+                    <div>
+                      <h3 className="text-gray-900 font-black text-sm sm:text-base">Sarah Wellness</h3>
+                      <p className="text-gray-600 font-medium text-xs sm:text-sm">Life Coach</p>
+                    </div>
+                  </div>
+                  
+                  {/* Services */}
+                  <div className="space-y-3 mb-6">
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">1:1 Coaching</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Career Guidance</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--secondary) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Wellness Plans</span>
+                    </div>
+                  </div>
+                  
+                  {/* CTA */}
+                  <div className="mt-auto">
+                    <div className="h-10 sm:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                      <span className="text-white font-black text-sm sm:text-base">Book Session</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Duplicate for seamless loop */}
+              <div className="flex-shrink-0 relative w-64 h-[500px] sm:w-72 sm:h-[550px] rounded-2xl sm:rounded-3xl p-1.5 sm:p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+                <div className="w-full h-full bg-white rounded-xl sm:rounded-2xl flex flex-col p-4 sm:p-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--pink))' }}>
+                      <span className="text-white font-black text-lg sm:text-xl">✂️</span>
+                    </div>
+                    <div>
+                      <h3 className="text-gray-900 font-black text-sm sm:text-base">Bella Salon</h3>
+                      <p className="text-gray-600 font-medium text-xs sm:text-sm">Hair & Beauty</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mb-6">
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--pink) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Haircuts & Styling</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--accent) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Color & Highlights</span>
+                    </div>
+                    <div className="h-8 sm:h-10 rounded-xl flex items-center px-3" style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">Facial Treatments</span>
+                    </div>
+                  </div>
+                  <div className="mt-auto">
+                    <div className="h-10 sm:h-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--pink))' }}>
+                      <span className="text-white font-black text-sm sm:text-base">Book Appointment</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
