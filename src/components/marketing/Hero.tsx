@@ -17,7 +17,7 @@ export const Hero = () => {
   };
   return (
     <section 
-      className="relative min-h-screen overflow-hidden px-6 py-16" 
+      className="relative min-h-screen overflow-hidden px-4 py-16" 
       style={{ backgroundColor: 'hsl(var(--secondary))' }}
     >
       <div className="container mx-auto max-w-7xl h-full min-h-screen flex flex-col lg:flex-row items-center justify-between gap-12">
