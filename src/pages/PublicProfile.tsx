@@ -87,9 +87,9 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/50 to-accent/20">
-      <div className="container py-8 max-w-4xl space-y-6">
+      <div className="w-full">
         {/* Default Mobile-First Hero Section */}
-        <Card className="border-0 shadow-xl bg-card/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+        <Card className="border-0 shadow-none bg-transparent rounded-none overflow-hidden">
           <div className="relative w-full aspect-[4/3] sm:aspect-[16/9]">
             {profile.banner_url || profile.avatar_url ? (
               <img
@@ -103,8 +103,8 @@ export default function PublicProfile() {
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background/95" />
           </div>
-          <CardContent className="pt-0 pb-6">
-            <div className="text-center -mt-6">
+          <CardContent className="p-0">
+            <div className="text-center">
               <h1 className="text-3xl font-extrabold tracking-tight">{profile.name || 'Your Business Name'}</h1>
               {profile.slogan && (
                 <p className="mt-1 text-sm text-muted-foreground">{profile.slogan}</p>
@@ -113,11 +113,11 @@ export default function PublicProfile() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid lg:grid-cols-3">
           {/* Profile Card */}
           <div className="lg:col-span-1">
-            <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-              <CardContent className="p-6">
+            <Card className="border-0 shadow-none bg-transparent">
+              <CardContent className="p-0">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={profile.avatar_url} alt={`${profile.name || "Profile"} avatar`} />
@@ -148,11 +148,11 @@ export default function PublicProfile() {
           </div>
 
           {/* Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2">
             {/* About */}
             {profile.about?.description && (
-              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-6">
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardContent className="p-0">
                   <h2 className="text-xl font-semibold mb-4">About</h2>
                   <p className="text-muted-foreground leading-relaxed">
                     {profile.about.description}
@@ -163,8 +163,8 @@ export default function PublicProfile() {
 
             {/* Contact Information */}
             {(profile.contact?.email || profile.contact?.phone || profile.contact?.location) && (
-              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-6">
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardContent className="p-0">
                   <h2 className="text-xl font-semibold mb-4">Contact</h2>
                   <div className="space-y-3">
                     {profile.contact?.email && (
@@ -202,8 +202,8 @@ export default function PublicProfile() {
 
             {/* Social Links */}
             {profile.socials && Object.keys(profile.socials).length > 0 && (
-              <Card className="border-0 shadow-lg bg-card/80 backdrop-blur-sm">
-                <CardContent className="p-6">
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardContent className="p-0">
                   <h2 className="text-xl font-semibold mb-4">Connect</h2>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(profile.socials).map(([platform, url]: [string, any]) => (
