@@ -44,6 +44,29 @@ export default function PublicProfile() {
     }
   };
 
+  // SEO: dynamic title, meta description, and canonical
+  useEffect(() => {
+    if (!profile) return;
+    document.title = `${profile.name} – ${profile.slogan ?? 'Book appointments'}`;
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'description');
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute('content', `${profile.name}${profile.slogan ? ' – ' + profile.slogan : ''}`.slice(0, 160));
+  }, [profile]);
+
+  useEffect(() => {
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', window.location.href);
+  }, [handle]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -64,7 +87,32 @@ export default function PublicProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/50 to-accent/20">
-      <div className="container py-8 max-w-4xl">
+      <div className="container py-8 max-w-4xl space-y-6">
+        {/* Default Mobile-First Hero Section */}
+        <Card className="border-0 shadow-xl bg-card/90 backdrop-blur-sm rounded-3xl overflow-hidden">
+          <div className="relative w-full aspect-[4/3] sm:aspect-[16/9]">
+            {profile.banner_url || profile.avatar_url ? (
+              <img
+                src={profile.banner_url || profile.avatar_url}
+                alt={`${profile.name || 'Business'} cover image`}
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-b from-accent/40 to-muted" />
+            )}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background/95" />
+          </div>
+          <CardContent className="pt-0 pb-6">
+            <div className="text-center -mt-6">
+              <h1 className="text-3xl font-extrabold tracking-tight">{profile.name || 'Your Business Name'}</h1>
+              {profile.slogan && (
+                <p className="mt-1 text-sm text-muted-foreground">{profile.slogan}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Profile Card */}
           <div className="lg:col-span-1">
@@ -72,7 +120,7 @@ export default function PublicProfile() {
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={profile.avatar_url} />
+                    <AvatarImage src={profile.avatar_url} alt={`${profile.name || "Profile"} avatar`} />
                     <AvatarFallback className="text-lg">{initials}</AvatarFallback>
                   </Avatar>
                   
