@@ -29,15 +29,12 @@ export const FAQ = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-20" style={{background: 'var(--gradient-faq)'}}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-white">
             Got questions?
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to know about Bookr
-          </p>
         </div>
         
         <div className="max-w-3xl mx-auto">
@@ -46,12 +43,12 @@ export const FAQ = () => {
               <AccordionItem 
                 key={index} 
                 value={`item-${index}`}
-                className="border border-border rounded-lg px-6 bg-card hover:bg-muted/20 transition-colors duration-200"
+                className="border-0 rounded-2xl px-8 bg-black/20 backdrop-blur-sm transition-colors duration-200"
               >
-                <AccordionTrigger className="text-left text-lg font-medium py-6">
+                <AccordionTrigger className="text-left text-lg font-medium py-8 text-white hover:no-underline">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-6 leading-relaxed">
+                <AccordionContent className="text-white/80 pb-8 leading-relaxed">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

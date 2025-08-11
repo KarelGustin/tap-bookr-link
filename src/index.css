@@ -17,16 +17,19 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 150 100% 35%;
-    --primary-foreground: 210 40% 98%;
+    /* Linktree purple */
+    --primary: 280 100% 50%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 280 100% 70%;
+    /* Linktree teal */
+    --secondary: 180 100% 50%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 60 100% 75%;
+    /* Linktree yellow/lime */
+    --accent: 80 100% 50%;
     --accent-foreground: 222.2 84% 4.9%;
 
     --destructive: 0 84.2% 60.2%;
@@ -34,9 +37,9 @@ All colors MUST be HSL.
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 150 100% 35%;
+    --ring: 280 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -47,11 +50,13 @@ All colors MUST be HSL.
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
     
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(150 100% 35%), hsl(190 100% 45%));
-    --gradient-secondary: linear-gradient(135deg, hsl(280 100% 70%), hsl(320 100% 75%));
-    --gradient-accent: linear-gradient(135deg, hsl(60 100% 75%), hsl(45 100% 70%));
-    --gradient-hero: linear-gradient(135deg, hsl(150 100% 35%) 0%, hsl(190 100% 45%) 50%, hsl(280 100% 70%) 100%);
+    /* Linktree specific gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(280 100% 50%) 0%, hsl(200 100% 40%) 100%);
+    --gradient-footer: linear-gradient(135deg, hsl(280 100% 50%) 0%, hsl(320 100% 60%) 100%);
+    --gradient-faq: linear-gradient(135deg, hsl(0 80% 40%) 0%, hsl(340 80% 50%) 100%);
+    --linktree-pink: 320 100% 75%;
+    --linktree-lime: 80 100% 50%;
+    --linktree-blue: 220 100% 60%;
   }
 
   .dark {

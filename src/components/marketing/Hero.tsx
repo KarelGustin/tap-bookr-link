@@ -4,34 +4,37 @@ import { Link } from "react-router-dom";
 
 export const Hero = () => {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-secondary/20 to-accent">
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden" style={{background: 'var(--gradient-hero)'}}>
+      {/* Large silhouette shapes like Linktree */}
+      <div className="absolute left-0 top-0 w-96 h-full">
+        <div className="w-full h-full bg-secondary/80 rounded-r-full transform -translate-x-1/2"></div>
+      </div>
+      <div className="absolute right-0 bottom-0 w-80 h-80">
+        <div className="w-full h-full bg-accent/30 rounded-full transform translate-x-1/4 translate-y-1/4"></div>
+      </div>
+      
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white leading-tight">
-            Turn your booking link into a website in{" "}
-            <span className="bg-gradient-to-r from-accent to-white bg-clip-text text-transparent">
-              5 minutes
-            </span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 text-white leading-tight">
+            Jumpstart your corner of the internet today
           </h1>
           
-          <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Bookr wraps your Salonized, Treatwell or Calendly page in a premium, mobile‑first lander—no designer needed.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="accent" className="text-lg px-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-md mx-auto">
+            <div className="flex-1 min-w-0">
+              <input 
+                type="text" 
+                placeholder="bookr.com/" 
+                className="w-full px-4 py-3 rounded-full border-0 text-lg"
+              />
+            </div>
+            <Button asChild size="lg" variant="linktree" className="text-lg px-8 py-3 min-w-fit">
               <Link to="/login">
                 Claim your Bookr
-                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
         </div>
       </div>
-      
-      <div className="absolute -top-10 -right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-      <div className="absolute -bottom-10 -left-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-secondary/10 rounded-full blur-3xl"></div>
     </section>
   );
 };

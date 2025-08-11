@@ -1,40 +1,97 @@
 import { Link } from "react-router-dom";
 
 export const Footer = () => {
-  const links = [
-    { name: "Pricing", href: "#pricing" },
-    { name: "FAQ", href: "#faq" },
-    { name: "Login", href: "/login" },
-    { name: "Privacy", href: "/privacy" },
-    { name: "Terms", href: "/terms" }
+  const footerSections = [
+    {
+      title: "Company",
+      links: [
+        { name: "The Bookr Blog", href: "#" },
+        { name: "Engineering Blog", href: "#" },
+        { name: "Marketplace", href: "#" },
+        { name: "What's New", href: "#" },
+        { name: "About", href: "#" },
+        { name: "Press", href: "#" },
+        { name: "Careers", href: "#" },
+        { name: "Link in Bio", href: "#" },
+        { name: "Social Good", href: "#" },
+        { name: "Contact", href: "#" }
+      ]
+    },
+    {
+      title: "Community", 
+      links: [
+        { name: "Bookr for Enterprise", href: "#" },
+        { name: "2023 Creator Report", href: "#" },
+        { name: "2022 Creator Report", href: "#" },
+        { name: "Charities", href: "#" },
+        { name: "What's Trending", href: "#" },
+        { name: "Creator Profile Directory", href: "#" },
+        { name: "Explore Templates", href: "#" }
+      ]
+    },
+    {
+      title: "Support",
+      links: [
+        { name: "Help Topics", href: "#" },
+        { name: "Getting Started", href: "#" },
+        { name: "Bookr Pro", href: "#" },
+        { name: "Features & How-Tos", href: "#" },
+        { name: "FAQs", href: "#faq" },
+        { name: "Report a Violation", href: "#" }
+      ]
+    },
+    {
+      title: "Trust & Legal",
+      links: [
+        { name: "Terms & Conditions", href: "/terms" },
+        { name: "Privacy Notice", href: "/privacy" },
+        { name: "Cookie Notice", href: "#" },
+        { name: "Trust Center", href: "#" },
+        { name: "Cookie Preferences", href: "#" },
+        { name: "Transparency Report", href: "#" },
+        { name: "Law Enforcement Access Policy", href: "#" }
+      ]
+    }
   ];
 
   return (
-    <footer className="py-12 bg-gradient-to-r from-primary via-secondary to-accent">
+    <footer className="pt-20 pb-8" style={{background: 'var(--gradient-footer)'}}>
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Main footer content */}
+        <div className="bg-white rounded-3xl p-12 mb-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {footerSections.map((section, index) => (
+              <div key={index}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {section.title}
+                </h3>
+                <ul className="space-y-3">
+                  {section.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <Link
+                        to={link.href}
+                        className="text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        {/* Bottom section */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-white">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
               <span className="text-primary font-bold text-lg">B</span>
             </div>
-            <span className="text-white font-semibold text-xl">Bookr</span>
+            <span className="font-semibold text-xl">Bookr</span>
           </div>
           
-          <nav className="flex flex-wrap items-center gap-6 md:gap-8">
-            {links.map((link, index) => (
-              <Link
-                key={index}
-                to={link.href}
-                className="text-white/80 hover:text-white transition-colors duration-200 text-sm"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        
-        <div className="mt-8 pt-8 border-t border-white/20 text-center">
-          <p className="text-white/60 text-sm">
+          <p className="text-white/80 text-sm">
             © 2024 Bookr. All rights reserved.
           </p>
         </div>
