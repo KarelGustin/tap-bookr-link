@@ -16,7 +16,7 @@ export const Hero = () => {
     >
       <div className="container mx-auto max-w-7xl h-full min-h-screen flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
         {/* Left Content */}
-        <div className="flex-1 space-y-6 sm:space-y-8 text-left w-full max-w-2xl">
+        <div className="flex-1 space-y-3 sm:space-y-4 text-left w-full max-w-2xl">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-white leading-tight tracking-tight">
             Turn Your Booking Link into a{' '}
             <span style={{ color: 'hsl(var(--accent))' }}>
@@ -33,7 +33,7 @@ export const Hero = () => {
             Used by hundreds of salons, consultants, trainers and beauty pros.
           </p>
           
-          <div className="space-y-4 w-full max-w-md pt-4 sm:pt-6">
+          <div className="space-y-4 w-full max-w-md pt-2 sm:pt-3">
             <div className="relative">
               <div className="flex items-center w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6 rounded-2xl sm:rounded-3xl bg-white text-base sm:text-lg lg:text-xl font-semibold shadow-lg">
                 <span className="text-gray-700 select-none text-sm sm:text-base lg:text-lg">TapBookr.com/</span>
