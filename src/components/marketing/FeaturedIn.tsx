@@ -4,35 +4,46 @@ import { Link } from "react-router-dom";
 export const FeaturedIn = () => {
   const logos = [
     { name: "TechCrunch", abbr: "TC" },
-    { name: "Business Insider", abbr: "INSIDER" },
-    { name: "Mashable", abbr: "Mashable" },
-    { name: "Fortune", abbr: "FORTUNE" },
-    { name: "Forbes", abbr: "Forbes" }
+    { name: "Business Insider", abbr: "BI" },
+    { name: "Mashable", abbr: "M" },
+    { name: "Fortune", abbr: "F" },
+    { name: "Forbes", abbr: "FB" }
   ];
 
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 text-gray-900">
-            The fast, friendly and powerful booking tool.
-          </h2>
-          
-          <Button asChild size="lg" variant="secondary" className="mb-16 rounded-full bg-purple-300 text-gray-900 hover:bg-purple-400">
+    <section className="py-24 bg-white">
+      <div className="container mx-auto px-6">
+        <div className="text-center max-w-4xl mx-auto">
+          <Button 
+            asChild 
+            size="lg" 
+            className="mb-16 rounded-full px-8 py-4 text-lg font-black text-white hover:scale-105 transition-all duration-200" 
+            style={{ backgroundColor: 'hsl(var(--primary))' }}
+          >
             <Link to="/login">
               Explore all plans
             </Link>
           </Button>
           
-          <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-12">
-            As featured in...
+          <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-16">
+            Built for service providers
           </h3>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-center">
+          {/* Trust indicators */}
+          <div className="mb-12">
+            <p className="text-lg text-gray-600 font-semibold mb-4">
+              Securely hosted • GDPR-compliant • No-tech setup
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
             {logos.map((logo, index) => (
               <div key={index} className="flex items-center justify-center">
-                <div className="w-24 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <span className="text-sm font-semibold text-gray-600">{logo.abbr}</span>
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+                  style={{ backgroundColor: 'hsl(var(--muted))' }}
+                >
+                  <span className="text-lg font-black text-gray-700">{logo.abbr}</span>
                 </div>
               </div>
             ))}

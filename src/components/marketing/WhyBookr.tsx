@@ -4,44 +4,54 @@ export const WhyBookr = () => {
   const features = [
     {
       title: "Show your business, your way.",
-      description: "Your TapBookr page is your personal mini-site — share services, offers, and updates in one beautiful place.",
-      bgColor: "hsl(var(--linktree-pink))",
-      textColor: "text-gray-800"
+      description: "Your Bookr page is your personal mini-site — share services, offers, and updates in one beautiful place.",
+      bgColor: "hsl(var(--accent))",
+      textColor: "text-gray-900"
     },
     {
       title: "Sell and get paid, effortlessly.",
       description: "Link your booking or payment platform and start taking appointments or payments instantly.",
-      bgColor: "hsl(var(--linktree-lime))",
-      textColor: "text-gray-800"
+      bgColor: "hsl(var(--orange))",
+      textColor: "text-white"
     },
     {
       title: "Turn visitors into loyal clients.",
       description: "Build trust, showcase your work, and make it easy for people to book with you — all in one page.",
-      bgColor: "hsl(var(--linktree-blue))",
+      bgColor: "hsl(var(--primary))",
       textColor: "text-white"
     }
   ];
 
   return (
-    <section className="py-20 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-24 bg-white">
+      <div className="container mx-auto px-6">
+        {/* Section header */}
+        <div className="text-center mb-20">
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
+            Why Bookr?
+          </h2>
+          <p className="text-xl md:text-2xl text-gray-600 font-semibold max-w-3xl mx-auto">
+            The fast, friendly and powerful booking tool.
+          </p>
+        </div>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="border-0 shadow-none rounded-3xl overflow-hidden h-96 group cursor-pointer hover:scale-105 transition-transform duration-300"
+              className="border-0 shadow-xl rounded-3xl overflow-hidden h-[400px] group cursor-pointer hover:scale-105 transition-all duration-300 hover:shadow-2xl"
               style={{ backgroundColor: feature.bgColor }}
             >
-              <CardContent className="p-8 h-full flex flex-col justify-between">
-                <div className="space-y-6">
-                  {/* Placeholder for feature graphic/mockup */}
-                  <div className="h-32 bg-white/20 rounded-2xl"></div>
+              <CardContent className="p-10 h-full flex flex-col justify-between">
+                <div className="space-y-8">
+                  {/* Minimal graphic placeholder */}
+                  <div className="h-24 w-24 bg-white/30 rounded-3xl"></div>
                 </div>
-                <div>
-                  <h3 className={`text-xl font-bold mb-2 ${feature.textColor}`}>
+                <div className="space-y-4">
+                  <h3 className={`text-2xl font-black leading-tight ${feature.textColor}`}>
                     {feature.title}
                   </h3>
-                  <p className={`text-base ${feature.textColor} opacity-80`}>
+                  <p className={`text-lg leading-relaxed ${feature.textColor} opacity-90 font-medium`}>
                     {feature.description}
                   </p>
                 </div>

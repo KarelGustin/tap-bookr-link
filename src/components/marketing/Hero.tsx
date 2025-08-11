@@ -4,66 +4,72 @@ import { Link } from "react-router-dom";
 export const Hero = () => {
   return (
     <section 
-      className="relative min-h-screen overflow-hidden px-4 py-8" 
-      style={{ backgroundColor: 'hsl(var(--hero-background))' }}
+      className="relative min-h-screen overflow-hidden px-6 py-16" 
+      style={{ backgroundColor: 'hsl(var(--secondary))' }}
     >
-      <div className="container mx-auto max-w-7xl h-full min-h-screen flex flex-col lg:flex-row items-center justify-between">
+      <div className="container mx-auto max-w-7xl h-full min-h-screen flex flex-col lg:flex-row items-center justify-between gap-12">
         {/* Left Content */}
-        <div className="flex-1 space-y-8 text-left max-w-2xl lg:pr-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight tracking-tight">
-            Turn Your Booking Link into a{' '}
+        <div className="flex-1 space-y-8 text-left max-w-2xl">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white leading-tight tracking-tight">
+            All your bookings.{' '}
             <span style={{ color: 'hsl(var(--accent))' }}>
-              Real Website
+              In one smart link.
             </span>
-            .
           </h1>
           
-          <p className="text-lg sm:text-xl md:text-2xl text-white leading-relaxed font-medium opacity-90">
-            Bookr wraps your existing booking link in a professional, customizable template — giving you an online presence that builds trust and gets more bookings.
+          <p className="text-xl sm:text-2xl md:text-3xl text-white leading-relaxed font-semibold opacity-95">
+            Bookr wraps your existing booking link in a beautiful page — so you look like a pro, not just a link.
           </p>
           
-          <p className="text-base sm:text-lg text-white opacity-75">
-            Perfect for salons, trainers, coaches, and service providers who want to look like a brand, not just a link.
+          <p className="text-lg sm:text-xl text-white/80 font-medium">
+            Used by hundreds of salons, consultants, trainers and beauty pros.
           </p>
           
-          <div className="space-y-4 max-w-md pt-6">
+          <div className="space-y-4 max-w-lg pt-8">
             <input 
               type="text" 
               placeholder="bookr.io/yourname" 
-              className="w-full px-6 py-4 rounded-2xl bg-white text-gray-800 placeholder-gray-500 text-lg font-medium focus:outline-none focus:ring-4 focus:ring-white/20 transition-all" 
+              className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg" 
             />
             <Button 
               asChild 
               size="lg" 
-              className="w-full text-lg font-bold px-8 py-4 rounded-2xl text-white border-0 transition-all hover:scale-105 hover:shadow-lg"
-              style={{ backgroundColor: 'hsl(var(--linktree-pink))' }}
+              className="w-full text-xl font-black px-8 py-6 rounded-3xl text-white border-0 transition-all hover:scale-105 hover:shadow-2xl"
+              style={{ backgroundColor: 'hsl(var(--accent))' }}
             >
               <Link to="/login">
-                Claim Your Bookr Page
+                Claim your Bookr page
               </Link>
             </Button>
           </div>
         </div>
         
-        {/* Right Content - Phone Mockup */}
+        {/* Right Content - Clean Phone Mockup */}
         <div className="flex-1 flex justify-center items-center mt-12 lg:mt-0">
-          <div className="relative w-80 h-[600px] bg-gradient-to-br from-orange-400 to-pink-500 rounded-[3rem] p-8 shadow-2xl transform rotate-12 hover:rotate-6 transition-transform duration-300">
-            <div className="w-full h-full bg-white rounded-[2rem] p-6 flex flex-col">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">B</span>
+          <div className="relative w-80 h-[650px] rounded-[3rem] p-2 shadow-2xl" style={{ backgroundColor: 'hsl(var(--accent))' }}>
+            <div className="w-full h-full bg-white rounded-[2.5rem] p-8 flex flex-col">
+              {/* Header */}
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                  <span className="text-white font-black text-2xl">B</span>
+                </div>
+                <div>
+                  <h3 className="text-gray-900 font-black text-xl">Your Brand</h3>
+                  <p className="text-gray-600 font-medium">Professional booking</p>
+                </div>
               </div>
-              <h3 className="text-gray-800 font-bold text-xl mb-2">Your Brand</h3>
-              <p className="text-gray-600 text-sm mb-6">Professional booking page</p>
               
-              <div className="space-y-3">
-                <div className="h-12 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl"></div>
-                <div className="h-12 bg-gradient-to-r from-pink-100 to-orange-100 rounded-xl"></div>
-                <div className="h-12 bg-gradient-to-r from-green-100 to-blue-100 rounded-xl"></div>
+              {/* Content blocks */}
+              <div className="space-y-4 mb-8">
+                <div className="h-16 rounded-2xl" style={{ backgroundColor: 'hsl(var(--accent) / 0.2)' }}></div>
+                <div className="h-16 rounded-2xl" style={{ backgroundColor: 'hsl(var(--orange) / 0.2)' }}></div>
+                <div className="h-16 rounded-2xl" style={{ backgroundColor: 'hsl(var(--primary) / 0.2)' }}></div>
               </div>
               
+              {/* CTA Button */}
               <div className="mt-auto">
-                <div className="h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-semibold">Book Now</span>
+                <div className="h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
+                  <span className="text-white font-black text-lg">Book Now</span>
                 </div>
               </div>
             </div>

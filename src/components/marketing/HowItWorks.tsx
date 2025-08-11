@@ -7,57 +7,63 @@ export const HowItWorks = () => {
       step: "1",
       icon: User,
       title: "Claim your handle",
-      description: "Choose your unique tapbookr.com URL",
-      color: "from-primary to-secondary"
+      description: "Choose your unique bookr.io URL",
+      bgColor: "hsl(var(--accent))"
     },
     {
       step: "2", 
       icon: Settings,
-      title: "Add your logo, slogan & booking link",
-      description: "Customize your page with your brand and connect your booking system",
-      color: "from-secondary to-accent"
+      title: "Connect & customize",
+      description: "Add your booking link, logo, and brand your page",
+      bgColor: "hsl(var(--orange))"
     },
     {
       step: "3",
       icon: Share,
-      title: "Publish and share your tapbookr.com/you",
-      description: "Go live instantly and start directing customers to your new booking page",
-      color: "from-accent to-primary"
+      title: "Publish",
+      description: "Go live instantly and start directing customers to your beautiful page",
+      bgColor: "hsl(var(--primary))"
     }
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-muted/20 to-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+    <section className="py-24 bg-gray-50">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-20">
+          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
             How it works
           </h2>
+          <p className="text-xl md:text-2xl text-gray-600 font-semibold max-w-2xl mx-auto">
+            Three simple steps to your professional booking page.
+          </p>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
           {steps.map((step, index) => (
-            <div key={index} className="relative">
-              <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer h-full">
-                <CardContent className="p-8 text-center">
-                  <div className={`w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br ${step.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 relative`}>
-                    <step.icon className="w-10 h-10 text-white" />
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                      <span className="text-sm font-bold text-primary">{step.step}</span>
+            <div key={index} className="relative text-center group">
+              <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white rounded-3xl overflow-hidden">
+                <CardContent className="p-10">
+                  <div 
+                    className="w-24 h-24 mx-auto mb-8 rounded-3xl flex items-center justify-center relative group-hover:scale-110 transition-transform duration-300"
+                    style={{ backgroundColor: step.bgColor }}
+                  >
+                    <step.icon className="w-12 h-12 text-white" />
+                    <div className="absolute -top-3 -right-3 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-lg font-black text-gray-900">{step.step}</span>
                     </div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">
+                  <h3 className="text-2xl font-black mb-4 text-gray-900">
                     {step.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-lg text-gray-600 leading-relaxed font-medium">
                     {step.description}
                   </p>
                 </CardContent>
               </Card>
               
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
-                  <div className="w-8 h-0.5 bg-gradient-to-r from-muted-foreground to-transparent"></div>
+                <div className="hidden md:block absolute top-1/2 -right-6 transform -translate-y-1/2 z-10">
+                  <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
                 </div>
               )}
             </div>

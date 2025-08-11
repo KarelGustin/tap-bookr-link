@@ -55,22 +55,25 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="pt-20 pb-8" style={{background: 'var(--gradient-footer)'}}>
-      <div className="container mx-auto px-4">
+    <footer 
+      className="pt-24 pb-12"
+      style={{ backgroundColor: 'hsl(var(--primary))' }}
+    >
+      <div className="container mx-auto px-6">
         {/* Main footer content */}
-        <div className="bg-white rounded-3xl p-12 mb-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="bg-white rounded-3xl p-16 mb-12 shadow-2xl">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
             {footerSections.map((section, index) => (
               <div key={index}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-xl font-black text-gray-900 mb-6">
                   {section.title}
                 </h3>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {section.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
                       <Link
                         to={link.href}
-                        className="text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm"
+                        className="text-gray-600 hover:text-gray-900 transition-colors duration-200 font-medium hover:underline"
                       >
                         {link.name}
                       </Link>
@@ -83,16 +86,19 @@ export const Footer = () => {
         </div>
         
         {/* Bottom section */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-white">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-primary font-bold text-lg">B</span>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 text-white">
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: 'hsl(var(--accent))' }}
+            >
+              <span className="font-black text-xl text-gray-900">B</span>
             </div>
-            <span className="font-semibold text-xl">Bookr</span>
+            <span className="font-black text-2xl">Bookr</span>
           </div>
           
-          <p className="text-white/80 text-sm">
-            © 2024 Bookr. All rights reserved.
+          <p className="text-white/80 font-medium">
+            © 2024 Bookr. All rights reserved. Made with Bookr ✨
           </p>
         </div>
       </div>
