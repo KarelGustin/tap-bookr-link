@@ -20,7 +20,7 @@ export const Hero = () => {
     <section className="relative min-h-screen overflow-hidden bg-secondary py-4">
       {/* Floating Header */}
       <div className="container mx-auto max-w-7xl px-2 md:px-3">
-        <div className="bg-white rounded-full p-3 mb-6">
+        <div className="bg-white rounded-2xl p-3 mb-6">
           <div className="flex items-center justify-between">
             <div className="text-xl font-black text-gray-900">Bookr</div>
             
