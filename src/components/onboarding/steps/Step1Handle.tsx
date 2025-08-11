@@ -112,7 +112,7 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
           <div className="relative">
             <div className="flex rounded-lg border border-input bg-background">
               <div className="flex items-center px-3 text-muted-foreground bg-muted/50 rounded-l-lg border-r">
-                bookr.io/
+                tapBookr.com/
               </div>
               <Input
                 id="handle"
