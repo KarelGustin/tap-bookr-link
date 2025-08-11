@@ -48,14 +48,14 @@ export const Step5Preview = ({
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://bookr.io/${profileData.handle}`);
+    navigator.clipboard.writeText(`https://TapBookr.com/${profileData.handle}`);
     toast({
       title: "Link copied!",
       description: "Your Bookr link has been copied to clipboard.",
     });
   };
 
-  const shareLink = `https://bookr.io/${profileData.handle}`;
+  const shareLink = `https://TapBookr.com/${profileData.handle}`;
 
   if (showSuccess) {
     return (
@@ -137,9 +137,9 @@ export const Step5Preview = ({
                   <div className="w-12 h-12 bg-muted rounded-full"></div>
                   <div>
                     <div className="font-semibold">{profileData.name || 'Your Name'}</div>
-                    <div className="text-sm text-muted-foreground">
-                      bookr.io/{profileData.handle}
-                    </div>
+                     <div className="text-sm text-muted-foreground">
+                       TapBookr.com/{profileData.handle}
+                     </div>
                   </div>
                 </div>
 
@@ -172,7 +172,7 @@ export const Step5Preview = ({
               <div>
                 <div className="font-medium">Handle locked</div>
                 <div className="text-sm text-muted-foreground">
-                  bookr.io/{profileData.handle}
+                  TapBookr.com/{profileData.handle}
                 </div>
               </div>
             </div>
