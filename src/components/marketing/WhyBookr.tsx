@@ -3,20 +3,20 @@ import { Card, CardContent } from "@/components/ui/card";
 export const WhyBookr = () => {
   const features = [
     {
-      title: "Share your content in limitless ways on your Bookr.",
-      description: "Connect everything you create in one simple link.",
+      title: "Show your business, your way.",
+      description: "Your TapBookr page is your personal mini-site — share services, offers, and updates in one beautiful place.",
       bgColor: "hsl(var(--linktree-pink))",
       textColor: "text-gray-800"
     },
     {
-      title: "Sell products and collect payments. It's monetization made simple.",
-      description: "Turn your audience into customers with built-in commerce.",
+      title: "Sell and get paid, effortlessly.",
+      description: "Link your booking or payment platform and start taking appointments or payments instantly.",
       bgColor: "hsl(var(--linktree-lime))",
       textColor: "text-gray-800"
     },
     {
-      title: "Grow, own and engage your audience by unifying them in one place.",
-      description: "Build deeper relationships with your followers.",
+      title: "Turn visitors into loyal clients.",
+      description: "Build trust, showcase your work, and make it easy for people to book with you — all in one page.",
       bgColor: "hsl(var(--linktree-blue))",
       textColor: "text-white"
     }
