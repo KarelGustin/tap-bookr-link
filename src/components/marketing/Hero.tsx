@@ -49,11 +49,8 @@ export const Hero = () => {
                 value={userInput}
                 onChange={handleInputChange}
                 placeholder="yourname" 
-                className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg placeholder:pl-0"
-                style={{ 
-                  paddingLeft: `${prefix.length * 0.6 + 2}rem`,
-                  textIndent: `${prefix.length * 0.6}rem`
-                }}
+                className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg"
+                style={{ paddingLeft: `${prefix.length * 0.6 + 2}rem` }}
               />
             </div>
             <Button 
