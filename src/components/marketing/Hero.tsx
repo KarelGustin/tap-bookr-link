@@ -75,11 +75,11 @@ export const Hero = () => {
           {/* Left Content */}
           <div className="flex-1 space-y-4 sm:space-y-6 text-left max-w-2xl px-2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
-              Everything you are. In one, simple link in bio.
+              Your booking link, made beautiful.
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Join 70M+ people using Bookr for their link in bio. One link to help you share everything you create, curate and sell from your Instagram, TikTok, Twitter, YouTube and other social media profiles.
+              Bookr wraps your booking software Link in a professional, mobile-ready page that looks like a €1500 website — for just a few euros a month.
             </p>
             
             <div className="space-y-3 max-w-lg pt-4">
