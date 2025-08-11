@@ -24,7 +24,7 @@ export const WhyBookr = () => {
 
   return (
     <section id="why-bookr" className="py-24 bg-white">
-      <div className="container mx-auto px-2">
+      <div className="container mx-auto px-2 md:px-3">
         {/* Section header */}
         <div className="text-center mb-20">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">

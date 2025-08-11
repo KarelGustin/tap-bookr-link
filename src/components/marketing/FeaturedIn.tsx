@@ -12,7 +12,7 @@ export const FeaturedIn = () => {
 
   return (
     <section className="py-24 bg-white">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-2 md:px-3">
         <div className="text-center max-w-4xl mx-auto">
           <Button 
             asChild 

@@ -59,7 +59,7 @@ export const Footer = () => {
       className="pt-24 pb-12"
       style={{ backgroundColor: 'hsl(var(--primary))' }}
     >
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-2 md:px-3">
         {/* Main footer content */}
         <div className="bg-white rounded-3xl p-16 mb-12 shadow-2xl">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
