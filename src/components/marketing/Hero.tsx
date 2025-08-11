@@ -27,11 +27,16 @@ export const Hero = () => {
           </p>
           
           <div className="space-y-4 max-w-lg pt-8">
-            <input 
-              type="text" 
-              placeholder="bookr.io/yourname" 
-              className="w-full px-8 py-6 rounded-3xl bg-white text-gray-900 placeholder-gray-500 text-xl font-semibold focus:outline-none focus:ring-4 focus:ring-white/30 transition-all shadow-lg" 
-            />
+            <div className="relative">
+              <div className="flex items-center w-full px-8 py-6 rounded-3xl bg-white text-xl font-semibold shadow-lg">
+                <span className="text-gray-700 select-none">TapBookr.com/</span>
+                <input 
+                  type="text" 
+                  placeholder="Yourname" 
+                  className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none ml-0"
+                />
+              </div>
+            </div>
             <Button 
               asChild 
               size="lg" 
