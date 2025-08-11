@@ -182,7 +182,7 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
         </Button>
         
         <p className="text-center text-sm text-muted-foreground">
-          You can change this later in Edit Page.
+          Your handle is permanent and cannot be changed.
         </p>
       </div>
     </OnboardingLayout>
