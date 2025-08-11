@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
+import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { Step1Handle } from '@/components/onboarding/steps/Step1Handle';
 import { Step2Booking } from '@/components/onboarding/steps/Step2Booking';
 import { Step3Branding } from '@/components/onboarding/steps/Step3Branding';
@@ -46,13 +51,20 @@ interface OnboardingData {
 }
 
 export default function Onboarding() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentStep = parseInt(searchParams.get('step') || '1');
-  const [onboardingData, setOnboardingData] = useState<Partial<OnboardingData>>({});
+  const [currentStep, setCurrentStep] = useState(1);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
+    handle: '',
+    isBusiness: false,
+    bookingUrl: '',
+    bookingMode: 'embed',
+    bannerType: 'color',
+    socials: {},
+    mediaFiles: [],
+  });
   const [isPublishing, setIsPublishing] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Redirect if no user
   useEffect(() => {
@@ -61,8 +73,51 @@ export default function Onboarding() {
     }
   }, [user, navigate]);
 
+  // Test database connection and policies
+  useEffect(() => {
+    const testDatabaseConnection = async () => {
+      if (!user) return;
+      
+      console.log('Testing database connection...');
+      try {
+        // Test if we can read from profiles table
+        const { data: readTest, error: readError } = await supabase
+          .from('profiles')
+          .select('id')
+          .limit(1);
+        
+        console.log('Read test result:', { data: readTest, error: readError });
+        
+        // Test if we can insert a test record (it will be rolled back)
+        const { data: insertTest, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            handle: 'test-handle-' + Date.now(),
+            status: 'draft'
+          })
+          .select('id');
+        
+        console.log('Insert test result:', { data: insertTest, error: insertError });
+        
+        // Clean up test record
+        if (insertTest?.[0]?.id) {
+          await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', insertTest[0].id);
+        }
+        
+      } catch (error) {
+        console.error('Database connection test failed:', error);
+      }
+    };
+    
+    testDatabaseConnection();
+  }, [user]);
+
   const updateStep = (step: number) => {
-    setSearchParams({ step: step.toString() });
+    setCurrentStep(step);
   };
 
   const uploadFile = async (file: File, path: string): Promise<string | null> => {
@@ -89,9 +144,15 @@ export default function Onboarding() {
   };
 
   const saveProfileData = async (data: Partial<OnboardingData>, status: 'draft' | 'published' = 'draft') => {
-    if (!user) return null;
+    console.log('saveProfileData called with:', { data, status, user: user?.id });
+    
+    if (!user) {
+      console.log('No user found, returning null');
+      return null;
+    }
 
     try {
+      console.log('Starting file uploads...');
       // Upload files first
       let avatarUrl: string | undefined;
       let bannerUrl: string | undefined;
@@ -99,35 +160,53 @@ export default function Onboarding() {
       const mediaUrls: string[] = [];
 
       if (data.avatarFile) {
+        console.log('Uploading avatar file...');
         avatarUrl = await uploadFile(data.avatarFile, 'avatars') || undefined;
+        console.log('Avatar upload result:', avatarUrl);
       }
 
       if (data.bannerFile) {
+        console.log('Uploading banner file...');
         bannerUrl = await uploadFile(data.bannerFile, 'banners') || undefined;
+        console.log('Banner upload result:', bannerUrl);
       }
 
       if (data.aboutPhotoFile) {
+        console.log('Uploading about photo file...');
         aboutPhotoUrl = await uploadFile(data.aboutPhotoFile, 'about') || undefined;
+        console.log('About photo upload result:', aboutPhotoUrl);
       }
 
       if (data.mediaFiles) {
+        console.log('Uploading media files...');
         for (const file of data.mediaFiles) {
           const url = await uploadFile(file, 'media');
           if (url) mediaUrls.push(url);
         }
+        console.log('Media files upload result:', mediaUrls);
       }
 
-      // Prepare profile data
+      // Determine the name field - prioritize business name for businesses
+      let displayName: string | undefined;
+      if (data.isBusiness && data.businessName) {
+        displayName = data.businessName;
+      } else if (data.name) {
+        displayName = data.name;
+      }
+
+      // Prepare profile data matching Supabase schema
       const profileData = {
-        user_id: user.id,
-        handle: data.handle?.toLowerCase(),
-        name: data.name || (data.isBusiness ? data.businessName : undefined),
+        user_id: user.id, // This links the profile to the logged-in user
+        handle: data.handle?.toLowerCase() || '',
+        name: displayName, // Use business name for businesses, personal name for individuals
         slogan: data.slogan,
         category: data.category,
         avatar_url: avatarUrl,
         booking_url: data.bookingUrl,
         booking_mode: data.bookingMode || 'embed',
         status,
+        accent_color: '#6E56CF',
+        theme_mode: 'light',
         banner: {
           type: data.bannerType || 'color',
           color: data.bannerColor,
@@ -142,33 +221,51 @@ export default function Onboarding() {
         media: {
           items: mediaUrls.map(url => ({ url, kind: 'image' })),
         },
+        contact: {
+          // Add contact information if available
+          email: user.email,
+          // Add other contact fields as needed
+        },
       };
 
+      console.log('Prepared profile data:', profileData);
+      console.log('User linking info:', { userId: user.id, userEmail: user.email });
+
       if (data.profileId) {
-        // Update existing profile
+        console.log('Updating existing profile with ID:', data.profileId);
+        // Update existing profile using Supabase
         const { error } = await supabase
           .from('profiles')
           .update(profileData)
           .eq('id', data.profileId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+        console.log('Profile updated successfully');
         return data.profileId;
       } else {
-        // Create new profile
+        console.log('Creating new profile...');
+        // Create new profile using Supabase
         const { data: newProfile, error } = await supabase
           .from('profiles')
           .insert(profileData)
           .select('id')
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+        console.log('Profile created successfully:', newProfile);
         return newProfile.id;
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Save error:', error);
       toast({
         title: "Save Error",
-        description: error.message || "Failed to save profile data",
+        description: error instanceof Error ? error.message : "Failed to save profile data",
         variant: "destructive",
       });
       return null;
@@ -177,22 +274,46 @@ export default function Onboarding() {
 
   // Step handlers
   const handleStep1 = async (data: { handle: string; businessName?: string; isBusiness: boolean }) => {
+    console.log('Step 1 data received:', data);
     const updatedData = { ...onboardingData, ...data };
+    console.log('Updated onboarding data:', updatedData);
     setOnboardingData(updatedData);
 
     // Create draft profile to lock handle
+    console.log('Attempting to save profile data...');
     const profileId = await saveProfileData(updatedData, 'draft');
+    console.log('Profile save result:', profileId);
+    
     if (profileId) {
+      console.log('Profile saved successfully, updating step...');
       setOnboardingData(prev => ({ ...prev, profileId }));
       updateStep(2);
+    } else {
+      console.log('Profile save failed');
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your profile. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleStep2 = async (data: { bookingUrl: string; bookingMode: 'embed' | 'new_tab' }) => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
-    await saveProfileData(updatedData, 'draft');
-    updateStep(3);
+    
+    // Save progress
+    const profileId = await saveProfileData(updatedData, 'draft');
+    if (profileId) {
+      setOnboardingData(prev => ({ ...prev, profileId }));
+      updateStep(3);
+    } else {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your booking information. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStep3 = async (data: {
@@ -206,46 +327,107 @@ export default function Onboarding() {
   }) => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
-    await saveProfileData(updatedData, 'draft');
-    updateStep(4);
+    
+    // Save progress
+    const profileId = await saveProfileData(updatedData, 'draft');
+    if (profileId) {
+      setOnboardingData(prev => ({ ...prev, profileId }));
+      updateStep(4);
+    } else {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your branding information. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleStep4 = async (data: {
     aboutTitle?: string;
     aboutDescription?: string;
     aboutPhotoFile?: File;
-    socials: any;
+    socials: OnboardingData['socials'];
     mediaFiles: File[];
   }) => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
-    await saveProfileData(updatedData, 'draft');
-    updateStep(5);
+    
+    // Save progress
+    const profileId = await saveProfileData(updatedData, 'draft');
+    if (profileId) {
+      setOnboardingData(prev => ({ ...prev, profileId }));
+      updateStep(5);
+    } else {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save your additional information. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePublish = async () => {
     setIsPublishing(true);
-    const profileId = await saveProfileData(onboardingData, 'published');
-    if (profileId) {
+    console.log('Publishing profile with data:', onboardingData);
+    
+    try {
+      const profileId = await saveProfileData(onboardingData, 'published');
+      if (profileId) {
+        console.log('Profile published successfully with ID:', profileId);
+        toast({
+          title: "Profile Published! 🎉",
+          description: "Your Bookr page is now live and ready for bookings.",
+        });
+        // Redirect to dashboard after successful publishing
+        navigate('/dashboard');
+      } else {
+        console.log('Profile publishing failed');
+        toast({
+          title: "Publishing Failed",
+          description: "Failed to publish your profile. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Publishing error:', error);
       toast({
-        title: "Profile Published! 🎉",
-        description: "Your Bookr page is now live and ready for bookings.",
+        title: "Publishing Error",
+        description: "An error occurred while publishing your profile.",
+        variant: "destructive",
       });
+    } finally {
+      setIsPublishing(false);
     }
-    setIsPublishing(false);
   };
 
   const handleSaveDraft = async () => {
-    await saveProfileData(onboardingData, 'draft');
-    toast({
-      title: "Draft Saved",
-      description: "Your progress has been saved. You can finish later.",
-    });
-    navigate('/edit');
+    try {
+      const profileId = await saveProfileData(onboardingData, 'draft');
+      if (profileId) {
+        toast({
+          title: "Draft Saved",
+          description: "Your progress has been saved. You can finish later.",
+        });
+        navigate('/dashboard');
+      } else {
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your draft. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Draft save error:', error);
+      toast({
+        title: "Save Error",
+        description: "An error occurred while saving your draft.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditPage = () => {
-    navigate('/edit');
+    navigate('/dashboard');
   };
 
   // Navigation handlers
@@ -260,8 +442,35 @@ export default function Onboarding() {
   };
 
   // Determine if profile can be published
-  const canPublish = !!(onboardingData.handle && onboardingData.bookingUrl && 
-    (!onboardingData.isBusiness || onboardingData.name || onboardingData.businessName));
+  const canPublish = () => {
+    const requiredFields = [
+      onboardingData.handle,
+      onboardingData.bookingUrl,
+    ];
+    
+    // For businesses, require business name
+    if (onboardingData.isBusiness) {
+      requiredFields.push(onboardingData.businessName);
+    }
+    
+    // For individuals, require personal name
+    if (!onboardingData.isBusiness) {
+      requiredFields.push(onboardingData.name);
+    }
+    
+    // Check if all required fields are filled
+    const hasAllRequired = requiredFields.every(field => field && field.trim().length > 0);
+    
+    console.log('Publish validation:', {
+      requiredFields,
+      hasAllRequired,
+      isBusiness: onboardingData.isBusiness,
+      businessName: onboardingData.businessName,
+      personalName: onboardingData.name
+    });
+    
+    return hasAllRequired;
+  };
 
   if (!user) {
     return null; // Will redirect via useEffect
@@ -310,7 +519,7 @@ export default function Onboarding() {
             name: onboardingData.name || onboardingData.businessName,
             bookingUrl: onboardingData.bookingUrl || '',
           }}
-          canPublish={canPublish}
+          canPublish={canPublish()}
           isPublishing={isPublishing}
         />
       );

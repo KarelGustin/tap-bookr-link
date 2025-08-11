@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, X } from 'lucide-react';
 import { OnboardingLayout } from '../OnboardingLayout';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Step1HandleProps {
   onNext: (data: { handle: string; businessName?: string; isBusiness: boolean }) => void;
@@ -20,13 +21,14 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState('');
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const isValidHandle = (value: string) => {
     const regex = /^[a-z0-9-]{3,24}$/;
     return regex.test(value);
   };
 
-  const checkAvailability = async (value: string) => {
+  const checkAvailability = useCallback(async (value: string) => {
     if (!isValidHandle(value)) {
       setIsAvailable(null);
       return;
@@ -34,29 +36,98 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
 
     setIsChecking(true);
     setError('');
+    console.log('🔍 Checking availability for handle:', value);
 
     try {
+      // First check if user is authenticated
+      if (!user) {
+        console.log('⚠️ User not authenticated, skipping availability check for now');
+        // For unauthenticated users, assume handle is available (they'll be authenticated before saving)
+        setIsAvailable(true);
+        return;
+      }
+
+      console.log('🔐 User authenticated, attempting database query...');
+      console.log('👤 User ID:', user.id);
+
+      // Test basic database connection first
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+
+      console.log('🧪 Basic connection test:', { testData, testError });
+
+      if (testError) {
+        console.error('🚨 Basic connection failed:', testError);
+        setError(`Database connection failed: ${testError.message}`);
+        setIsAvailable(null);
+        return;
+      }
+
+      // Now try the actual availability check
+      // Use a simpler approach that should work better with RLS
       const { data, error } = await supabase
         .from('profiles')
-        .select('handle')
+        .select('id')
         .eq('handle', value.toLowerCase())
-        .single();
+        .maybeSingle();
 
-      if (error && error.code === 'PGRST116') {
-        // No rows returned, handle is available
-        setIsAvailable(true);
+      console.log('📊 Availability check result:', { data, error });
+
+      if (error) {
+        // If we get a permission error, try a different approach
+        if (error.code === '42501' || error.message.includes('permission denied')) {
+          console.log('🔒 Permission denied, trying alternative approach...');
+          
+          // Try to check if the user already has a profile with this handle
+          const { data: ownProfile, error: ownError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('handle', value.toLowerCase())
+            .maybeSingle();
+          
+          if (ownError) {
+            console.error('🚨 Own profile check failed:', ownError);
+            setError('Unable to check availability. Please try again.');
+            setIsAvailable(null);
+            return;
+          }
+          
+          if (ownProfile) {
+            // User already has this handle
+            console.log('❌ User already has this handle');
+            setIsAvailable(false);
+            setError('You already have this handle.');
+          } else {
+            // Assume available for now (user will be authenticated before saving)
+            console.log('✅ Assuming handle is available (will verify on save)');
+            setIsAvailable(true);
+          }
+        } else {
+          console.error('🚨 Availability check error:', error);
+          setError(`Error checking availability: ${error.message}`);
+          setIsAvailable(null);
+        }
       } else if (data) {
         // Handle exists
+        console.log('❌ Handle is taken');
         setIsAvailable(false);
         setError('This handle is already taken. Try adding your city or business name.');
+      } else {
+        // No handle found - it's available
+        console.log('✅ Handle is available');
+        setIsAvailable(true);
       }
     } catch (err) {
+      console.error('💥 Availability check exception:', err);
       setError('Unable to check availability. Please try again.');
       setIsAvailable(null);
     } finally {
       setIsChecking(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -69,11 +140,11 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [handle]);
+  }, [handle, checkAvailability]);
 
   const handleSubmit = () => {
     if (!isValidHandle(handle)) {
-      setError('Handle must be 3-24 characters, letters, numbers, and hyphens only.');
+      setError('Handle must be 3-24 characters, letters, numbers, and hyphens only. No spaces.');
       return;
     }
 
@@ -96,12 +167,23 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
 
   const canContinue = isValidHandle(handle) && isAvailable && (!isBusiness || businessName.trim());
 
+  // Debug logging
+  console.log('Step1Handle validation:', {
+    handle,
+    isValidHandle: isValidHandle(handle),
+    isAvailable,
+    isBusiness,
+    businessName: businessName.trim(),
+    businessNameValid: !isBusiness || businessName.trim(),
+    canContinue
+  });
+
   return (
     <OnboardingLayout
       currentStep={1}
       totalSteps={5}
       title="Claim your Bookr handle"
-      subtitle="Takes under 3 minutes."
+      subtitle="Takes less than 3 minutes."
     >
       <div className="space-y-6">
         {/* Handle input */}
@@ -180,6 +262,14 @@ export const Step1Handle = ({ onNext }: Step1HandleProps) => {
         >
           Continue
         </Button>
+        
+        {/* Debug information - remove in production */}
+        <div className="text-xs text-gray-500 space-y-1">
+          <p>Debug: Handle valid: {isValidHandle(handle) ? '✅' : '❌'}</p>
+          <p>Debug: Available: {isAvailable === true ? '✅' : isAvailable === false ? '❌' : '⏳'}</p>
+          <p>Debug: Business name valid: {(!isBusiness || businessName.trim()) ? '✅' : '❌'}</p>
+          <p>Debug: Can continue: {canContinue ? '✅' : '❌'}</p>
+        </div>
         
         <p className="text-center text-sm text-muted-foreground">
           Your handle is permanent and cannot be changed.

@@ -1,16 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, ExternalLink, Mail, Phone, MapPin } from 'lucide-react';
+import { Database } from '@/integrations/supabase/types';
 import NotFound from './NotFound';
+
+type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  testimonials?: Testimonial[];
+};
+
+interface BannerSection {
+  background_image?: string;
+  profile_image?: string;
+  title?: string;
+  subtitle?: string;
+  background_color?: string;
+  text_color?: string;
+}
+
+interface BannerData {
+  url?: string;
+}
+
+interface Testimonial {
+  id: string;
+  customer_name: string;
+  review_title: string;
+  review_text: string;
+  image_url?: string;
+  background_color?: string;
+  text_color?: string;
+}
 
 export default function PublicProfile() {
   const { handle } = useParams();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -44,29 +67,6 @@ export default function PublicProfile() {
     }
   };
 
-  // SEO: dynamic title, meta description, and canonical
-  useEffect(() => {
-    if (!profile) return;
-    document.title = `${profile.name} – ${profile.slogan ?? 'Book appointments'}`;
-    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.setAttribute('name', 'description');
-      document.head.appendChild(meta);
-    }
-    meta.setAttribute('content', `${profile.name}${profile.slogan ? ' – ' + profile.slogan : ''}`.slice(0, 160));
-  }, [profile]);
-
-  useEffect(() => {
-    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.setAttribute('rel', 'canonical');
-      document.head.appendChild(link);
-    }
-    link.setAttribute('href', window.location.href);
-  }, [handle]);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -79,147 +79,345 @@ export default function PublicProfile() {
     return <NotFound />;
   }
 
-  const initials = profile.name
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase() || '?';
+  // Default banner configuration
+  const bannerConfig: BannerSection = {
+    background_image: profile.banner ? (profile.banner as BannerData)?.url : undefined,
+    profile_image: profile.avatar_url || undefined,
+    title: profile.name || 'Your Business Name',
+    subtitle: profile.slogan || 'Your business description',
+    background_color: profile.accent_color || 'hsl(var(--primary))',
+    text_color: 'white'
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/50 to-accent/20">
-      <div className="w-full px-2 space-y-2 pb-2">
-        {/* Default Mobile-First Hero Section */}
-        <Card className="border-0 shadow-none bg-transparent rounded-none overflow-hidden">
-          <div className="relative w-full aspect-[4/3] sm:aspect-[16/9]">
-            {profile.banner_url || profile.avatar_url ? (
-              <img
-                src={profile.banner_url || profile.avatar_url}
-                alt={`${profile.name || 'Business'} cover image`}
-                className="h-full w-full object-cover"
-                loading="eager"
-              />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-b from-accent/40 to-muted" />
+    <div className="min-h-screen bg-white">
+      {/* Banner Section */}
+      <section className="relative w-full">
+        {/* Background */}
+        <div 
+          className="relative w-full h-96 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500"
+          style={{
+            backgroundImage: bannerConfig.background_image 
+              ? `url(${bannerConfig.background_image})` 
+              : undefined,
+            backgroundColor: bannerConfig.background_image ? 'transparent' : bannerConfig.background_color
+          }}
+        >
+          {bannerConfig.background_image && (
+            <div className="absolute inset-0 bg-black/20" />
+          )}
+          
+          {/* Content Container */}
+          <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">
+            {/* Profile Image */}
+            {bannerConfig.profile_image && (
+              <div className="mb-6">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                  <img 
+                    src={bannerConfig.profile_image} 
+                    alt={bannerConfig.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
             )}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-b from-transparent to-background/95" />
-          </div>
-          <CardContent className="pt-0 px-2 pb-2">
-            <div className="text-center">
-              <h1 className="text-3xl font-extrabold tracking-tight">{profile.name || 'Your Business Name'}</h1>
-              {profile.slogan && (
-                <p className="mt-1 text-sm text-muted-foreground">{profile.slogan}</p>
+            
+            {/* Text Content */}
+            <div className="space-y-2">
+              <h1 
+                className="text-4xl font-bold tracking-tight"
+                style={{ color: bannerConfig.text_color }}
+              >
+                {bannerConfig.title}
+              </h1>
+              {bannerConfig.subtitle && (
+                <p 
+                  className="text-xl font-medium max-w-2xl mx-auto"
+                  style={{ color: bannerConfig.text_color }}
+                >
+                  {bannerConfig.subtitle}
+                </p>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-2 lg:grid-cols-3">
-          {/* Profile Card */}
-          <div className="lg:col-span-1">
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardContent className="p-2">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <Avatar className="w-24 h-24">
-                    <AvatarImage src={profile.avatar_url} alt={`${profile.name || "Profile"} avatar`} />
-                    <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-                  </Avatar>
-                  
-                  <div className="space-y-2">
-                    <h1 className="text-2xl font-bold">{profile.name}</h1>
-                    {profile.category && (
-                      <Badge variant="secondary">{profile.category}</Badge>
-                    )}
-                    {profile.slogan && (
-                      <p className="text-muted-foreground">{profile.slogan}</p>
-                    )}
-                  </div>
-
-                  {profile.booking_url && (
-                    <Button asChild className="w-full" size="lg">
-                      <a href={profile.booking_url} target="_blank" rel="noopener noreferrer">
-                        <Calendar className="mr-2 h-4 w-4" />
-                        Book Appointment
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Content */}
-          <div className="lg:col-span-2 space-y-2">
-            {/* About */}
-            {profile.about?.description && (
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-2">
-                  <h2 className="text-xl font-semibold mb-4">About</h2>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {profile.about.description}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Contact Information */}
-            {(profile.contact?.email || profile.contact?.phone || profile.contact?.location) && (
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-2">
-                  <h2 className="text-xl font-semibold mb-4">Contact</h2>
-                  <div className="space-y-3">
-                    {profile.contact?.email && (
-                      <div className="flex items-center space-x-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${profile.contact.email}`}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          {profile.contact.email}
-                        </a>
-                      </div>
-                    )}
-                    {profile.contact?.phone && (
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <a 
-                          href={`tel:${profile.contact.phone}`}
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          {profile.contact.phone}
-                        </a>
-                      </div>
-                    )}
-                    {profile.contact?.location && (
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{profile.contact.location}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Social Links */}
-            {profile.socials && Object.keys(profile.socials).length > 0 && (
-              <Card className="border-0 shadow-none bg-transparent">
-                <CardContent className="p-2">
-                  <h2 className="text-xl font-semibold mb-4">Connect</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(profile.socials).map(([platform, url]: [string, any]) => (
-                      <Button key={platform} variant="outline" size="sm" asChild>
-                        <a href={url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                          {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                        </a>
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
         </div>
+      </section>
+
+      {/* Profile Section with Arced Background */}
+      <section className="relative -mt-20 mb-8">
+        {/* Arced Background */}
+        <div className="relative w-full bg-white">
+          {/* Arc shape that overlaps the banner */}
+          <div className="absolute -top-20 left-0 right-0 h-40 bg-white rounded-t-[50%] transform -translate-y-1/2"></div>
+          
+          {/* Content Container with Profile Image and Text */}
+          <div className="relative z-10 -pt-8 pb-4 px-4">
+            <div className="max-w-2xl mx-auto text-center space-y-2">
+              {/* Profile Image Circle */}
+              <div className="flex justify-center mb-0">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white -mt-48 ">
+                  {profile.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt={profile.name || 'Profile'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-4xl font-bold text-gray-400">
+                        {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Subheading: Name of user */}
+              <p className="text-lg text-gray-600 font-medium">
+                {profile.name || 'Your Name'}
+              </p>
+              
+              {/* Heading: Business Name */}
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                {profile.name || 'Your Business Name'}
+              </h2>
+              
+              {/* Text: Description */}
+              <p className="text-lg text-gray-600 leading-relaxed max-w-xl mx-auto">
+                {profile.slogan || 'Your business description goes here. This is where you can tell visitors about what you do, your mission, or any other important information.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Horizontal Scrolling Cards Section */}
+      <section className="py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Our Work(Space)
+          </h3>
+          
+          {/* Horizontal Scrolling Container */}
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Card 1 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                  <span className="text-white text-lg font-medium">Image 1</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card 2 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+                  <span className="text-white text-lg font-medium">Image 2</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card 3 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 flex items-center justify-center">
+                  <span className="text-white text-lg font-medium">Image 3</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card 4 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                  <span className="text-white text-lg font-medium">Image 4</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Card 5 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                  <span className="text-white text-lg font-medium">Image 5</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Booking Section */}
+      {profile.booking_url && (
+        <section className="w-full">
+          <div className="w-full">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center px-4">
+              Book Your Appointment
+            </h3>
+            
+            {/* Booking iframe - 100% width */}
+            <div className="w-full">
+              <iframe
+                src={profile.booking_url}
+                className="w-full min-h-[1000px] border-0"
+                title="Book Appointment"
+                allow="camera; microphone; geolocation"
+                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Reviews Section */}
+      {profile.testimonials && Array.isArray(profile.testimonials) && profile.testimonials.length > 0 && (
+        <section className="py-8 px-4">
+          <div className="max-w-6xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              Customer Reviews
+            </h3>
+            
+            {/* Horizontal Scrolling Reviews Container */}
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {profile.testimonials.map((testimonial: Testimonial) => (
+                <div key={testimonial.id} className="flex-shrink-0">
+                  <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                    {testimonial.image_url ? (
+                      <div className="w-full h-full relative">
+                        <img 
+                          src={testimonial.image_url} 
+                          alt={`${testimonial.customer_name} testimonial`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/30" />
+                        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                          <div className="mb-4">
+                            <h4 className="font-semibold text-lg mb-2">{testimonial.review_title}</h4>
+                            <p className="text-sm opacity-90">{testimonial.customer_name}</p>
+                          </div>
+                          <p className="text-sm leading-relaxed opacity-90">
+                            "{testimonial.review_text}"
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="w-full h-full flex flex-col justify-end p-6 text-white"
+                        style={{ 
+                          backgroundColor: testimonial.background_color || 'hsl(var(--primary))',
+                          color: testimonial.text_color || 'white'
+                        }}
+                      >
+                        <div className="mb-4">
+                          <h4 className="font-semibold text-lg mb-2">{testimonial.review_title}</h4>
+                          <p className="text-sm opacity-90">{testimonial.customer_name}</p>
+                        </div>
+                        <p className="text-sm leading-relaxed opacity-90">
+                          "{testimonial.review_text}"
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Placeholder Testimonials Section */}
+      <section className="py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            Customer Reviews
+          </h3>
+          
+          {/* Horizontal Scrolling Reviews Container */}
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {/* Placeholder Review Card 1 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex flex-col justify-end p-6 text-white">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-lg mb-2">Amazing Service</h4>
+                    <p className="text-sm opacity-90">John Doe</p>
+                  </div>
+                  <p className="text-sm leading-relaxed opacity-90">
+                    "Absolutely fantastic experience! The quality of work exceeded my expectations and the team was incredibly professional."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Placeholder Review Card 2 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex flex-col justify-end p-6 text-white">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-lg mb-2">Highly Recommended</h4>
+                    <p className="text-sm opacity-90">Sarah Johnson</p>
+                  </div>
+                  <p className="text-sm leading-relaxed opacity-90">
+                    "I've been a customer for years and they never disappoint. The attention to detail is outstanding."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Placeholder Review Card 3 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 flex flex-col justify-end p-6 text-white">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-lg mb-2">Outstanding Quality</h4>
+                    <p className="text-sm opacity-90">Mike Brown</p>
+                  </div>
+                  <p className="text-sm leading-relaxed opacity-90">
+                    "The best service I've ever received. Professional, punctual, and the results speak for themselves."
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Placeholder Review Card 4 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col justify-end p-6 text-white">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-lg mb-2">Exceptional Experience</h4>
+                    <p className="text-sm opacity-90">Lisa Wilson</p>
+                  </div>
+                  <p className="text-sm leading-relaxed opacity-90">
+                    "From start to finish, everything was perfect. I couldn't be happier with the results!"
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Placeholder Review Card 5 */}
+            <div className="flex-shrink-0">
+              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex flex-col justify-end p-6 text-white">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-lg mb-2">Professional & Reliable</h4>
+                    <p className="text-sm opacity-90">Robert Davis</p>
+                  </div>
+                  <p className="text-sm leading-relaxed opacity-90">
+                    "They delivered exactly what they promised, on time and within budget. Highly professional team."
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Additional sections will go here */}
+      <div className="container mx-auto px-4 py-8">
+        <p className="text-center text-gray-500">
+          More customizable sections coming soon...
+        </p>
       </div>
     </div>
   );

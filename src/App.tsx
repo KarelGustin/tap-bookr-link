@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Edit from "./pages/Edit";
+import Dashboard from "./pages/Dashboard";
 import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,11 @@ const App = () => (
             <Route path="/edit" element={
               <PrivateRoute>
                 <Edit />
+              </PrivateRoute>
+            } />
+            <Route path="/dashboard" element={
+              <PrivateRoute>
+                <Dashboard />
               </PrivateRoute>
             } />
             <Route path="/:handle" element={<PublicProfile />} />

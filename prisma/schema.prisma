@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  user_id     String   @unique // This will store the auth.uid() from Supabase
+  handle      String   @unique
+  status      String   @default("draft")
+  name        String?
+  slogan      String?
+  avatar_url  String?
+  category    String?
+  accent_color String? @default("#6E56CF")
+  theme_mode  String   @default("light")
+  booking_url String?
+  booking_mode String  @default("embed")
+  socials     Json     @default("{}")
+  about       Json     @default("{}")
+  media       Json     @default("{\"items\":[]}")
+  contact     Json     @default("{}")
+  banner      Json     @default("{}")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("profiles")
+}

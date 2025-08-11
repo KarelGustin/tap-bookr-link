@@ -16,12 +16,12 @@ export const Testimonials = () => {
           </div>
           
           <blockquote className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-12 leading-tight">
-            "Bookr simplifies the process for creators to share multiple parts of themselves in one inclusive link."
+            "TapBookr made it so easy to have a website for my business. It boosted my bookings aswell and I'm so glad I found it!"
           </blockquote>
           
           <div className="mb-12">
             <p className="text-xl font-bold text-gray-900 mb-2">Riley Lemon</p>
-            <p className="text-lg text-gray-600 font-semibold">YouTuber, Content Creator</p>
+            <p className="text-lg text-gray-600 font-semibold">Nail artist, Business Owner</p>
           </div>
           
           <div className="flex items-center justify-center gap-6">

@@ -4,7 +4,7 @@ export const WhyBookr = () => {
   const features = [
     {
       title: "Instantly look professional",
-      description: "Drop your name, logo and a few photos. Bookr turns your plain booking link into a clean, mobile page clients trust—no web skills needed.",
+      description: "Drop your name, logo and a few photos. Bookr turns your plain booking link into a clean, website clients trust—no web skills needed.",
       bgColor: "hsl(var(--primary))",
       textColor: "text-gray-900"
     },

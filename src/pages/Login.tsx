@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,12 +35,17 @@ export default function Login() {
         });
       } else {
         if (isLogin) {
-          navigate('/edit');
+          // For login, redirect directly to dashboard
+          // The Dashboard page will handle checking if profile exists and show appropriate content
+          navigate('/dashboard');
         } else {
+          // For signup, redirect to onboarding
           toast({
             title: "Account created!",
             description: "Please check your email to verify your account.",
           });
+          // After signup, redirect to onboarding
+          navigate('/onboarding');
         }
       }
     } catch (error) {

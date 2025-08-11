@@ -34,11 +34,11 @@ export const Hero = () => {
             
             {/* Mobile + Desktop Actions */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-gray-600 text-sm px-3 py-2">
-                Log in
+              <Button asChild variant="ghost" className="text-gray-600 text-sm px-3 py-2">
+                <Link to="/login">Log in</Link>
               </Button>
-              <Button className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
-                Sign up free
+              <Button asChild className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
+                <Link to="/login">Sign up free</Link>
               </Button>
               {/* Mobile Hamburger */}
               <Button 
@@ -74,7 +74,7 @@ export const Hero = () => {
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Bookr wraps your booking software Link in a professional, mobile-ready page that looks like a €1500 website — for just a few euros a month.
+              Bookr wraps your booking software <u>link</u> in a professional, mobile-ready page that looks like a €1500 website — for just a few euros a month.
             </p>
             
             <div className="space-y-3 max-w-lg pt-4">
