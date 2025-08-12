@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { Button } from '@/components/ui/button';
 import NotFound from './NotFound';
 
 type Profile = Database['public']['Tables']['profiles']['Row'] & {
@@ -29,6 +30,18 @@ interface AboutData {
   description?: string;
   alignment?: 'center' | 'left';
   testimonials?: Testimonial[];
+  // Footer data
+  businessName?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  hours?: string;
+  nextAvailable?: string;
+  cancellationPolicy?: string;
+  privacyPolicy?: string;
+  termsOfService?: string;
+  showMaps?: boolean;
+  showAttribution?: boolean;
 }
 
 interface MediaItem {
@@ -439,12 +452,217 @@ export default function PublicProfile() {
         );
       })()}
 
-      {/* Additional sections will go here */}
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-gray-500">
-          More customizable sections coming soon...
-        </p>
-      </div>
+      {/* Footer Section */}
+      <footer className="bg-gray-900 text-white mt-16">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Primary Actions */}
+          <div className="text-center mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              {profile.booking_url && (
+                <Button 
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
+                  onClick={() => {
+                    if (profile.booking_url) {
+                      window.open(profile.booking_url, '_blank');
+                    }
+                  }}
+                >
+                  Book Now
+                </Button>
+              )}
+                             {(() => {
+                 const about = profile.about as AboutData;
+                 const phone = about?.phone;
+                 if (phone) {
+                  return (
+                    <Button 
+                      size="lg"
+                      variant="outline"
+                      className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-lg"
+                      onClick={() => window.open(`tel:${phone}`, '_self')}
+                    >
+                      Call Now
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          </div>
+
+          {/* Business Information & Map */}
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Business Details */}
+            <div className="space-y-4">
+              {(() => {
+                const about = profile.about as AboutData;
+                const businessName = about?.businessName || profile.name;
+                const address = about?.address;
+                const email = about?.email;
+                const phone = about?.phone;
+                const hours = about?.hours;
+                const nextAvailable = about?.nextAvailable;
+                
+                return (
+                  <div className="space-y-4">
+                    {businessName && (
+                      <h3 className="text-xl font-semibold">{businessName}</h3>
+                    )}
+                    
+                    {address && (
+                      <div className="flex items-start space-x-3">
+                        <div className="w-5 h-5 text-gray-400 mt-0.5">
+                          📍
+                        </div>
+                        <p className="text-gray-300">{address}</p>
+                      </div>
+                    )}
+                    
+                    {phone && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 text-gray-400">
+                          📞
+                        </div>
+                        <a 
+                          href={`tel:${phone}`}
+                          className="text-gray-300 hover:text-white transition-colors"
+                        >
+                          {phone}
+                        </a>
+                      </div>
+                    )}
+                    
+                    {email && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 text-gray-400">
+                          ✉️
+                        </div>
+                        <a 
+                          href={`mailto:${email}`}
+                          className="text-gray-300 hover:text-white transition-colors"
+                        >
+                          {email}
+                        </a>
+                      </div>
+                    )}
+                    
+                    {hours && (
+                      <div className="flex items-start space-x-3">
+                        <div className="w-5 h-5 text-gray-400 mt-0.5">
+                          🕒
+                        </div>
+                        <p className="text-gray-300">{hours}</p>
+                      </div>
+                    )}
+                    
+                    {nextAvailable && (
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 text-gray-400">
+                          🎯
+                        </div>
+                        <p className="text-gray-300">
+                          Next available: <span className="font-medium">{nextAvailable}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Google Maps */}
+            {(() => {
+              const about = profile.about as AboutData;
+              const address = about?.address;
+              const showMaps = about?.showMaps !== false;
+              const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+              
+              if (showMaps && address && apiKey) {
+                const encodedAddress = encodeURIComponent(address);
+                const mapUrl = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedAddress}`;
+                
+                return (
+                  <div className="h-64 rounded-lg overflow-hidden">
+                    <iframe
+                      src={mapUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Business Location"
+                    />
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
+
+          {/* Policies & Trust */}
+          <div className="border-t border-gray-700 pt-8 mb-8">
+            <div className="grid md:grid-cols-3 gap-6">
+              {(() => {
+                const about = profile.about as AboutData;
+                const cancellationPolicy = about?.cancellationPolicy;
+                const privacyPolicy = about?.privacyPolicy;
+                const termsOfService = about?.termsOfService;
+                
+                return (
+                  <>
+                    {cancellationPolicy && (
+                      <div>
+                        <h4 className="font-medium mb-2">Cancellation Policy</h4>
+                        <p className="text-sm text-gray-300">{cancellationPolicy}</p>
+                      </div>
+                    )}
+                    
+                    {privacyPolicy && (
+                      <div>
+                        <h4 className="font-medium mb-2">Privacy</h4>
+                        <p className="text-sm text-gray-300">{privacyPolicy}</p>
+                      </div>
+                    )}
+                    
+                    {termsOfService && (
+                      <div>
+                        <h4 className="font-medium mb-2">Terms</h4>
+                        <p className="text-sm text-gray-300">{termsOfService}</p>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
+          {/* Attribution */}
+          {(() => {
+            const about = profile.about as AboutData;
+            const showAttribution = about?.showAttribution !== false;
+            
+            if (showAttribution) {
+              return (
+                <div className="border-t border-gray-700 pt-6 text-center">
+                  <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-400">
+                    <span>Powered by Bookr</span>
+                    <span>•</span>
+                    <a 
+                      href="/onboarding" 
+                      className="text-gray-300 hover:text-white transition-colors"
+                    >
+                      Create your page
+                    </a>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+        </div>
+      </footer>
     </div>
   );
 }

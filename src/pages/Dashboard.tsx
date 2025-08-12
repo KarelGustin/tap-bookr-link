@@ -121,6 +121,19 @@ export default function Dashboard() {
     aboutDescription: '',
     aboutAlignment: 'center' as 'center' | 'left',
 
+    // Footer settings
+    footerBusinessName: '',
+    footerAddress: '',
+    footerEmail: '',
+    footerPhone: '',
+    footerHours: '',
+    footerNextAvailable: '',
+    footerCancellationPolicy: '',
+    footerPrivacyPolicy: '',
+    footerTermsOfService: '',
+    footerShowMaps: true,
+    footerShowAttribution: true,
+
     mediaFiles: [] as File[],
     mediaOrder: [] as string[],
     draggedIndex: null as number | null,
@@ -146,6 +159,17 @@ export default function Dashboard() {
     aboutTitle: d.aboutTitle,
     aboutDescription: d.aboutDescription,
     aboutAlignment: d.aboutAlignment,
+    footerBusinessName: d.footerBusinessName,
+    footerAddress: d.footerAddress,
+    footerEmail: d.footerEmail,
+    footerPhone: d.footerPhone,
+    footerHours: d.footerHours,
+    footerNextAvailable: d.footerNextAvailable,
+    footerCancellationPolicy: d.footerCancellationPolicy,
+    footerPrivacyPolicy: d.footerPrivacyPolicy,
+    footerTermsOfService: d.footerTermsOfService,
+    footerShowMaps: d.footerShowMaps,
+    footerShowAttribution: d.footerShowAttribution,
     mediaOrder: d.mediaOrder,
     socials: d.socials,
     bookingUrl: d.bookingUrl,
@@ -253,6 +277,19 @@ export default function Dashboard() {
       aboutTitle: typeof about.title === 'string' ? (about.title as string) : '',
       aboutDescription: typeof about.description === 'string' ? (about.description as string) : '',
       aboutAlignment: typeof about.alignment === 'string' ? (about.alignment as 'center' | 'left') : 'center',
+
+      // Footer settings
+      footerBusinessName: typeof about.businessName === 'string' ? (about.businessName as string) : profile.name || '',
+      footerAddress: typeof about.address === 'string' ? (about.address as string) : '',
+      footerEmail: typeof about.email === 'string' ? (about.email as string) : '',
+      footerPhone: typeof about.phone === 'string' ? (about.phone as string) : '',
+      footerHours: typeof about.hours === 'string' ? (about.hours as string) : '',
+      footerNextAvailable: typeof about.nextAvailable === 'string' ? (about.nextAvailable as string) : '',
+      footerCancellationPolicy: typeof about.cancellationPolicy === 'string' ? (about.cancellationPolicy as string) : 'Plans changed? Reschedule or cancel 24h in advance to avoid a fee.',
+      footerPrivacyPolicy: typeof about.privacyPolicy === 'string' ? (about.privacyPolicy as string) : 'We only use your details to manage your appointment. No spam.',
+      footerTermsOfService: typeof about.termsOfService === 'string' ? (about.termsOfService as string) : 'Secure booking handled by top booking platforms.',
+      footerShowMaps: typeof about.showMaps === 'boolean' ? (about.showMaps as boolean) : true,
+      footerShowAttribution: typeof about.showAttribution === 'boolean' ? (about.showAttribution as boolean) : true,
 
       socials: Array.isArray(profile.socials) ? (profile.socials as SocialItem[]) : [],
 
@@ -367,6 +404,18 @@ export default function Dashboard() {
         description: design.aboutDescription || null,
         alignment: design.aboutAlignment,
         testimonials: testimonialsForSave,
+        // Footer settings
+        businessName: design.footerBusinessName || null,
+        address: design.footerAddress || null,
+        email: design.footerEmail || null,
+        phone: design.footerPhone || null,
+        hours: design.footerHours || null,
+        nextAvailable: design.footerNextAvailable || null,
+        cancellationPolicy: design.footerCancellationPolicy || null,
+        privacyPolicy: design.footerPrivacyPolicy || null,
+        termsOfService: design.footerTermsOfService || null,
+        showMaps: design.footerShowMaps,
+        showAttribution: design.footerShowAttribution,
       };
 
       // Media: use reordered existing, then append new uploads
@@ -508,6 +557,18 @@ export default function Dashboard() {
         description: design.aboutDescription || null,
         alignment: design.aboutAlignment,
         testimonials: existingAbout.testimonials || null,
+        // Footer settings
+        businessName: design.footerBusinessName || null,
+        address: design.footerAddress || null,
+        email: design.footerEmail || null,
+        phone: design.footerPhone || null,
+        hours: design.footerHours || null,
+        nextAvailable: design.footerNextAvailable || null,
+        cancellationPolicy: design.footerCancellationPolicy || null,
+        privacyPolicy: design.footerPrivacyPolicy || null,
+        termsOfService: design.footerTermsOfService || null,
+        showMaps: design.footerShowMaps,
+        showAttribution: design.footerShowAttribution,
       } as Json;
 
       const { error } = await supabase
@@ -652,6 +713,18 @@ export default function Dashboard() {
         description: design.aboutDescription || null,
         alignment: design.aboutAlignment,
         testimonials: testimonialsForSave,
+        // Footer settings
+        businessName: design.footerBusinessName || null,
+        address: design.footerAddress || null,
+        email: design.footerEmail || null,
+        phone: design.footerPhone || null,
+        hours: design.footerHours || null,
+        nextAvailable: design.footerNextAvailable || null,
+        cancellationPolicy: design.footerCancellationPolicy || null,
+        privacyPolicy: design.footerPrivacyPolicy || null,
+        termsOfService: design.footerTermsOfService || null,
+        showMaps: design.footerShowMaps,
+        showAttribution: design.footerShowAttribution,
       } as Json;
 
       const { error } = await supabase
@@ -1935,6 +2008,137 @@ export default function Dashboard() {
                         Clear All
                       </Button>
                     )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 8) Footer */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Footer Settings</h4>
+                    <Button onClick={saveAbout} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Footer'}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Configure your footer information and policies. This appears at the bottom of your public page.
+                  </p>
+                  
+                  {/* Business Information */}
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label>Business Name</Label>
+                      <Input 
+                        placeholder="Your business name"
+                        value={design.footerBusinessName}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerBusinessName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Address</Label>
+                      <Input 
+                        placeholder="Your business address"
+                        value={design.footerAddress}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerAddress: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input 
+                        type="email"
+                        placeholder="your@email.com"
+                        value={design.footerEmail}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerEmail: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Phone</Label>
+                      <Input 
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"
+                        value={design.footerPhone}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerPhone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Business Hours</Label>
+                      <Input 
+                        placeholder="Mon-Fri 9AM-6PM, Sat 10AM-4PM"
+                        value={design.footerHours}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerHours: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Next Available</Label>
+                      <Input 
+                        placeholder="Tue 14:30 (optional)"
+                        value={design.footerNextAvailable}
+                        onChange={(e) => setDesign((d) => ({ ...d, footerNextAvailable: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Policies */}
+                  <div className="space-y-3">
+                    <h5 className="font-medium text-sm">Policies & Trust</h5>
+                    <div className="grid gap-3">
+                      <div>
+                        <Label>Cancellation Policy</Label>
+                        <Textarea 
+                          rows={2}
+                          placeholder="Plans changed? Reschedule or cancel 24h in advance to avoid a fee."
+                          value={design.footerCancellationPolicy}
+                          onChange={(e) => setDesign((d) => ({ ...d, footerCancellationPolicy: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Privacy Policy</Label>
+                        <Textarea 
+                          rows={2}
+                          placeholder="We only use your details to manage your appointment. No spam."
+                          value={design.footerPrivacyPolicy}
+                          onChange={(e) => setDesign((d) => ({ ...d, footerPrivacyPolicy: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label>Terms of Service</Label>
+                        <Textarea 
+                          rows={2}
+                          placeholder="Secure booking handled by top booking platforms."
+                          value={design.footerTermsOfService}
+                          onChange={(e) => setDesign((d) => ({ ...d, footerTermsOfService: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Display Options */}
+                  <div className="space-y-3">
+                    <h5 className="font-medium text-sm">Display Options</h5>
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="showMaps"
+                          checked={design.footerShowMaps}
+                          onChange={(e) => setDesign((d) => ({ ...d, footerShowMaps: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="showMaps">Show Google Maps</Label>
+                      </div>
+                     
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="showAttribution"
+                          checked={design.footerShowAttribution}
+                          onChange={(e) => setDesign((d) => ({ ...d, footerShowAttribution: e.target.checked }))}
+                          className="rounded"
+                        />
+                        <Label htmlFor="showAttribution">Show "Powered by Bookr"</Label>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
