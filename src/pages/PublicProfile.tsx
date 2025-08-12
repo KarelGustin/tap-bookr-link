@@ -172,7 +172,7 @@ export default function PublicProfile() {
         <div 
           className="relative w-full"
           style={{
-            height: '70vh',
+            height: '80vh',
             backgroundImage: bannerConfig.background_image 
               ? `url(${bannerConfig.background_image})` 
               : undefined,
@@ -223,22 +223,16 @@ export default function PublicProfile() {
 
 
 
-      {/* Arc Transition Section */}
-      <section className="relative -mt-16" style={{ zIndex: 2 }}>
-        {/* Arc shape that overlaps the banner */}
-        <div className="relative w-full bg-white">
-          <div className="absolute -top-16 left-0 right-0 h-32 bg-white rounded-t-[50%] transform -translate-y-1/2"></div>
-        </div>
-      </section>
+
 
       {/* About Section with Profile Avatar */}
-      <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3, marginTop: '-1px' }}>
+      <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3 }}>
         <div className="max-w-6xl mx-auto">
           {/* Mobile Layout - Stacked */}
           <div className="block md:hidden text-center">
             {/* Profile Avatar - Full width on mobile */}
             <div className="w-full mb-8">
-              <div className="w-full h-[100%] overflow-hidden  shadow-xl bg-white -mt-24" style={{ borderRadius: '12px' }}>
+              <div className="w-full h-[100%] overflow-hidden shadow-xl bg-white rounded-xl">
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -280,8 +274,8 @@ export default function PublicProfile() {
           {/* Desktop Layout - Side by side */}
           <div className="hidden md:flex items-start gap-8">
             {/* Profile Avatar - Left side on desktop */}
-            <div className="flex-shrink-0">
-              <div className="w-96 h-96 overflow-hidden border-4 border-white shadow-xl bg-white -mt-24 rounded-full" >
+            <div className="w-1/2">
+              <div className="w-full h-[100%] overflow-hidden shadow-xl bg-white rounded-xl" >
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
@@ -299,11 +293,13 @@ export default function PublicProfile() {
             </div>
             
             {/* About Content - Right side on desktop */}
-            <div className="flex-1 pt-8">
+            <div className="w-1/2 pt-8">
               {profile.about && typeof profile.about === 'object' && (
                 <>
                   {(profile.about as AboutData).title && (
-                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    <h3 className={`text-2xl font-bold text-gray-900 mb-4 ${
+                      (profile.about as AboutData).alignment === 'left' ? 'text-left' : 'text-center'
+                    }`}>
                       {(profile.about as AboutData).title}
                     </h3>
                   )}
