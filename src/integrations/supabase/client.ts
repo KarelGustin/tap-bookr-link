@@ -2,13 +2,28 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Temporary: Use hardcoded values while we fix the environment variable issue
 const SUPABASE_URL = "https://rllgepvklxqyhegrqodw.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbGdlcHZrbHhxeWhlZ3Jxb2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTA1NzEsImV4cCI6MjA3MDQ4NjU3MX0.TyuQteVpZZCpcx9XO6qV48r4_bIn6eXWMo4HNKU1En8";
+// Replace this line with your actual anon key from the dashboard:
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbGdlcHZrbHhxeWhlZ3Jxb2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTA1NzEsImV4cCI6MjA3MDQ4NjU3MX0.TyuQteVpZZCpcx9XO6qV48r4_bIn6eXWMo4HNKU1En8";
+
+// Check if environment variables are available
+const envUrl = import.meta.env.DATABASE_URL;
+const envKey = import.meta.env.DATABASE_ANON_KEY;
+
+// Log configuration for debugging
+console.log('🔧 Supabase Client Configuration:', {
+  url: SUPABASE_URL,
+  key: SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'NOT SET',
+  usingEnv: !!envUrl && !!envKey,
+  envUrl: envUrl,
+  envKey: envKey ? envKey.substring(0, 20) + '...' : 'NOT SET'
+});
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,

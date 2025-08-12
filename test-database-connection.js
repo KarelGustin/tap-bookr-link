@@ -1,55 +1,80 @@
-// Test script to verify database connection and policies
-// Run this in your browser console on the onboarding page
+// Test script to diagnose Supabase connection issues
+// Run this with: node test-database-connection.js
 
-async function testDatabaseConnection() {
-  console.log('🧪 Testing database connection and policies...');
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = "https://rllgepvklxqyhegrqodw.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbGdlcHZrbHhxeWhlZ3Jxb2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTA1NzEsImV4cCI6MjA3MDQ4NjU3MX0.TyuQteVpZZCpcx9XO6qV48r4_bIn6eXWMo4HNKU1En8";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function testConnection() {
+  console.log('🔍 Testing Supabase connection...');
+  console.log('URL:', SUPABASE_URL);
+  console.log('Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
   
   try {
-    // Test 1: Check if we can read from profiles table
-    console.log('📖 Test 1: Reading from profiles table...');
-    const { data: readTest, error: readError } = await supabase
+    // Test 1: Basic connection
+    console.log('\n📡 Test 1: Basic connection...');
+    const { data: testData, error: testError } = await supabase
       .from('profiles')
       .select('id')
       .limit(1);
     
-    console.log('✅ Read test result:', { data: readTest, error: readError });
+    if (testError) {
+      console.error('❌ Basic connection failed:', testError);
+      console.log('Error code:', testError.code);
+      console.log('Error message:', testError.message);
+      console.log('Error details:', testError.details);
+      console.log('Error hint:', testError.hint);
+    } else {
+      console.log('✅ Basic connection successful');
+      console.log('Data returned:', testData);
+    }
     
-    // Test 2: Check if we can insert a test record
-    console.log('📝 Test 2: Inserting test record...');
-    const testHandle = 'test-handle-' + Date.now();
-    const { data: insertTest, error: insertError } = await supabase
+    // Test 2: Check table structure
+    console.log('\n📊 Test 2: Table structure...');
+    const { data: tableInfo, error: tableError } = await supabase
+      .rpc('get_table_info', { table_name: 'profiles' });
+    
+    if (tableError) {
+      console.log('⚠️ Could not get table info (this is normal for anon users)');
+    } else {
+      console.log('✅ Table info:', tableInfo);
+    }
+    
+    // Test 3: Check RLS status
+    console.log('\n🔒 Test 3: RLS status...');
+    const { data: rlsInfo, error: rlsError } = await supabase
+      .rpc('check_rls_status', { table_name: 'profiles' });
+    
+    if (rlsError) {
+      console.log('⚠️ Could not check RLS status (this is normal for anon users)');
+    } else {
+      console.log('✅ RLS info:', rlsInfo);
+    }
+    
+    // Test 4: Try to create a test profile (should fail for anon users)
+    console.log('\n➕ Test 4: Try to insert (should fail for anon users)...');
+    const { data: insertData, error: insertError } = await supabase
       .from('profiles')
       .insert({
         user_id: 'test-user-id',
-        handle: testHandle,
+        handle: 'test-handle-' + Date.now(),
         status: 'draft'
       })
-      .select('id');
+      .select();
     
-    console.log('✅ Insert test result:', { data: insertTest, error: insertError });
-    
-    // Test 3: Clean up test record
-    if (insertTest?.[0]?.id) {
-      console.log('🧹 Test 3: Cleaning up test record...');
-      const { error: deleteError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', insertTest[0].id);
-      
-      console.log('✅ Cleanup result:', { error: deleteError });
+    if (insertError) {
+      console.log('⚠️ Insert failed as expected for anon user:', insertError.message);
+    } else {
+      console.log('❌ Insert succeeded (this might indicate a security issue)');
     }
     
-    // Test 4: Check current user
-    console.log('👤 Test 4: Checking current user...');
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log('✅ Current user:', user);
-    
-    console.log('🎉 All tests completed!');
-    
-  } catch (error) {
-    console.error('❌ Test failed:', error);
+  } catch (err) {
+    console.error('💥 Unexpected error:', err);
   }
 }
 
 // Run the test
-testDatabaseConnection();
+testConnection();

@@ -19,6 +19,25 @@ interface BannerSection {
 
 interface BannerData {
   url?: string;
+  imageUrl?: string;
+  color?: string;
+  type?: 'color' | 'image';
+}
+
+interface AboutData {
+  title?: string;
+  description?: string;
+}
+
+interface MediaItem {
+  url?: string;
+  fileName?: string;
+}
+
+interface SocialLink {
+  title?: string;
+  url?: string;
+  platform?: string;
 }
 
 interface Testimonial {
@@ -59,6 +78,11 @@ export default function PublicProfile() {
         return;
       }
 
+      console.log('Loaded profile data:', data);
+      console.log('Media field:', data.media);
+      console.log('Media type:', typeof data.media);
+      console.log('Media is array:', Array.isArray(data.media));
+
       setProfile(data);
     } catch (error) {
       setNotFound(true);
@@ -81,13 +105,43 @@ export default function PublicProfile() {
 
   // Default banner configuration
   const bannerConfig: BannerSection = {
-    background_image: profile.banner ? (profile.banner as BannerData)?.url : undefined,
+    background_image: profile.banner && typeof profile.banner === 'object' && 'imageUrl' in profile.banner && typeof profile.banner.imageUrl === 'string'
+      ? profile.banner.imageUrl 
+      : undefined,
     profile_image: profile.avatar_url || undefined,
     title: profile.name || 'Your Business Name',
     subtitle: profile.slogan || 'Your business description',
-    background_color: profile.accent_color || 'hsl(var(--primary))',
+    background_color: profile.banner && typeof profile.banner === 'object' && 'color' in profile.banner && typeof profile.banner.color === 'string'
+      ? profile.banner.color
+      : (profile.accent_color || '#6E56CF'),
     text_color: 'white'
   };
+
+  // Strict helpers to normalize media from DB (supports { items: [...] } or array)
+  type UnknownRecord = Record<string, unknown>;
+  const rawMedia: unknown = profile.media as unknown;
+
+  const extractMediaArray = (value: unknown): unknown[] => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'object' && value !== null) {
+      const maybeItems = (value as UnknownRecord).items;
+      if (Array.isArray(maybeItems)) return maybeItems as unknown[];
+    }
+    return [];
+  };
+
+  const getImageUrl = (item: unknown): string => {
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object' && item !== null) {
+      const rec = item as UnknownRecord;
+      if (typeof rec.url === 'string') return rec.url;
+      if (typeof rec.imageUrl === 'string') return rec.imageUrl;
+      if (typeof rec.fileName === 'string') return rec.fileName;
+    }
+    return '';
+  };
+
+  const mediaList: unknown[] = extractMediaArray(rawMedia);
 
   return (
     <div className="min-h-screen bg-white">
@@ -95,12 +149,14 @@ export default function PublicProfile() {
       <section className="relative w-full">
         {/* Background */}
         <div 
-          className="relative w-full h-96 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500"
+          className="relative w-full h-96"
           style={{
             backgroundImage: bannerConfig.background_image 
               ? `url(${bannerConfig.background_image})` 
               : undefined,
-            backgroundColor: bannerConfig.background_image ? 'transparent' : bannerConfig.background_color
+            backgroundColor: bannerConfig.background_image ? 'transparent' : bannerConfig.background_color,
+            backgroundSize: bannerConfig.background_image ? 'cover' : undefined,
+            backgroundPosition: bannerConfig.background_image ? 'center' : undefined,
           }}
         >
           {bannerConfig.background_image && (
@@ -110,7 +166,7 @@ export default function PublicProfile() {
           {/* Content Container */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">
             {/* Profile Image */}
-            {bannerConfig.profile_image && (
+            {/* {bannerConfig.profile_image && (
               <div className="mb-6">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <img 
@@ -120,7 +176,7 @@ export default function PublicProfile() {
                   />
                 </div>
               </div>
-            )}
+            )} */}
             
             {/* Text Content */}
             <div className="space-y-2">
@@ -191,59 +247,101 @@ export default function PublicProfile() {
         </div>
       </section>
 
+      {/* About Section */}
+      {profile.about && typeof profile.about === 'object' && (
+        <section className="py-8 px-4 bg-gray-50">
+          <div className="max-w-4xl mx-auto text-center">
+            {(profile.about as AboutData).title && (
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                {(profile.about as AboutData).title}
+              </h3>
+            )}
+            {(profile.about as AboutData).description && (
+              <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto">
+                {(profile.about as AboutData).description}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Social Links Section */}
+      {profile.socials && Array.isArray(profile.socials) && profile.socials.length > 0 && (
+        <section className="py-8 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Connect With Us</h3>
+            <div className="flex flex-wrap justify-center gap-4">
+              {(profile.socials as SocialLink[]).map((social: SocialLink, index: number) => {
+                // Defensive: allow for string or object, but only render if object with url
+                if (typeof social === 'object' && social !== null && 'url' in social && social.url) {
+                  return (
+                    <a
+                      key={index}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      <span className="font-medium">{social.title || social.platform || 'Social'}</span>
+                    </a>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Horizontal Scrolling Cards Section */}
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Our Work(Space)
+            {(() => {
+              if (profile.about && typeof profile.about === 'object' && 'title' in profile.about) {
+                const aboutData = profile.about as AboutData;
+                return aboutData.title || 'Our Work(Space)';
+              }
+              return 'Our Work(Space)';
+            })()}
           </h3>
           
           {/* Horizontal Scrolling Container */}
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Card 1 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">Image 1</span>
+          <div
+            className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {mediaList.length > 0 ? (
+              mediaList.map((mediaItem: unknown, index: number) => {
+                const imageUrl = getImageUrl(mediaItem);
+                return (
+                  <div key={index} className="flex-shrink-0">
+                    <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={`Media ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                          <span className="text-white text-lg font-medium">Image {index + 1}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              // Fallback when no media is available
+              <div className="flex-shrink-0">
+                <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <span className="text-gray-500 text-lg font-medium">No images uploaded yet</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Card 2 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">Image 2</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Card 3 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">Image 3</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Card 4 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">Image 4</span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Card 5 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">Image 5</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -325,93 +423,6 @@ export default function PublicProfile() {
           </div>
         </section>
       )}
-
-      {/* Placeholder Testimonials Section */}
-      <section className="py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Customer Reviews
-          </h3>
-          
-          {/* Horizontal Scrolling Reviews Container */}
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {/* Placeholder Review Card 1 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex flex-col justify-end p-6 text-white">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-lg mb-2">Amazing Service</h4>
-                    <p className="text-sm opacity-90">John Doe</p>
-                  </div>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    "Absolutely fantastic experience! The quality of work exceeded my expectations and the team was incredibly professional."
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Placeholder Review Card 2 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-green-400 to-blue-500 flex flex-col justify-end p-6 text-white">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-lg mb-2">Highly Recommended</h4>
-                    <p className="text-sm opacity-90">Sarah Johnson</p>
-                  </div>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    "I've been a customer for years and they never disappoint. The attention to detail is outstanding."
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Placeholder Review Card 3 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-pink-400 to-red-500 flex flex-col justify-end p-6 text-white">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-lg mb-2">Outstanding Quality</h4>
-                    <p className="text-sm opacity-90">Mike Brown</p>
-                  </div>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    "The best service I've ever received. Professional, punctual, and the results speak for themselves."
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Placeholder Review Card 4 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col justify-end p-6 text-white">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-lg mb-2">Exceptional Experience</h4>
-                    <p className="text-sm opacity-90">Lisa Wilson</p>
-                  </div>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    "From start to finish, everything was perfect. I couldn't be happier with the results!"
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Placeholder Review Card 5 */}
-            <div className="flex-shrink-0">
-              <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex flex-col justify-end p-6 text-white">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-lg mb-2">Professional & Reliable</h4>
-                    <p className="text-sm opacity-90">Robert Davis</p>
-                  </div>
-                  <p className="text-sm leading-relaxed opacity-90">
-                    "They delivered exactly what they promised, on time and within budget. Highly professional team."
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Additional sections will go here */}
       <div className="container mx-auto px-4 py-8">

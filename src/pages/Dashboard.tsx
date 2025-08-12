@@ -17,11 +17,9 @@ import {
   Edit3,
   Save,
   Link as LinkIcon,
-  Image as ImageIcon,
   Star,
   Share2,
   Menu,
-  X as CloseIcon,
   Lock,
   ExternalLink
 } from 'lucide-react';
@@ -42,7 +40,6 @@ export default function Dashboard() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(true);
   const [bookingUrl, setBookingUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
@@ -55,7 +52,7 @@ export default function Dashboard() {
       id: '1',
       platform: 'instagram',
       title: 'Instagram',
-      url: 'https://instagram.com/username',
+      url: '',
       isActive: true,
       isSaved: true
     },
@@ -63,7 +60,7 @@ export default function Dashboard() {
       id: '2',
       platform: 'whatsapp',
       title: 'WhatsApp',
-      url: 'https://wa.me/1234567890',
+      url: '',
       isActive: true,
       isSaved: false
     },
@@ -71,7 +68,7 @@ export default function Dashboard() {
       id: '3',
       platform: 'tiktok',
       title: 'TikTok',
-      url: 'https://tiktok.com/@username',
+      url: '',
       isActive: false,
       isSaved: true
     },
@@ -79,7 +76,7 @@ export default function Dashboard() {
       id: '4',
       platform: 'facebook',
       title: 'Facebook',
-      url: 'https://facebook.com/username',
+      url: '',
       isActive: false,
       isSaved: false
     }
@@ -313,7 +310,7 @@ export default function Dashboard() {
               onClick={() => setSidebarOpen(false)}
               className="lg:hidden"
             >
-              <CloseIcon className="w-4 h-4" />
+              <ChevronDown className="w-4 h-4" />
             </Button>
           </div>
 
@@ -664,7 +661,7 @@ export default function Dashboard() {
                               <Input
                                 id={`url-${link.id}`}
                                 type="url"
-                                placeholder={`https://${link.platform}.com/username`}
+                                placeholder={`Enter your ${link.title} profile URL`}
                                 value={link.url}
                                 onChange={(e) => {
                                   setSocialLinks(prev => 
@@ -723,165 +720,6 @@ export default function Dashboard() {
           </div>
         </footer>
       </div>
-
-      {/* Right Sidebar - Mobile Preview */}
-      <div className={`hidden lg:block w-80 bg-gray-100 border-l border-gray-200 p-6 ${previewOpen ? '' : 'hidden'}`}>
-        <div className="bg-white rounded-3xl shadow-lg p-4 mx-auto" style={{ width: '280px', height: '560px' }}>
-          {/* Mobile Preview Header */}
-          <div className="text-center mb-6">
-            {profile ? (
-              <>
-                <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-gray-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">@{profile.handle}</h3>
-                {profile.slogan && (
-                  <p className="text-sm text-gray-600 mt-1">{profile.slogan}</p>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                  <Plus className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">Create Profile</h3>
-                <p className="text-sm text-gray-600 mt-1">Get started with Bookr</p>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Preview Content */}
-          <div className="space-y-3">
-            {profile ? (
-              socialLinks.filter(link => link.isActive).map((link) => (
-                <div key={link.id} className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">{link.title}</span>
-                </div>
-              ))
-            ) : (
-              <div className="w-full h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-sm text-purple-600 font-medium">Start Building</span>
-              </div>
-            )}
-            
-            {profile && socialLinks.filter(link => link.isActive).length === 0 && (
-              <>
-                <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No links yet</span>
-                </div>
-                <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No links yet</span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Preview Footer */}
-          <div className="absolute bottom-4 left-4 right-4">
-            {profile ? (
-              <Button className="w-full" size="sm">
-                <Star className="w-4 h-4 mr-2" />
-                Join {profile.handle} on Bookr
-              </Button>
-            ) : (
-              <div className="w-full h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-sm text-gray-500">Preview Mode</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Preview Toggle */}
-      <div className="lg:hidden fixed bottom-4 right-4 z-30">
-        <Button
-          onClick={() => setPreviewOpen(!previewOpen)}
-          className="w-12 h-12 rounded-full shadow-lg"
-        >
-          <ImageIcon className="w-5 h-5" />
-        </Button>
-      </div>
-
-      {/* Mobile Preview Overlay */}
-      {previewOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40">
-          <div className="absolute bottom-4 right-4 left-4">
-            <div className="bg-white rounded-3xl shadow-lg p-4 mx-auto" style={{ width: '280px', height: '560px' }}>
-              {/* Mobile Preview Header */}
-              <div className="text-center mb-6">
-                {profile ? (
-                  <>
-                    <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-gray-500" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">@{profile.handle}</h3>
-                    {profile.slogan && (
-                      <p className="text-sm text-gray-600 mt-1">{profile.slogan}</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div className="w-16 h-16 bg-purple-100 rounded-full mx-auto mb-3 flex items-center justify-center">
-                      <Plus className="w-8 h-8 text-purple-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">Create Profile</h3>
-                    <p className="text-sm text-gray-600 mt-1">Get started with Bookr</p>
-                  </>
-                )}
-              </div>
-
-              {/* Mobile Preview Content */}
-              <div className="space-y-3">
-                {profile ? (
-                  socialLinks.filter(link => link.isActive).map((link) => (
-                    <div key={link.id} className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-sm text-gray-500">{link.title}</span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="w-full h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm text-purple-600 font-medium">Start Building</span>
-                  </div>
-                )}
-                
-                {profile && socialLinks.filter(link => link.isActive).length === 0 && (
-                  <>
-                    <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-sm text-gray-500">No links yet</span>
-                    </div>
-                    <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <span className="text-sm text-gray-500">No links yet</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Mobile Preview Footer */}
-              <div className="absolute bottom-4 left-4 right-4">
-                {profile ? (
-                  <Button className="w-full" size="sm">
-                    <Star className="w-4 h-4 mr-2" />
-                    Join {profile.handle} on Bookr
-                  </Button>
-                ) : (
-                  <div className="w-full h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm text-gray-500">Preview Mode</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Close Button */}
-          <Button
-            onClick={() => setPreviewOpen(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full"
-            variant="secondary"
-          >
-            <CloseIcon className="w-5 h-5" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
