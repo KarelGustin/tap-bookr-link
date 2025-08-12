@@ -29,13 +29,13 @@ export const FAQ = () => {
   ];
 
   return (
-    <section id="faq" className="py-24 bg-gray-50">
-      <div className="container mx-auto px-2 md:px-3">
+    <section id="faq" className="py-24 bg-gradient-to-b from-gray-50 to-white">
+      <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Got questions?
           </h2>
-          <p className="text-xl md:text-2xl text-gray-600 font-semibold">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Everything you need to know about Bookr.
           </p>
         </div>
@@ -46,12 +46,12 @@ export const FAQ = () => {
               <AccordionItem 
                 key={index} 
                 value={`item-${index}`}
-                className="border-0 rounded-3xl px-10 py-4 bg-white shadow-lg hover:shadow-xl transition-all duration-200"
+                className="border border-gray-200 rounded-2xl px-8 py-4 bg-white"
               >
-                <AccordionTrigger className="text-left text-xl font-black py-8 text-gray-900 hover:no-underline">
+                <AccordionTrigger className="text-left text-xl font-bold py-6 text-gray-900 hover:no-underline">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-gray-600 pb-8 leading-relaxed text-lg font-medium">
+                <AccordionContent className="text-gray-600 pb-6 leading-relaxed text-lg">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

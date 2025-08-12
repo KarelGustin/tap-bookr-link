@@ -25,7 +25,7 @@ export const Testimonials = () => {
           </div>
           
           <div className="flex items-center justify-center gap-6">
-            <button 
+            {/* <button 
               className="w-16 h-16 rounded-full border-3 flex items-center justify-center hover:scale-105 transition-all duration-200"
               style={{ borderColor: 'hsl(var(--accent))' }}
             >
@@ -36,7 +36,7 @@ export const Testimonials = () => {
               style={{ borderColor: 'hsl(var(--accent))' }}
             >
               <ArrowRight className="w-6 h-6" style={{ color: 'hsl(var(--accent))' }} />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
