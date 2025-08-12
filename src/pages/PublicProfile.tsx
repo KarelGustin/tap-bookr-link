@@ -403,7 +403,7 @@ export default function PublicProfile() {
 
       {/* Booking Section */}
       {profile.booking_url && (
-        <section className="w-full">
+        <section className="w-full" id="booking-section">
           <div className="w-full">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center px-4">
               Book Your Appointment
@@ -505,11 +505,11 @@ export default function PublicProfile() {
               {profile.booking_url && (
                 <Button 
                   size="lg"
-                  className="bg-primary hover:bg-primary/90 text-white px-8 py-3 text-lg"
+                  className="bg-primary hover:bg-primary/90 text-black px-8 py-3 text-lg"
                   onClick={() => {
-                    if (profile.booking_url) {
-                      window.open(profile.booking_url, '_blank');
-                    }
+                    document.getElementById('booking-section')?.scrollIntoView({ 
+                      behavior: 'smooth' 
+                    });
                   }}
                 >
                   Book Now
@@ -523,10 +523,13 @@ export default function PublicProfile() {
                     <Button 
                       size="lg"
                       variant="outline"
-                      className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-3 text-lg"
-                      onClick={() => window.open(`tel:${phone}`, '_self')}
+                      className="border-white text-black hover:bg-white hover:text-gray-900 px-8 py-3 text-lg"
+                      onClick={() => {
+                        const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, '')}`;
+                        window.open(whatsappUrl, '_blank');
+                      }}
                     >
-                      Call Now
+                      Questions? WhatsApp!
                     </Button>
                   );
                 }

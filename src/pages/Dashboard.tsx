@@ -56,7 +56,7 @@ interface SocialLink {
 export default function Dashboard() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState('design');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bookingUrl, setBookingUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -188,6 +188,7 @@ export default function Dashboard() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [galleryNewPreviews, setGalleryNewPreviews] = useState<string[]>([]);
   const [testimonialPreviews, setTestimonialPreviews] = useState<Record<number, string>>({});
+  const [previewKey, setPreviewKey] = useState(0);
 
   // initialize defaults for socials and testimonials if empty
   useEffect(() => {
@@ -451,6 +452,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaFiles: [], avatarFile: null, bannerImageFile: null }));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -500,6 +502,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, bannerImageFile: null }));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -538,6 +541,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, avatarFile: null }));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -623,6 +627,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaFiles: [] }));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -650,6 +655,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -677,6 +683,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -742,6 +749,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -805,6 +813,7 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaOrder: newMediaOrder }));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Remove failed', description: 'Please try again.', variant: 'destructive' });
       // Revert local state on error
@@ -1472,6 +1481,48 @@ export default function Dashboard() {
                   <Button onClick={saveDesign} disabled={designLoading}>
                     {designLoading ? 'Saving…' : 'Save changes'}
                   </Button>
+                </div>
+
+                {/* Live Preview */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-700">Live Preview</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setPreviewKey(prev => prev + 1)}
+                      className="text-xs"
+                    >
+                      Refresh Preview
+                    </Button>
+                  </div>
+                  <div className="relative">
+                    {/* Mobile Preview */}
+                    <div className="block lg:hidden">
+                      <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '375px', margin: '0 auto' }}>
+                        <iframe
+                          key={previewKey}
+                          src={`/profile/${profile?.handle}?preview=${previewKey}`}
+                          className="w-full"
+                          style={{ height: '600px' }}
+                          title="Mobile Preview"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Desktop Preview */}
+                    <div className="hidden lg:block">
+                      <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        <iframe
+                          key={previewKey}
+                          src={`/profile/${profile?.handle}?preview=${previewKey}`}
+                          className="w-full"
+                          style={{ height: '800px' }}
+                          title="Desktop Preview"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <Separator />
