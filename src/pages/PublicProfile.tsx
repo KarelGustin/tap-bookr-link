@@ -233,46 +233,94 @@ export default function PublicProfile() {
 
       {/* About Section with Profile Avatar */}
       <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3, marginTop: '-1px' }}>
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Profile Avatar */}
-          <div className="flex justify-center mb-8">
-            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white -mt-24">
-              {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.name || 'Profile'}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-6xl font-bold text-gray-400">
-                    {profile.name?.charAt(0)?.toUpperCase() || '?'}
-                  </span>
-                </div>
+        <div className="max-w-6xl mx-auto">
+          {/* Mobile Layout - Stacked */}
+          <div className="block md:hidden text-center">
+            {/* Profile Avatar - Full width on mobile */}
+            <div className="w-full mb-8">
+              <div className="w-full h-[100%] overflow-hidden  shadow-xl bg-white -mt-24" style={{ borderRadius: '12px' }}>
+                {profile.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.name || 'Profile'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-6xl font-bold text-gray-400">
+                      {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* About Content - Centered on mobile */}
+            {profile.about && typeof profile.about === 'object' && (
+              <>
+                {(profile.about as AboutData).title && (
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    {(profile.about as AboutData).title}
+                  </h3>
+                )}
+                {(profile.about as AboutData).description && (
+                  <div 
+                    className={`text-lg text-gray-600 leading-relaxed ${
+                      (profile.about as AboutData).alignment === 'left' ? 'text-left' : 'text-center'
+                    }`}
+                    style={{ whiteSpace: 'pre-line' }}
+                  >
+                    {(profile.about as AboutData).description}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Desktop Layout - Side by side */}
+          <div className="hidden md:flex items-start gap-8">
+            {/* Profile Avatar - Left side on desktop */}
+            <div className="flex-shrink-0">
+              <div className="w-96 h-96 overflow-hidden border-4 border-white shadow-xl bg-white -mt-24 rounded-full" >
+                {profile.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.name || 'Profile'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-6xl font-bold text-gray-400">
+                      {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* About Content - Right side on desktop */}
+            <div className="flex-1 pt-8">
+              {profile.about && typeof profile.about === 'object' && (
+                <>
+                  {(profile.about as AboutData).title && (
+                    <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                      {(profile.about as AboutData).title}
+                    </h3>
+                  )}
+                  {(profile.about as AboutData).description && (
+                    <div 
+                      className={`text-lg text-gray-600 leading-relaxed ${
+                        (profile.about as AboutData).alignment === 'left' ? 'text-left' : 'text-center'
+                      }`}
+                      style={{ whiteSpace: 'pre-line' }}
+                    >
+                      {(profile.about as AboutData).description}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
-          
-          {/* About Content */}
-          {profile.about && typeof profile.about === 'object' && (
-            <>
-              {(profile.about as AboutData).title && (
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  {(profile.about as AboutData).title}
-                </h3>
-              )}
-              {(profile.about as AboutData).description && (
-                <div 
-                  className={`text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto ${
-                    (profile.about as AboutData).alignment === 'left' ? 'text-left' : 'text-center'
-                  }`}
-                  style={{ whiteSpace: 'pre-line' }}
-                >
-                  {(profile.about as AboutData).description}
-                </div>
-              )}
-            </>
-          )}
         </div>
       </section>
 
