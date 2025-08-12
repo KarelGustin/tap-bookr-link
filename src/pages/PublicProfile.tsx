@@ -27,6 +27,8 @@ interface BannerData {
 interface AboutData {
   title?: string;
   description?: string;
+  alignment?: 'center' | 'left';
+  testimonials?: Testimonial[];
 }
 
 interface MediaItem {
@@ -109,12 +111,18 @@ export default function PublicProfile() {
       ? profile.banner.imageUrl 
       : undefined,
     profile_image: profile.avatar_url || undefined,
-    title: profile.name || 'Your Business Name',
-    subtitle: profile.slogan || 'Your business description',
+    title: profile.banner && typeof profile.banner === 'object' && 'heading' in profile.banner && typeof profile.banner.heading === 'string'
+      ? profile.banner.heading
+      : (profile.name || 'Your Business Name'),
+    subtitle: profile.banner && typeof profile.banner === 'object' && 'subheading' in profile.banner && typeof profile.banner.subheading === 'string'
+      ? profile.banner.subheading
+      : (profile.slogan || 'Your business description'),
     background_color: profile.banner && typeof profile.banner === 'object' && 'color' in profile.banner && typeof profile.banner.color === 'string'
       ? profile.banner.color
       : (profile.accent_color || '#6E56CF'),
-    text_color: 'white'
+    text_color: profile.banner && typeof profile.banner === 'object' && 'textColor' in profile.banner && typeof profile.banner.textColor === 'string'
+      ? profile.banner.textColor
+      : 'white'
   };
 
   // Strict helpers to normalize media from DB (supports { items: [...] } or array)
@@ -146,11 +154,12 @@ export default function PublicProfile() {
   return (
     <div className="min-h-screen bg-white">
       {/* Banner Section */}
-      <section className="relative w-full">
+      <section className="relative w-full" style={{ zIndex: 1 }}>
         {/* Background */}
         <div 
-          className="relative w-full h-96"
+          className="relative w-full"
           style={{
+            height: '70vh',
             backgroundImage: bannerConfig.background_image 
               ? `url(${bannerConfig.background_image})` 
               : undefined,
@@ -165,30 +174,30 @@ export default function PublicProfile() {
           
           {/* Content Container */}
           <div className="relative z-10 flex flex-col items-center justify-center h-full px-4 text-center">
-            {/* Profile Image */}
-            {/* {bannerConfig.profile_image && (
-              <div className="mb-6">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                  <img 
-                    src={bannerConfig.profile_image} 
-                    alt={bannerConfig.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            )} */}
-            
             {/* Text Content */}
-            <div className="space-y-2">
+            <div className="space-y-4 text-center">
+              {/* Category */}
+              {profile.category && (
+                <p 
+                  className="text-lg font-medium uppercase tracking-wider"
+                  style={{ color: bannerConfig.text_color }}
+                >
+                  {profile.category}
+                </p>
+              )}
+              
+              {/* Main Heading */}
               <h1 
-                className="text-4xl font-bold tracking-tight"
+                className="text-5xl md:text-6xl font-bold tracking-tight"
                 style={{ color: bannerConfig.text_color }}
               >
                 {bannerConfig.title}
               </h1>
+              
+              {/* Subheading */}
               {bannerConfig.subtitle && (
                 <p 
-                  className="text-xl font-medium max-w-2xl mx-auto"
+                  className="text-xl md:text-2xl font-medium max-w-3xl mx-auto leading-relaxed"
                   style={{ color: bannerConfig.text_color }}
                 >
                   {bannerConfig.subtitle}
@@ -199,71 +208,60 @@ export default function PublicProfile() {
         </div>
       </section>
 
-      {/* Profile Section with Arced Background */}
-      <section className="relative -mt-20 mb-8">
-        {/* Arced Background */}
+
+
+      {/* Arc Transition Section */}
+      <section className="relative -mt-16" style={{ zIndex: 2 }}>
+        {/* Arc shape that overlaps the banner */}
         <div className="relative w-full bg-white">
-          {/* Arc shape that overlaps the banner */}
-          <div className="absolute -top-20 left-0 right-0 h-40 bg-white rounded-t-[50%] transform -translate-y-1/2"></div>
-          
-          {/* Content Container with Profile Image and Text */}
-          <div className="relative z-10 -pt-8 pb-4 px-4">
-            <div className="max-w-2xl mx-auto text-center space-y-2">
-              {/* Profile Image Circle */}
-              <div className="flex justify-center mb-0">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white -mt-48 ">
-                  {profile.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt={profile.name || 'Profile'}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-gray-400">
-                        {profile.name?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Subheading: Name of user */}
-              <p className="text-lg text-gray-600 font-medium">
-                {profile.name || 'Your Name'}
-              </p>
-              
-              {/* Heading: Business Name */}
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                {profile.name || 'Your Business Name'}
-              </h2>
-              
-              {/* Text: Description */}
-              <p className="text-lg text-gray-600 leading-relaxed max-w-xl mx-auto">
-                {profile.slogan || 'Your business description goes here. This is where you can tell visitors about what you do, your mission, or any other important information.'}
-              </p>
-            </div>
-          </div>
+          <div className="absolute -top-16 left-0 right-0 h-32 bg-white rounded-t-[50%] transform -translate-y-1/2"></div>
         </div>
       </section>
 
-      {/* About Section */}
-      {profile.about && typeof profile.about === 'object' && (
-        <section className="py-8 px-4 bg-gray-50">
-          <div className="max-w-4xl mx-auto text-center">
-            {(profile.about as AboutData).title && (
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                {(profile.about as AboutData).title}
-              </h3>
-            )}
-            {(profile.about as AboutData).description && (
-              <p className="text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                {(profile.about as AboutData).description}
-              </p>
-            )}
+      {/* About Section with Profile Avatar */}
+      <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3, marginTop: '-1px' }}>
+        <div className="max-w-4xl mx-auto text-center">
+          {/* Profile Avatar */}
+          <div className="flex justify-center mb-8">
+            <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white shadow-xl bg-white -mt-24">
+              {profile.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.name || 'Profile'}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-6xl font-bold text-gray-400">
+                    {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
-      )}
+          
+          {/* About Content */}
+          {profile.about && typeof profile.about === 'object' && (
+            <>
+              {(profile.about as AboutData).title && (
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {(profile.about as AboutData).title}
+                </h3>
+              )}
+              {(profile.about as AboutData).description && (
+                <div 
+                  className={`text-lg text-gray-600 leading-relaxed max-w-3xl mx-auto ${
+                    (profile.about as AboutData).alignment === 'left' ? 'text-left' : 'text-center'
+                  }`}
+                  style={{ whiteSpace: 'pre-line' }}
+                >
+                  {(profile.about as AboutData).description}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
 
       {/* Social Links Section */}
       {profile.socials && Array.isArray(profile.socials) && profile.socials.length > 0 && (
@@ -280,7 +278,7 @@ export default function PublicProfile() {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center px-6 py-3 bg-primary text-black rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       <span className="font-medium">{social.title || social.platform || 'Social'}</span>
                     </a>
@@ -369,27 +367,60 @@ export default function PublicProfile() {
       )}
 
       {/* Reviews Section */}
-      {profile.testimonials && Array.isArray(profile.testimonials) && profile.testimonials.length > 0 && (
-        <section className="py-8 px-4">
-          <div className="max-w-6xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-              Customer Reviews
-            </h3>
-            
-            {/* Horizontal Scrolling Reviews Container */}
-            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {profile.testimonials.map((testimonial: Testimonial) => (
-                <div key={testimonial.id} className="flex-shrink-0">
-                  <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
-                    {testimonial.image_url ? (
-                      <div className="w-full h-full relative">
-                        <img 
-                          src={testimonial.image_url} 
-                          alt={`${testimonial.customer_name} testimonial`}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/30" />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+      {(() => {
+        // Check for testimonials in both profile.testimonials and profile.about.testimonials
+        let testimonials: Testimonial[] = [];
+        
+        if (profile.testimonials && Array.isArray(profile.testimonials)) {
+          testimonials = profile.testimonials;
+        } else if (profile.about && typeof profile.about === 'object' && 'testimonials' in profile.about) {
+          const aboutData = profile.about as AboutData & { testimonials?: Testimonial[] };
+          if (aboutData.testimonials && Array.isArray(aboutData.testimonials)) {
+            testimonials = aboutData.testimonials;
+          }
+        }
+        
+        // Only show section if there are testimonials
+        if (testimonials.length === 0) return null;
+        
+        return (
+          <section className="py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                Customer Reviews
+              </h3>
+              
+              {/* Horizontal Scrolling Reviews Container */}
+              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {testimonials.map((testimonial: Testimonial, index: number) => (
+                  <div key={testimonial.id || index} className="flex-shrink-0">
+                    <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                      {testimonial.image_url ? (
+                        <div className="w-full h-full relative">
+                          <img 
+                            src={testimonial.image_url} 
+                            alt={`${testimonial.customer_name} testimonial`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/30" />
+                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                            <div className="mb-4">
+                              <h4 className="font-semibold text-lg mb-2">{testimonial.review_title}</h4>
+                              <p className="text-sm opacity-90">{testimonial.customer_name}</p>
+                            </div>
+                            <p className="text-sm leading-relaxed opacity-90">
+                              "{testimonial.review_text}"
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div 
+                          className="w-full h-full flex flex-col justify-end p-6 text-white"
+                          style={{ 
+                            backgroundColor: testimonial.background_color || 'hsl(var(--primary))',
+                            color: testimonial.text_color || 'white'
+                          }}
+                        >
                           <div className="mb-4">
                             <h4 className="font-semibold text-lg mb-2">{testimonial.review_title}</h4>
                             <p className="text-sm opacity-90">{testimonial.customer_name}</p>
@@ -398,31 +429,15 @@ export default function PublicProfile() {
                             "{testimonial.review_text}"
                           </p>
                         </div>
-                      </div>
-                    ) : (
-                      <div 
-                        className="w-full h-full flex flex-col justify-end p-6 text-white"
-                        style={{ 
-                          backgroundColor: testimonial.background_color || 'hsl(var(--primary))',
-                          color: testimonial.text_color || 'white'
-                        }}
-                      >
-                        <div className="mb-4">
-                          <h4 className="font-semibold text-lg mb-2">{testimonial.review_title}</h4>
-                          <p className="text-sm opacity-90">{testimonial.customer_name}</p>
-                        </div>
-                        <p className="text-sm leading-relaxed opacity-90">
-                          "{testimonial.review_text}"
-                        </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        );
+      })()}
 
       {/* Additional sections will go here */}
       <div className="container mx-auto px-4 py-8">

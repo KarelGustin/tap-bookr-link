@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Link } from 'react-router-dom';
-import { Database } from '@/integrations/supabase/types';
+import { Database, Json } from '@/integrations/supabase/types';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { 
   ChevronDown,
   Settings,
@@ -23,6 +25,22 @@ import {
   Lock,
   ExternalLink
 } from 'lucide-react';
+
+// Strong, shared types (top-level)
+export type SocialItem = { title?: string; platform?: string; url?: string };
+export type TestimonialItem = { customer_name: string; review_title: string; review_text: string; image_url?: string };
+export type Banner = { 
+  type: 'color' | 'image'; 
+  color?: string; 
+  imageUrl?: string;
+  heading?: string;
+  subheading?: string;
+  textColor?: string;
+};
+export type BannerPartial = Partial<Banner>;
+export type MediaItem = { url: string; kind: 'image' };
+export type WithFile = TestimonialItem & { _file?: File };
+export type ProfileWithTestimonials = Profile & { testimonials?: TestimonialItem[] | null };
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -81,6 +99,660 @@ export default function Dashboard() {
       isSaved: false
     }
   ]);
+
+  // --- Design editor state ---
+  const [designLoading, setDesignLoading] = useState(false);
+  const [design, setDesign] = useState({
+    bannerType: 'color' as 'color' | 'image',
+    bannerColor: '#6E56CF',
+    bannerImageFile: null as File | null,
+    avatarFile: null as File | null,
+
+    // Banner content
+    bannerHeading: '',
+    bannerSubheading: '',
+    bannerTextColor: '#FFFFFF',
+
+    name: '',
+    slogan: '',
+    category: '',
+
+    aboutTitle: '',
+    aboutDescription: '',
+    aboutAlignment: 'center' as 'center' | 'left',
+
+    mediaFiles: [] as File[],
+    mediaOrder: [] as string[],
+    draggedIndex: null as number | null,
+
+    socials: [] as SocialItem[],
+
+    bookingUrl: '',
+    bookingMode: 'embed' as 'embed' | 'new_tab',
+
+    testimonials: [] as TestimonialItem[],
+  });
+
+  // Dirty tracking (exclude file objects)
+  const dirtySnapshot = (d: typeof design) => JSON.stringify({
+    bannerType: d.bannerType,
+    bannerColor: d.bannerColor,
+    bannerHeading: d.bannerHeading,
+    bannerSubheading: d.bannerSubheading,
+    bannerTextColor: d.bannerTextColor,
+    name: d.name,
+    slogan: d.slogan,
+    category: d.category,
+    aboutTitle: d.aboutTitle,
+    aboutDescription: d.aboutDescription,
+    aboutAlignment: d.aboutAlignment,
+    mediaOrder: d.mediaOrder,
+    socials: d.socials,
+    bookingUrl: d.bookingUrl,
+    bookingMode: 'embed',
+    testimonials: d.testimonials,
+  });
+  const [baseline, setBaseline] = useState('');
+  const isDirty = baseline !== '' && baseline !== dirtySnapshot(design);
+
+  const bannerInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const testimonialInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
+
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [galleryNewPreviews, setGalleryNewPreviews] = useState<string[]>([]);
+  const [testimonialPreviews, setTestimonialPreviews] = useState<Record<number, string>>({});
+
+  // initialize defaults for socials and testimonials if empty
+  useEffect(() => {
+    if (!profile) return;
+    // if socials is empty in design, prime with defaults
+    setDesign((d) => {
+      let updatedDesign = d;
+      
+      if (d.socials.length === 0) {
+        updatedDesign = {
+          ...updatedDesign,
+          socials: [
+            { title: 'Instagram', platform: 'instagram', url: '' },
+            { title: 'Facebook', platform: 'facebook', url: '' },
+            { title: 'WhatsApp', platform: 'whatsapp', url: '' },
+            { title: 'LinkedIn', platform: 'linkedin', url: '' },
+          ],
+        };
+      }
+      
+      // if testimonials is empty, prime with 3 placeholder testimonials
+      if (d.testimonials.length === 0) {
+        updatedDesign = {
+          ...updatedDesign,
+          testimonials: [
+            { 
+              customer_name: 'Sarah Johnson', 
+              review_title: 'Amazing service!', 
+              review_text: 'I was so impressed with the quality and attention to detail. Highly recommend!',
+              image_url: undefined
+            },
+            { 
+              customer_name: 'Mike Chen', 
+              review_title: 'Exceeded expectations', 
+              review_text: 'Professional, reliable, and delivered exactly what I was looking for.',
+              image_url: undefined
+            },
+            { 
+              customer_name: 'Emily Rodriguez', 
+              review_title: 'Fantastic experience', 
+              review_text: 'The team went above and beyond to make sure everything was perfect.',
+              image_url: undefined
+            }
+          ],
+        };
+      }
+      
+      return updatedDesign;
+    });
+  }, [profile]);
+
+  // Local previews for existing images
+  useEffect(() => {
+    const b: BannerPartial = (profile?.banner ?? {}) as BannerPartial;
+    setBannerPreview(typeof b.imageUrl === 'string' ? b.imageUrl : null);
+    setAvatarPreview(profile?.avatar_url || null);
+  }, [profile]);
+
+  useEffect(() => {
+    if (!profile) return;
+    const b: BannerPartial = (profile.banner ?? {}) as BannerPartial;
+    const about = (profile.about ?? {}) as { [key: string]: unknown };
+
+    const existingMediaUrls = getExistingMediaUrls();
+
+    const profWithT = profile as ProfileWithTestimonials;
+    const tRaw = profWithT.testimonials;
+    
+    // Check if testimonials are stored in about section
+    let testimonialsFromAbout: TestimonialItem[] = [];
+    if (typeof about.testimonials === 'object' && Array.isArray(about.testimonials)) {
+      testimonialsFromAbout = about.testimonials as TestimonialItem[];
+    }
+
+    setDesign((d) => ({
+      ...d,
+      bannerType: typeof b.imageUrl === 'string' ? 'image' : 'color',
+      bannerColor: typeof b.color === 'string' ? b.color : profile.accent_color || '#6E56CF',
+      bannerHeading: typeof b.heading === 'string' ? b.heading : profile.name || '',
+      bannerSubheading: typeof b.subheading === 'string' ? b.subheading : profile.slogan || '',
+      bannerTextColor: typeof b.textColor === 'string' ? b.textColor : '#FFFFFF',
+
+      name: profile.name || '',
+      slogan: profile.slogan || '',
+      category: profile.category || '',
+
+      aboutTitle: typeof about.title === 'string' ? (about.title as string) : '',
+      aboutDescription: typeof about.description === 'string' ? (about.description as string) : '',
+      aboutAlignment: typeof about.alignment === 'string' ? (about.alignment as 'center' | 'left') : 'center',
+
+      socials: Array.isArray(profile.socials) ? (profile.socials as SocialItem[]) : [],
+
+      bookingUrl: profile.booking_url || '',
+      bookingMode: 'embed',
+
+      testimonials: Array.isArray(tRaw) ? (tRaw as TestimonialItem[]) : testimonialsFromAbout,
+
+      mediaOrder: existingMediaUrls,
+    }));
+  }, [profile]);
+
+  // update baseline when profile loads or after save
+  useEffect(() => {
+    if (!profile) return;
+    setBaseline(dirtySnapshot(design));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
+
+
+  // beforeunload prompt
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  const sanitizeFileName = (name: string): string => {
+    const dot = name.lastIndexOf('.');
+    const base = (dot > -1 ? name.slice(0, dot) : name)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase();
+    const ext = dot > -1 ? name.slice(dot).toLowerCase().replace(/[^a-z0-9.]+/g, '') : '';
+    return (base || 'file') + ext;
+  };
+
+  const uploadDesignFile = async (bucket: 'avatars' | 'media', file: File) => {
+    if (!user) return null;
+    const safe = sanitizeFileName(file.name);
+    const filePath = `${user.id}/${Date.now()}-${safe}`;
+    const { error } = await supabase.storage.from(bucket).upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+    if (error) return null;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return data?.publicUrl ?? null;
+  };
+
+  const saveDesign = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Avatar
+      let avatar_url = profile.avatar_url || null;
+      if (design.avatarFile) {
+        const url = await uploadDesignFile('avatars', design.avatarFile);
+        if (url) avatar_url = url;
+      }
+
+      // Banner
+      const banner: Banner = { 
+        type: design.bannerType as 'color' | 'image',
+        heading: design.bannerHeading || profile.name || '',
+        subheading: design.bannerSubheading || profile.slogan || '',
+        textColor: design.bannerTextColor || '#FFFFFF'
+      };
+
+      if (design.bannerType === 'color') {
+        banner.color = design.bannerColor || '#6E56CF';
+      } else if (design.bannerType === 'image') {
+        if (design.bannerImageFile) {
+          const url = await uploadDesignFile('media', design.bannerImageFile);
+          if (url) banner.imageUrl = url;
+        } else {
+          const existing = (profile.banner ?? {}) as Partial<Banner>;
+          if (existing.imageUrl) banner.imageUrl = existing.imageUrl;
+          if (existing.color) banner.color = existing.color;
+        }
+      }
+
+      // Testimonials: upload any new images
+      const testimonialsForSave: TestimonialItem[] = [];
+      for (let i = 0; i < design.testimonials.length; i += 1) {
+        const t = design.testimonials[i] as WithFile;
+        let image_url = t.image_url;
+        if (t._file) {
+          const url = await uploadDesignFile('media', t._file);
+          if (url) image_url = url;
+          delete t._file;
+        }
+        testimonialsForSave.push({
+          customer_name: t.customer_name || '',
+          review_title: t.review_title || '',
+          review_text: t.review_text || '',
+          image_url,
+        });
+      }
+
+      // About
+      const about = {
+        title: design.aboutTitle || null,
+        description: design.aboutDescription || null,
+        alignment: design.aboutAlignment,
+        testimonials: testimonialsForSave,
+      };
+
+      // Media: use reordered existing, then append new uploads
+      const reorderedExisting: MediaItem[] = design.mediaOrder.map((u) => ({ url: u, kind: 'image' }));
+      const newlyUploaded: MediaItem[] = [];
+      for (const f of design.mediaFiles) {
+        const url = await uploadDesignFile('media', f);
+        if (url) newlyUploaded.push({ url, kind: 'image' });
+      }
+      const media = { items: [...reorderedExisting, ...newlyUploaded] } as Json;
+
+      const updatePayload = {
+        name: design.name || null,
+        slogan: design.slogan || null,
+        category: design.category || null,
+        avatar_url,
+        banner: banner as Json,
+        about: about as Json,
+        media,
+        socials: design.socials as Json,
+        booking_url: design.bookingUrl || null,
+        booking_mode: 'embed' as const,
+        // testimonials: testimonialsForSave, // Disabled until DB column exists
+        updated_at: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from('profiles').update(updatePayload).eq('id', profile.id);
+      if (error) throw error;
+      toast({ title: 'Saved', description: 'Your design changes were saved.' });
+
+      // Reset files and refresh profile
+      setDesign((d) => ({ ...d, mediaFiles: [], avatarFile: null, bannerImageFile: null }));
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot({ ...design, mediaFiles: [], avatarFile: null, bannerImageFile: null }));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  // Add individual save functions for different sections
+  const saveBanner = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Banner
+      const banner: Banner = { 
+        type: design.bannerType as 'color' | 'image',
+        heading: design.bannerHeading || profile.name || '',
+        subheading: design.bannerSubheading || profile.slogan || '',
+        textColor: design.bannerTextColor || '#FFFFFF'
+      };
+
+      if (design.bannerType === 'color') {
+        banner.color = design.bannerColor || '#6E56CF';
+      } else if (design.bannerType === 'image') {
+        if (design.bannerImageFile) {
+          const url = await uploadDesignFile('media', design.bannerImageFile);
+          if (url) banner.imageUrl = url;
+        } else {
+          const existing = (profile.banner ?? {}) as Partial<Banner>;
+          if (existing.imageUrl) banner.imageUrl = existing.imageUrl;
+          if (existing.color) banner.color = existing.color;
+        }
+      }
+
+      const bannerJson = banner as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ banner: bannerJson as Json, updated_at: new Date().toISOString() })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Banner saved', description: 'Your banner changes were saved.' });
+
+      // Reset file and refresh profile
+      setDesign((d) => ({ ...d, bannerImageFile: null }));
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot({ ...design, bannerImageFile: null }));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveProfile = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Avatar
+      let avatar_url = profile.avatar_url || null;
+      if (design.avatarFile) {
+        const url = await uploadDesignFile('avatars', design.avatarFile);
+        if (url) avatar_url = url;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          name: design.name || null,
+          slogan: design.slogan || null,
+          category: design.category || null,
+          avatar_url,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Profile saved', description: 'Your profile changes were saved.' });
+
+      // Reset file and refresh profile
+      setDesign((d) => ({ ...d, avatarFile: null }));
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot({ ...design, avatarFile: null }));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveAbout = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // About - preserve existing testimonials if they exist
+      const existingAbout = (profile.about ?? {}) as { [key: string]: unknown };
+      const about = {
+        title: design.aboutTitle || null,
+        description: design.aboutDescription || null,
+        alignment: design.aboutAlignment,
+        testimonials: existingAbout.testimonials || null,
+      } as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          about: about as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'About section saved', description: 'Your about section changes were saved.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot(design));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveMedia = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Media: use reordered existing, then append new uploads
+      const reorderedExisting: MediaItem[] = design.mediaOrder.map((u) => ({ url: u, kind: 'image' }));
+      const newlyUploaded: MediaItem[] = [];
+      for (const f of design.mediaFiles) {
+        const url = await uploadDesignFile('media', f);
+        if (url) newlyUploaded.push({ url, kind: 'image' });
+      }
+      const media = { items: [...reorderedExisting, ...newlyUploaded] } as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          media: media as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Media gallery saved', description: 'Your media gallery changes were saved.' });
+
+      // Reset files and refresh profile
+      setDesign((d) => ({ ...d, mediaFiles: [] }));
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot({ ...design, mediaFiles: [] }));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveSocials = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          socials: design.socials as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Social links saved', description: 'Your social links changes were saved.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot(design));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveBooking = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          booking_url: design.bookingUrl || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Booking settings saved', description: 'Your booking settings were saved.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot(design));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveTestimonials = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Testimonials: upload any new images
+      const testimonialsForSave: TestimonialItem[] = [];
+      for (let i = 0; i < design.testimonials.length; i += 1) {
+        const t = design.testimonials[i] as WithFile;
+        let image_url = t.image_url;
+        if (t._file) {
+          const url = await uploadDesignFile('media', t._file);
+          if (url) image_url = url;
+          delete t._file;
+        }
+        testimonialsForSave.push({
+          customer_name: t.customer_name || '',
+          review_title: t.review_title || '',
+          review_text: t.review_text || '',
+          image_url,
+        });
+      }
+
+      // Note: testimonials column doesn't exist in DB yet, so we'll store in about for now
+      const about = {
+        title: design.aboutTitle || null,
+        description: design.aboutDescription || null,
+        alignment: design.aboutAlignment,
+        testimonials: testimonialsForSave,
+      } as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          about: about as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Testimonials saved', description: 'Your testimonials were saved.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot(design));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  // Auto-save placeholder testimonials when they're first added
+  useEffect(() => {
+    if (!profile || !user) return;
+    
+    // Check if we have placeholder testimonials that need to be saved
+    const hasPlaceholderTestimonials = design.testimonials.length > 0 && 
+      design.testimonials.every(t => 
+        t.customer_name === 'Sarah Johnson' || 
+        t.customer_name === 'Mike Chen' || 
+        t.customer_name === 'Emily Rodriguez'
+      );
+    
+    // Check if testimonials exist in the database
+    const about = (profile.about ?? {}) as { [key: string]: unknown };
+    const hasTestimonialsInDB = typeof about.testimonials === 'object' && Array.isArray(about.testimonials) && about.testimonials.length > 0;
+    
+    // If we have placeholder testimonials but none in DB, auto-save them
+    if (hasPlaceholderTestimonials && !hasTestimonialsInDB) {
+      // Wait a bit for the state to fully update, then auto-save
+      const timer = setTimeout(() => {
+        saveTestimonials();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [design.testimonials, profile, user, saveTestimonials]);
+
+  // Function to remove media item from database
+  const removeMediaItem = async (url: string, index: number) => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      // Remove from local state
+      const newMediaOrder = design.mediaOrder.filter((_, i) => i !== index);
+      setDesign((d) => ({ ...d, mediaOrder: newMediaOrder }));
+
+      // Update database
+      const reorderedExisting: MediaItem[] = newMediaOrder.map((u) => ({ url: u, kind: 'image' }));
+      const media = { items: reorderedExisting } as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          media: media as Json,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+      toast({ title: 'Image removed', description: 'Image was removed from your gallery.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot({ ...design, mediaOrder: newMediaOrder }));
+    } catch (e) {
+      toast({ title: 'Remove failed', description: 'Please try again.', variant: 'destructive' });
+      // Revert local state on error
+      setDesign((d) => ({ ...d, mediaOrder: design.mediaOrder }));
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  // Drag & drop media ordering
+  const handleMediaDragStart = (index: number) => setDesign((d) => ({ ...d, draggedIndex: index }));
+  const handleMediaDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    const from = design.draggedIndex;
+    if (from === null || from === index) return;
+    const next = [...design.mediaOrder];
+    const [moved] = next.splice(from, 1);
+    next.splice(index, 0, moved);
+    setDesign((d) => ({ ...d, mediaOrder: next, draggedIndex: index }));
+  };
+  const handleMediaDrop = () => setDesign((d) => ({ ...d, draggedIndex: null }));
 
   useEffect(() => {
     if (user) {
@@ -248,6 +920,28 @@ export default function Dashboard() {
         variant: "destructive",
       });
     }
+  };
+
+  // Helper to extract existing media urls from profile.media (supports array or { items: [...] })
+  const getExistingMediaUrls = (): string[] => {
+    const m: unknown = profile?.media as unknown;
+    const urls: string[] = [];
+    const pushUrl = (v: unknown) => {
+      if (typeof v === 'string') urls.push(v);
+      else if (typeof v === 'object' && v !== null) {
+        const r = v as Record<string, unknown>;
+        if (typeof r.url === 'string') urls.push(r.url);
+        else if (typeof r.imageUrl === 'string') urls.push(r.imageUrl);
+        else if (typeof r.fileName === 'string') urls.push(r.fileName);
+      }
+    };
+    if (Array.isArray(m)) {
+      m.forEach(pushUrl);
+    } else if (typeof m === 'object' && m !== null) {
+      const items = (m as Record<string, unknown>).items;
+      if (Array.isArray(items)) items.forEach(pushUrl);
+    }
+    return urls;
   };
 
   if (authLoading || profileLoading) {
@@ -699,9 +1393,554 @@ export default function Dashboard() {
 
             {/* Design Section */}
             {activeSection === 'design' && (
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Design Settings</h3>
-                <p className="text-gray-600">Customize your profile appearance, colors, and layout here.</p>
+              <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Design your public page</h3>
+                  <Button onClick={saveDesign} disabled={designLoading}>
+                    {designLoading ? 'Saving…' : 'Save changes'}
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* 1) Banner */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Banner</h4>
+                    <Button onClick={saveBanner} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Banner'}
+                    </Button>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant={design.bannerType === 'color' ? 'default' : 'outline'}
+                      onClick={() => setDesign((d) => ({ ...d, bannerType: 'color' }))}
+                    >
+                      Use color
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={design.bannerType === 'image' ? 'default' : 'outline'}
+                      onClick={() => setDesign((d) => ({ ...d, bannerType: 'image' }))}
+                    >
+                      Use image
+                    </Button>
+                  </div>
+
+                  {/* Banner Content */}
+                  <div className="space-y-3">
+                    {/* <div>
+                      <Label>Name</Label>
+                      <Input
+                        placeholder="Your business or personal name"
+                        value={design.name}
+                        onChange={(e) => setDesign((d) => ({ ...d, name: e.target.value }))}
+                      />
+                    </div> */}
+                    <div>
+                      <Label>Category</Label>
+                      <Input
+                        placeholder="e.g., Photographer, Designer, Consultant"
+                        value={design.category}
+                        onChange={(e) => setDesign((d) => ({ ...d, category: e.target.value }))}
+                      />
+                    </div>
+                    {/* <div>
+                      <Label>Slogan</Label>
+                      <Input
+                        placeholder="Your business tagline or description"
+                        value={design.slogan}
+                        onChange={(e) => setDesign((d) => ({ ...d, slogan: e.target.value }))}
+                      />
+                    </div> */}
+                    <div>
+                      <Label>Banner Heading</Label>
+                      <Input
+                        placeholder="Your main banner title (optional - uses name if empty)"
+                        value={design.bannerHeading}
+                        onChange={(e) => setDesign((d) => ({ ...d, bannerHeading: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Banner Subheading</Label>
+                      <Input
+                        placeholder="Your banner subtitle or tagline (optional - uses slogan if empty)"
+                        value={design.bannerSubheading}
+                        onChange={(e) => setDesign((d) => ({ ...d, bannerSubheading: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label>Text Color</Label>
+                      <Input
+                        type="color"
+                        value={design.bannerTextColor}
+                        onChange={(e) => setDesign((d) => ({ ...d, bannerTextColor: e.target.value }))}
+                        className="w-24 p-1"
+                      />
+                    </div>
+                  </div>
+
+                  {design.bannerType === 'color' ? (
+                    <div className="flex items-center gap-3">
+                      <Label className="w-32">Color</Label>
+                      <Input
+                        type="color"
+                        value={design.bannerColor}
+                        onChange={(e) => setDesign((d) => ({ ...d, bannerColor: e.target.value }))}
+                        className="w-24 p-1"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Banner image</Label>
+                      <div className="flex items-center gap-3">
+                        <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
+                          {bannerPreview ? 'Change banner' : 'Upload banner'}
+                        </Button>
+                        <input
+                          ref={bannerInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setDesign((d) => ({ ...d, bannerImageFile: file }));
+                            if (file) setBannerPreview(URL.createObjectURL(file));
+                          }}
+                        />
+                      </div>
+                      {/* Current banner preview */}
+                      <div className="mt-2">
+                        <p className="text-xs text-muted-foreground mb-1">Current banner</p>
+                        <div className="w-full max-w-md aspect-[3/1] rounded-md overflow-hidden border bg-muted/30">
+                          {bannerPreview ? (
+                            <img src={bannerPreview} className="w-full h-full object-cover" />
+                          ) : (
+                            (() => {
+                              const bPreview: BannerPartial = (profile?.banner ?? {}) as BannerPartial;
+                              const color = typeof bPreview.color === 'string' ? bPreview.color : '#e5e7eb';
+                              return <div style={{ backgroundColor: color }} className="w-full h-full" />;
+                            })()
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* 2) Profile */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Profile</h4>
+                    <Button onClick={saveProfile} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Profile'}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Avatar</Label>
+                    <div className="flex items-center gap-3">
+                      <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()}>
+                        {avatarPreview ? 'Change avatar' : 'Upload avatar'}
+                      </Button>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setDesign((d) => ({ ...d, avatarFile: file }));
+                          if (file) setAvatarPreview(URL.createObjectURL(file));
+                        }}
+                      />
+                    </div>
+                    {/* Current avatar preview */}
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="w-16 h-16 rounded-full overflow-hidden border bg-muted/30">
+                        {avatarPreview ? (
+                          <img src={avatarPreview} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full" />
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">Currently used avatar</p>
+                    </div>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Name, category, and slogan are now configured in the Banner section above.
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 3) About */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">About section</h4>
+                    <Button onClick={saveAbout} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save About'}
+                    </Button>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label>Title</Label>
+                      <Input value={design.aboutTitle} onChange={(e) => setDesign((d) => ({ ...d, aboutTitle: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label>Text Alignment</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant={design.aboutAlignment === 'center' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'center' }))}
+                        >
+                          Center
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={design.aboutAlignment === 'left' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'left' }))}
+                        >
+                          Left
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label>Description</Label>
+                      <Textarea 
+                        rows={6} 
+                        value={design.aboutDescription} 
+                        onChange={(e) => setDesign((d) => ({ ...d, aboutDescription: e.target.value }))}
+                        placeholder="Enter your description here. Use Enter/Return to create new paragraphs."
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Use Enter/Return to create new paragraphs. Line breaks will be preserved.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 4) Media gallery */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Media gallery</h4>
+                    <Button onClick={saveMedia} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Gallery'}
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Up to 6 images</p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{design.mediaOrder.length + galleryNewPreviews.length}/6</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => galleryInputRef.current?.click()}
+                        disabled={design.mediaOrder.length + galleryNewPreviews.length >= 6}
+                      >
+                        + Add image
+                      </Button>
+                      <input
+                        ref={galleryInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          // limit to max 6
+                          if (design.mediaOrder.length + galleryNewPreviews.length >= 6) return;
+                          setDesign((d) => ({ ...d, mediaFiles: [...d.mediaFiles, file] }));
+                          setGalleryNewPreviews((p) => [...p, URL.createObjectURL(file)]);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {design.mediaOrder.map((u, i) => (
+                      <div
+                        key={u + i}
+                        className={`w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0 relative ${design.draggedIndex === i ? 'ring-2 ring-primary' : ''}`}
+                        draggable
+                        onDragStart={() => handleMediaDragStart(i)}
+                        onDragOver={(e) => handleMediaDragOver(e, i)}
+                        onDrop={handleMediaDrop}
+                      >
+                        <img src={u} className="w-full h-full object-cover" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
+                          onClick={() => removeMediaItem(u, i)}
+                          disabled={designLoading}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                    {galleryNewPreviews.map((u, i) => (
+                      <div key={`new-${i}`} className="w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0 opacity-80 relative">
+                        <img src={u} className="w-full h-full object-cover" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
+                          onClick={() => {
+                            // Remove from new files and previews
+                            setDesign((d) => ({ 
+                              ...d, 
+                              mediaFiles: d.mediaFiles.filter((_, idx) => idx !== i) 
+                            }));
+                            setGalleryNewPreviews((p) => p.filter((_, idx) => idx !== i));
+                          }}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ))}
+                    {design.mediaOrder.length + galleryNewPreviews.length === 0 && (
+                      <p className="text-xs text-muted-foreground">No images yet</p>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 5) Social links */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Social links</h4>
+                    <Button onClick={saveSocials} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Socials'}
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {design.socials.map((s, i) => (
+                      <div key={i} className="grid sm:grid-cols-3 gap-2">
+                        <Input
+                          placeholder="Title (e.g., Instagram)"
+                          value={s.title || ''}
+                          onChange={(e) => {
+                            const next = [...design.socials];
+                            next[i] = { ...next[i], title: e.target.value };
+                            setDesign((d) => ({ ...d, socials: next }));
+                          }}
+                        />
+                        <Input
+                          placeholder="Platform (optional)"
+                          value={s.platform || ''}
+                          onChange={(e) => {
+                            const next = [...design.socials];
+                            next[i] = { ...next[i], platform: e.target.value };
+                            setDesign((d) => ({ ...d, socials: next }));
+                          }}
+                        />
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="https://..."
+                            value={s.url || ''}
+                            onChange={(e) => {
+                              const next = [...design.socials];
+                              next[i] = { ...next[i], url: e.target.value };
+                              setDesign((d) => ({ ...d, socials: next }));
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              const next = design.socials.filter((_, idx) => idx !== i);
+                              setDesign((d) => ({ ...d, socials: next }));
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setDesign((d) => ({ ...d, socials: [...d.socials, { title: '', url: '' }] }))}
+                    >
+                      Add social
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 6) Booking */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Booking</h4>
+                    <Button onClick={saveBooking} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Booking'}
+                    </Button>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-3">
+                      <Label>Booking URL</Label>
+                      <Input
+                        placeholder="https://..."
+                        value={design.bookingUrl}
+                        onChange={(e) => setDesign((d) => ({ ...d, bookingUrl: e.target.value }))}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Embed mode is used by default.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* 7) Testimonials */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">Testimonials</h4>
+                      {design.testimonials.length > 0 && design.testimonials.every(t => 
+                        t.customer_name === 'Sarah Johnson' || 
+                        t.customer_name === 'Mike Chen' || 
+                        t.customer_name === 'Emily Rodriguez'
+                      ) && (
+                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                          Using placeholders
+                        </span>
+                      )}
+                      {(() => {
+                        // Check if testimonials exist in the database
+                        const about = (profile?.about ?? {}) as { [key: string]: unknown };
+                        const hasTestimonialsInDB = typeof about.testimonials === 'object' && Array.isArray(about.testimonials) && about.testimonials.length > 0;
+                        
+                        if (design.testimonials.length > 0 && !hasTestimonialsInDB) {
+                          return (
+                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full animate-pulse">
+                              Auto-saving...
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+                    <Button onClick={saveTestimonials} disabled={designLoading} size="sm">
+                      {designLoading ? 'Saving…' : 'Save Testimonials'}
+                    </Button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Add a few short reviews (image optional). Placeholder testimonials are shown by default and will be automatically saved to your public page. You can edit, replace, or remove them anytime.
+                  </p>
+                  {design.testimonials.map((t, i) => (
+                    <div key={i} className="grid sm:grid-cols-4 gap-2 items-start">
+                      <div className="sm:col-span-4 flex items-center gap-3">
+                        <div className="w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0">
+                          {testimonialPreviews[i] ? (
+                            <img src={testimonialPreviews[i]} className="w-full h-full object-cover" />
+                          ) : t.image_url ? (
+                            <img src={t.image_url} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image</div>
+                          )}
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              if (!testimonialInputRefs.current[i]) return;
+                              testimonialInputRefs.current[i]!.click();
+                            }}
+                          >
+                            {testimonialPreviews[i] || t.image_url ? 'Change image' : 'Upload image'}
+                          </Button>
+                          <input
+                            ref={(el) => (testimonialInputRefs.current[i] = el)}
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setTestimonialPreviews((p) => ({ ...p, [i]: URL.createObjectURL(file) }));
+                              // temporarily stash file path on testimonial via image_url placeholder to mark change
+                              const next = [...design.testimonials] as WithFile[];
+                              next[i] = { ...next[i], _file: file };
+                              setDesign((d) => ({ ...d, testimonials: next }));
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <Input
+                        placeholder="Customer name"
+                        value={t.customer_name}
+                        onChange={(e) => {
+                          const next = [...design.testimonials];
+                          next[i] = { ...next[i], customer_name: e.target.value };
+                          setDesign((d) => ({ ...d, testimonials: next }));
+                        }}
+                      />
+                      <Input
+                        placeholder="Review title"
+                        value={t.review_title}
+                        onChange={(e) => {
+                          const next = [...design.testimonials];
+                          next[i] = { ...next[i], review_title: e.target.value };
+                          setDesign((d) => ({ ...d, testimonials: next }));
+                        }}
+                      />
+                      <Input
+                        placeholder="Review text"
+                        value={t.review_text}
+                        onChange={(e) => {
+                          const next = [...design.testimonials];
+                          next[i] = { ...next[i], review_text: e.target.value };
+                          setDesign((d) => ({ ...d, testimonials: next }));
+                        }}
+                      />
+                      <div className="sm:col-span-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setDesign((d) => ({ ...d, testimonials: d.testimonials.filter((_, idx) => idx !== i) }))}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={design.testimonials.length >= 6}
+                      onClick={() => setDesign((d) => ({ ...d, testimonials: [...d.testimonials, { customer_name: '', review_title: '', review_text: '' }] }))}
+                    >
+                      + Add testimonial
+                    </Button>
+                    {design.testimonials.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setDesign((d) => ({ ...d, testimonials: [] }))}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        Clear All
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={saveDesign} disabled={designLoading}>{designLoading ? 'Saving…' : 'Save changes'}</Button>
+                </div>
               </div>
             )}
           </div>
