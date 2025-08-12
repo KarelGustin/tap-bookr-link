@@ -1490,36 +1490,61 @@ export default function Dashboard() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setPreviewKey(prev => prev + 1)}
+                      onClick={() => {
+                        setPreviewKey(prev => prev + 1);
+                        // Force iframe refresh for external domain
+                        const iframes = document.querySelectorAll('iframe[title*="Preview"]');
+                        iframes.forEach(iframe => {
+                          if (iframe instanceof HTMLIFrameElement) {
+                            const currentSrc = iframe.src;
+                            iframe.src = '';
+                            setTimeout(() => {
+                              iframe.src = currentSrc;
+                            }, 100);
+                          }
+                        });
+                      }}
                       className="text-xs"
                     >
                       Refresh Preview
                     </Button>
                   </div>
                   <div className="relative">
-                    {/* Mobile Preview */}
-                    <div className="block lg:hidden">
-                      <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '375px', margin: '0 auto' }}>
-                        <iframe
-                          key={previewKey}
-                          src={`/profile/${profile?.handle}?preview=${previewKey}`}
-                          className="w-full"
-                          style={{ height: '600px' }}
-                          title="Mobile Preview"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Desktop Preview */}
-                    <div className="hidden lg:block">
-                      <div className="bg-white rounded-lg shadow-lg overflow-hidden" style={{ maxWidth: '800px', margin: '0 auto' }}>
-                        <iframe
-                          key={previewKey}
-                          src={`/profile/${profile?.handle}?preview=${previewKey}`}
-                          className="w-full"
-                          style={{ height: '800px' }}
-                          title="Desktop Preview"
-                        />
+                    {/* iPhone Mockup Preview - Always Mobile */}
+                    <div className="flex justify-center">
+                      <div className="relative">
+                        {/* iPhone Frame - iPhone 14 Pro dimensions */}
+                        <div className="relative bg-black rounded-[2.5rem] p-1.5 shadow-2xl">
+                          {/* Screen */}
+                          <div className="bg-white rounded-[2rem] overflow-hidden" style={{ width: '320px', height: '692px' }}>
+                            <iframe
+                              key={previewKey}
+                              src={`https://tapbookr.com/${profile?.handle}?preview=${previewKey}`}
+                              className="w-full h-full"
+                              title="iPhone Preview"
+                              style={{ 
+                                border: 'none',
+                                transform: 'scale(0.8)',
+                                transformOrigin: 'top left',
+                                width: '125%',
+                                height: '125%'
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Home Indicator */}
+                        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-black rounded-full opacity-60"></div>
+                        
+                        {/* Dynamic Island */}
+                        <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-black rounded-b-2xl"></div>
+                        
+                        {/* Volume Buttons */}
+                        <div className="absolute left-0 top-20 w-1 h-8 bg-gray-800 rounded-r-sm"></div>
+                        <div className="absolute left-0 top-32 w-1 h-8 bg-gray-800 rounded-r-sm"></div>
+                        
+                        {/* Power Button */}
+                        <div className="absolute right-0 top-24 w-1 h-12 bg-gray-800 rounded-l-sm"></div>
                       </div>
                     </div>
                   </div>
