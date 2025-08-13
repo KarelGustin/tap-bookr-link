@@ -7,6 +7,7 @@ import { FeaturedIn } from "@/components/marketing/FeaturedIn";
 import { FAQ } from "@/components/marketing/FAQ";
 import { Footer } from "@/components/marketing/Footer";
 import { Pricing } from "@/components/marketing/Pricing";
+import { Analytics } from "@vercel/analytics/react";
 
 const Index = () => {
   return (
@@ -23,7 +24,7 @@ const Index = () => {
         {/* <FeaturedIn /> */}
         <FAQ />
       </main>
-              
+      <Analytics />
       <Footer />
     </div>
   );
