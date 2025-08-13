@@ -103,7 +103,7 @@ export default function Dashboard() {
   // --- Design editor state ---
   const [designLoading, setDesignLoading] = useState(false);
   const [design, setDesign] = useState({
-    bannerType: 'color' as 'color' | 'image',
+            bannerType: 'image' as 'color' | 'image',
     bannerColor: '#6E56CF',
     bannerImageFile: null as File | null,
     avatarFile: null as File | null,
@@ -265,7 +265,7 @@ export default function Dashboard() {
 
     setDesign((d) => ({
       ...d,
-      bannerType: typeof b.imageUrl === 'string' ? 'image' : 'color',
+              bannerType: typeof b.imageUrl === 'string' ? 'image' : 'image', // Default to image, fallback to accent color
       bannerColor: typeof b.color === 'string' ? b.color : profile.accent_color || '#6E56CF',
       bannerHeading: typeof b.heading === 'string' ? b.heading : profile.name || '',
       bannerSubheading: typeof b.subheading === 'string' ? b.subheading : profile.slogan || '',
@@ -1555,7 +1555,7 @@ export default function Dashboard() {
                 {/* 1) Banner */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Banner</h4>
+                    <h4 className="font-medium">Landing Page Banner</h4>
                     <Button onClick={saveBanner} disabled={designLoading} size="sm">
                       {designLoading ? 'Saving…' : 'Save Banner'}
                     </Button>
@@ -1576,6 +1576,9 @@ export default function Dashboard() {
                       Use image
                     </Button>
                   </div>
+                  <p className="text-sm text-gray-500">
+                    Image is selected by default. If no image is uploaded, the TapBookr accent color will be used as a fallback.
+                  </p>
 
                   {/* Banner Content */}
                   <div className="space-y-3">

@@ -12,7 +12,20 @@ import { Step1Handle } from '@/components/onboarding/steps/Step1Handle';
 import { Step2Booking } from '@/components/onboarding/steps/Step2Booking';
 import { Step3Branding } from '@/components/onboarding/steps/Step3Branding';
 import { Step4Extras } from '@/components/onboarding/steps/Step4Extras';
-import { Step5Preview } from '@/components/onboarding/steps/Step5Preview';
+import { Step4PersonalImage } from '@/components/onboarding/steps/Step4PersonalImage';
+import { Step5SocialTestimonials } from '@/components/onboarding/steps/Step5SocialTestimonials';
+import { Step6Footer } from '@/components/onboarding/steps/Step6Footer';
+import { Step7Preview } from '@/components/onboarding/steps/Step7Preview';
+
+interface BusinessHours {
+  monday: { open: string; close: string; closed: boolean };
+  tuesday: { open: string; close: string; closed: boolean };
+  wednesday: { open: string; close: string; closed: boolean };
+  thursday: { open: string; close: string; closed: boolean };
+  friday: { open: string; close: string; closed: boolean };
+  saturday: { open: string; close: string; closed: boolean };
+  sunday: { open: string; close: string; closed: boolean };
+}
 
 interface OnboardingData {
   // Step 1
@@ -24,24 +37,28 @@ interface OnboardingData {
   bookingUrl: string;
   bookingMode: 'embed' | 'new_tab';
   
-  // Step 3
+  // Step 3 - Enhanced Branding
   name?: string;
   slogan?: string;
   avatarFile?: File;
-  avatar_url?: string; // Add this for existing avatar URLs
+  avatar_url?: string;
   bannerType: 'color' | 'image';
   bannerColor?: string;
   bannerFile?: File;
-  banner?: { // Add this for existing banner data
+  banner?: {
     type?: 'color' | 'image';
     color?: string;
     imageUrl?: string;
+    heading?: string;
+    subheading?: string;
+    textColor?: string;
   };
   category?: string;
   
-  // Step 4
+  // Step 4 - Enhanced About & Media
   aboutTitle?: string;
   aboutDescription?: string;
+  aboutAlignment?: 'center' | 'left';
   aboutPhotoFile?: File;
   socials: {
     instagram?: string;
@@ -51,6 +68,34 @@ interface OnboardingData {
     whatsapp?: string;
   };
   mediaFiles: File[];
+  
+  // Step 5 - Enhanced Social & Testimonials
+  socialLinks: Array<{
+    id: string;
+    title: string;
+    platform?: string;
+    url: string;
+  }>;
+  testimonials: Array<{
+    customer_name: string;
+    review_title: string;
+    review_text: string;
+    image_url?: string;
+    _file?: File;
+  }>;
+  
+  // Step 6 - Footer & Advanced Settings
+  footerBusinessName?: string;
+  footerAddress?: string;
+  footerEmail?: string;
+  footerPhone?: string;
+  footerHours?: BusinessHours;
+  footerNextAvailable?: string;
+  footerCancellationPolicy?: string;
+  footerPrivacyPolicy?: string;
+  footerTermsOfService?: string;
+  footerShowMaps?: boolean;
+  footerShowAttribution?: boolean;
   
   // Profile ID for updates
   profileId?: string;
@@ -63,9 +108,11 @@ export default function Onboarding() {
     isBusiness: false,
     bookingUrl: '',
     bookingMode: 'embed',
-    bannerType: 'color',
+    bannerType: 'image',
     socials: {},
     mediaFiles: [],
+    socialLinks: [],
+    testimonials: [],
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const { user } = useAuth();
@@ -383,18 +430,37 @@ export default function Onboarding() {
         accent_color: '#6E56CF',
         theme_mode: 'light',
         banner: {
-          type: data.bannerType || 'color',
-          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : undefined,
+          type: data.bannerType || 'image',
+          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
           imageUrl: data.bannerType === 'image' ? bannerUrl : undefined,
+          heading: data.banner?.heading || data.name,
+          subheading: data.banner?.subheading || data.slogan,
+          textColor: data.banner?.textColor || '#ffffff',
         },
         about: {
           title: data.aboutTitle,
           description: data.aboutDescription,
+          alignment: data.aboutAlignment || 'center',
           photoUrl: aboutPhotoUrl,
         },
         socials: data.socials || {},
+        socialLinks: data.socialLinks || [],
         media: {
           items: mediaUrls.map(url => ({ url, kind: 'image' })),
+        },
+        testimonials: data.testimonials || [],
+        footer: {
+          businessName: data.footerBusinessName,
+          address: data.footerAddress,
+          email: data.footerEmail,
+          phone: data.footerPhone,
+          hours: data.footerHours,
+          nextAvailable: data.footerNextAvailable,
+          cancellationPolicy: data.footerCancellationPolicy,
+          privacyPolicy: data.footerPrivacyPolicy,
+          termsOfService: data.footerTermsOfService,
+          showMaps: data.footerShowMaps,
+          showAttribution: data.footerShowAttribution,
         },
         contact: {
           // Add contact information if available
@@ -548,20 +614,103 @@ export default function Onboarding() {
     console.log('Updated onboarding data:', updatedData);
     setOnboardingData(updatedData);
 
-    // Create draft profile to lock handle
-    console.log('Attempting to save profile data...');
-    const profileId = await saveProfileData(updatedData, 'draft');
-    console.log('Profile save result:', profileId);
-    
-    if (profileId) {
-      console.log('Profile saved successfully, updating step...');
-      setOnboardingData(prev => ({ ...prev, profileId }));
-      updateStep(2);
-    } else {
-      console.log('Profile save failed');
+    try {
+      // First, check if user already has a profile
+      const { data: existingProfile, error: findError } = await supabase
+        .from('profiles')
+        .select('id, handle')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+
+      if (findError) {
+        console.error('Error finding existing profile:', findError);
+        toast({
+          title: "Error",
+          description: "Unable to check existing profile. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let profileId: string | null = null;
+
+      if (existingProfile) {
+        // Update existing profile
+        console.log('Updating existing profile with new handle...');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            handle: data.handle.toLowerCase(),
+            status: 'draft',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingProfile.id);
+
+        if (updateError) {
+          console.error('Update error:', updateError);
+          toast({
+            title: "Update Failed",
+            description: "Failed to update your profile. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        profileId = existingProfile.id;
+      } else {
+        // Create new profile
+        console.log('Creating new profile...');
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user?.id,
+            handle: data.handle.toLowerCase(),
+            status: 'draft',
+            accent_color: '#6E56CF',
+            theme_mode: 'light',
+            banner: {
+              type: 'image',
+              color: 'hsl(var(--accent))'
+            },
+            about: {},
+            socials: {},
+            media: { items: [] },
+            contact: { email: user?.email }
+          })
+          .select('id')
+          .single();
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          
+          // If it's a duplicate handle error, show specific message
+          if (insertError.code === '23505' && insertError.message.includes('handle')) {
+            toast({
+              title: "Handle Already Taken",
+              description: "This handle is already taken. Please choose a different one.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Creation Failed",
+              description: "Failed to create your profile. Please try again.",
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+        profileId = newProfile.id;
+      }
+
+      if (profileId) {
+        console.log('Profile saved successfully, updating step...');
+        setOnboardingData(prev => ({ ...prev, profileId }));
+        updateStep(2);
+      }
+    } catch (error) {
+      console.error('Handle step error:', error);
       toast({
-        title: "Save Failed",
-        description: "Failed to save your profile. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -573,52 +722,210 @@ export default function Onboarding() {
     console.log('Updated onboarding data after Step 2:', updatedData);
     setOnboardingData(updatedData);
     
-    // Save progress - this will overwrite any existing booking URL
-    console.log('Saving Step 2 data to database...');
-    const profileId = await saveProfileData(updatedData, 'draft');
-    if (profileId) {
-      console.log('Step 2 data saved successfully, profile ID:', profileId);
-      setOnboardingData(prev => ({ ...prev, profileId }));
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 2');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Saving Step 2 data to database...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          booking_url: data.bookingUrl,
+          booking_mode: data.bookingMode,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', onboardingData.profileId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your booking information. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Step 2 data saved successfully');
       updateStep(3);
-    } else {
-      console.log('Step 2 save failed');
+    } catch (error) {
+      console.error('Step 2 save error:', error);
       toast({
-        title: "Save Failed",
-        description: "Failed to save your booking information. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const handleStep3 = async (data: {
-    name?: string;
+    businessName?: string;
     slogan?: string;
-    avatarFile?: File;
+    category?: string;
     bannerType: 'color' | 'image';
     bannerColor?: string;
     bannerFile?: File;
-    category?: string;
+    bannerTextColor?: string;
   }) => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save progress
-    const profileId = await saveProfileData(updatedData, 'draft');
-    if (profileId) {
-      setOnboardingData(prev => ({ ...prev, profileId }));
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 3');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle file uploads first
+      let bannerUrl: string | undefined;
+
+      if (data.bannerFile) {
+        console.log('Uploading banner file...');
+        bannerUrl = await uploadFile(data.bannerFile, 'media') || undefined;
+      }
+
+      // Prepare update data
+      const updateData: {
+        name?: string;
+        slogan?: string;
+        category?: string;
+        banner?: {
+          type: 'color' | 'image';
+          color: string;
+          imageUrl?: string;
+          heading?: string;
+          subheading?: string;
+          textColor?: string;
+        };
+        updated_at: string;
+      } = {
+        name: data.businessName,
+        slogan: data.slogan,
+        category: data.category,
+        updated_at: new Date().toISOString()
+      };
+
+      if (bannerUrl) {
+        updateData.banner = {
+          type: data.bannerType,
+          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
+          imageUrl: data.bannerType === 'image' ? bannerUrl : undefined,
+          heading: data.businessName,
+          subheading: data.slogan,
+          textColor: data.bannerTextColor || '#ffffff'
+        };
+      } else {
+        updateData.banner = {
+          type: data.bannerType,
+          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
+          heading: data.businessName,
+          subheading: data.slogan,
+          textColor: data.bannerTextColor || '#ffffff'
+        };
+      }
+
+      console.log('Saving Step 3 data to database...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', onboardingData.profileId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your branding information. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Step 3 data saved successfully');
       updateStep(4);
-    } else {
+    } catch (error) {
+      console.error('Step 3 save error:', error);
       toast({
-        title: "Save Failed",
-        description: "Failed to save your branding information. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const handleStep4 = async (data: {
+  const handleStep4 = async (data: { 
+    avatarFile?: File;
+  }) => {
+    const updatedData = { ...onboardingData, ...data };
+    setOnboardingData(updatedData);
+    
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 4');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle avatar file upload
+      let avatarUrl: string | undefined;
+
+      if (data.avatarFile) {
+        console.log('Uploading avatar file...');
+        avatarUrl = await uploadFile(data.avatarFile, 'avatars') || undefined;
+      }
+
+      if (avatarUrl) {
+        console.log('Saving Step 4 data to database...');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            avatar_url: avatarUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', onboardingData.profileId);
+
+        if (updateError) {
+          console.error('Update error:', updateError);
+          toast({
+            title: "Save Failed",
+            description: "Failed to save your personal image. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      console.log('Step 4 data saved successfully');
+      updateStep(5);
+    } catch (error) {
+      console.error('Step 4 save error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStep5 = async (data: {
     aboutTitle?: string;
     aboutDescription?: string;
+    aboutAlignment?: 'center' | 'left';
     aboutPhotoFile?: File;
     socials: OnboardingData['socials'];
     mediaFiles: File[];
@@ -626,15 +933,270 @@ export default function Onboarding() {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save progress
-    const profileId = await saveProfileData(updatedData, 'draft');
-    if (profileId) {
-      setOnboardingData(prev => ({ ...prev, profileId }));
-      updateStep(5);
-    } else {
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 4');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle file uploads first
+      let aboutPhotoUrl: string | undefined;
+      const mediaUrls: string[] = [];
+
+      if (data.aboutPhotoFile) {
+        console.log('Uploading about photo file...');
+        aboutPhotoUrl = await uploadFile(data.aboutPhotoFile, 'media') || undefined;
+      }
+
+      if (data.mediaFiles) {
+        console.log('Uploading media files...');
+        for (const file of data.mediaFiles) {
+          const url = await uploadFile(file, 'media');
+          if (url) mediaUrls.push(url);
+        }
+      }
+
+      // Prepare update data - merge with existing data
+      const updateData: {
+        about: {
+          title?: string;
+          description?: string;
+          alignment?: 'center' | 'left';
+          photoUrl?: string;
+        };
+        socials: OnboardingData['socials'];
+        media: { items: { url: string; kind: string }[] };
+        updated_at: string;
+      } = {
+        about: {
+          title: data.aboutTitle,
+          description: data.aboutDescription,
+          alignment: data.aboutAlignment || 'center',
+          photoUrl: aboutPhotoUrl
+        },
+        socials: data.socials,
+        media: {
+          items: mediaUrls.map(url => ({ url, kind: 'image' }))
+        },
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving Step 5 data to database...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', onboardingData.profileId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your additional information. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Step 5 data saved successfully');
+      updateStep(6);
+    } catch (error) {
+      console.error('Step 4 save error:', error);
       toast({
-        title: "Save Failed",
-        description: "Failed to save your additional information. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStep6 = async (data: {
+    socialLinks: OnboardingData['socialLinks'];
+    testimonials: OnboardingData['testimonials'];
+  }) => {
+    const updatedData = { ...onboardingData, ...data };
+    setOnboardingData(updatedData);
+    
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 6');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle testimonial image uploads first
+      const updatedTestimonials = [...data.testimonials];
+      for (let i = 0; i < updatedTestimonials.length; i++) {
+        const testimonial = updatedTestimonials[i];
+        if (testimonial._file) {
+          console.log(`Uploading testimonial image ${i + 1}...`);
+          const imageUrl = await uploadFile(testimonial._file, 'media') || undefined;
+          if (imageUrl) {
+            updatedTestimonials[i] = {
+              ...testimonial,
+              image_url: imageUrl,
+              _file: undefined // Remove the file object as it's no longer needed
+            };
+          }
+        }
+      }
+
+      // Get existing profile data to merge with
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('about, socials')
+        .eq('id', onboardingData.profileId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching existing profile:', fetchError);
+        toast({
+          title: "Error",
+          description: "Failed to load existing profile data. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Merge existing data with new data
+      const existingAbout = existingProfile.about || {};
+      const existingSocials = existingProfile.socials || {};
+
+      const updateData: {
+        socials: any;
+        about: any;
+        updated_at: string;
+      } = {
+        socials: {
+          ...existingSocials,
+          socialLinks: data.socialLinks
+        },
+        about: {
+          ...existingAbout,
+          testimonials: updatedTestimonials
+        },
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving Step 6 data to database...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', onboardingData.profileId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your social links and testimonials. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Step 6 data saved successfully');
+      updateStep(7);
+    } catch (error) {
+      console.error('Step 6 save error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStep7 = async (data: {
+    footerBusinessName?: string;
+    footerAddress?: string;
+    footerEmail?: string;
+    footerPhone?: string;
+    footerHours?: string;
+    footerNextAvailable?: string;
+    footerCancellationPolicy?: string;
+    footerPrivacyPolicy?: string;
+    footerTermsOfService?: string;
+    footerShowMaps?: boolean;
+    footerShowAttribution?: boolean;
+  }) => {
+    const updatedData = { ...onboardingData, ...data };
+    setOnboardingData(updatedData);
+    
+    try {
+      if (!onboardingData.profileId) {
+        console.error('No profile ID found for Step 6');
+        toast({
+          title: "Error",
+          description: "Profile not found. Please go back to Step 1.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Prepare update data
+      const updateData: {
+        footer: {
+          businessName?: string;
+          address?: string;
+          email?: string;
+          phone?: string;
+          hours?: string;
+          nextAvailable?: string;
+          cancellationPolicy?: string;
+          privacyPolicy?: string;
+          termsOfService?: string;
+          showMaps?: boolean;
+          showAttribution?: boolean;
+        };
+        updated_at: string;
+      } = {
+        footer: {
+          businessName: data.footerBusinessName,
+          address: data.footerAddress,
+          email: data.footerEmail,
+          phone: data.footerPhone,
+          hours: data.footerHours,
+          nextAvailable: data.footerNextAvailable,
+          cancellationPolicy: data.footerCancellationPolicy,
+          privacyPolicy: data.footerPrivacyPolicy,
+          termsOfService: data.footerTermsOfService,
+          showMaps: data.footerShowMaps,
+          showAttribution: data.footerShowAttribution
+        },
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Saving Step 7 data to database...');
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', onboardingData.profileId);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        toast({
+          title: "Save Failed",
+          description: "Failed to save your footer settings. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Step 7 data saved successfully');
+      updateStep(8);
+    } catch (error) {
+      console.error('Step 6 save error:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
@@ -723,9 +1285,7 @@ export default function Onboarding() {
     }
   };
 
-  const skipToStep5 = () => {
-    updateStep(5);
-  };
+
 
   // Determine if profile can be published
   const canPublish = () => {
@@ -806,13 +1366,24 @@ export default function Onboarding() {
     
     case 4:
       return (
-        <Step4Extras 
+        <Step4PersonalImage 
           onNext={handleStep4} 
           onBack={goBack}
-          onSkip={skipToStep5}
+          existingData={{
+            avatar_url: onboardingData.avatar_url,
+          }}
+        />
+      );
+    
+    case 5:
+      return (
+        <Step4Extras 
+          onNext={handleStep5} 
+          onBack={goBack}
           existingData={{
             aboutTitle: onboardingData.aboutTitle,
             aboutDescription: onboardingData.aboutDescription,
+            aboutAlignment: onboardingData.aboutAlignment,
             aboutPhotoFile: onboardingData.aboutPhotoFile,
             socials: onboardingData.socials,
             mediaFiles: onboardingData.mediaFiles,
@@ -820,9 +1391,42 @@ export default function Onboarding() {
         />
       );
     
-    case 5:
+    case 6:
       return (
-        <Step5Preview 
+        <Step5SocialTestimonials 
+          onNext={handleStep6} 
+          onBack={goBack}
+          existingData={{
+            socialLinks: onboardingData.socialLinks,
+            testimonials: onboardingData.testimonials,
+          }}
+        />
+      );
+    
+    case 7:
+      return (
+        <Step6Footer 
+          onNext={handleStep7} 
+          onBack={goBack}
+          existingData={{
+            footerBusinessName: onboardingData.footerBusinessName,
+            footerAddress: onboardingData.footerAddress,
+            footerEmail: onboardingData.footerEmail,
+            footerPhone: onboardingData.footerPhone,
+            footerHours: onboardingData.footerHours,
+            footerNextAvailable: onboardingData.footerNextAvailable,
+            footerCancellationPolicy: onboardingData.footerCancellationPolicy,
+            footerPrivacyPolicy: onboardingData.footerPrivacyPolicy,
+            footerTermsOfService: onboardingData.footerTermsOfService,
+            footerShowMaps: onboardingData.footerShowMaps,
+            footerShowAttribution: onboardingData.footerShowAttribution,
+          }}
+        />
+      );
+    
+    case 8:
+      return (
+        <Step7Preview 
           onPublish={handlePublish}
           onSaveDraft={handleSaveDraft}
           onEditPage={handleEditPage}
@@ -836,8 +1440,24 @@ export default function Onboarding() {
             banner: onboardingData.banner || {},
             aboutTitle: onboardingData.aboutTitle || '',
             aboutDescription: onboardingData.aboutDescription || '',
+            aboutAlignment: onboardingData.aboutAlignment || 'center',
             socials: onboardingData.socials || {},
+            socialLinks: onboardingData.socialLinks || [],
             mediaFiles: onboardingData.mediaFiles || [],
+            testimonials: onboardingData.testimonials || [],
+            footer: {
+              businessName: onboardingData.footerBusinessName,
+              address: onboardingData.footerAddress,
+              email: onboardingData.footerEmail,
+              phone: onboardingData.footerPhone,
+              hours: onboardingData.footerHours,
+              nextAvailable: onboardingData.footerNextAvailable,
+              cancellationPolicy: onboardingData.footerCancellationPolicy,
+              privacyPolicy: onboardingData.footerPrivacyPolicy,
+              termsOfService: onboardingData.footerTermsOfService,
+              showMaps: onboardingData.footerShowMaps,
+              showAttribution: onboardingData.footerShowAttribution,
+            },
             bookingUrl: onboardingData.bookingUrl || '',
             bookingMode: onboardingData.bookingMode || 'embed',
           }}

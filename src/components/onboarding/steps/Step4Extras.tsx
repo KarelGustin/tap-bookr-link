@@ -10,6 +10,7 @@ interface Step4ExtrasProps {
   onNext: (data: {
     aboutTitle?: string;
     aboutDescription?: string;
+    aboutAlignment?: 'center' | 'left';
     aboutPhotoFile?: File;
     socials: {
       instagram?: string;
@@ -21,10 +22,10 @@ interface Step4ExtrasProps {
     mediaFiles: File[];
   }) => void;
   onBack: () => void;
-  onSkip: () => void;
   existingData?: {
     aboutTitle?: string;
     aboutDescription?: string;
+    aboutAlignment?: 'center' | 'left';
     aboutPhotoFile?: File;
     socials?: {
       instagram?: string;
@@ -37,9 +38,10 @@ interface Step4ExtrasProps {
   };
 }
 
-export const Step4Extras = ({ onNext, onBack, onSkip, existingData }: Step4ExtrasProps) => {
+export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) => {
   const [aboutTitle, setAboutTitle] = useState(existingData?.aboutTitle || '');
   const [aboutDescription, setAboutDescription] = useState(existingData?.aboutDescription || '');
+  const [aboutAlignment, setAboutAlignment] = useState<'center' | 'left'>(existingData?.aboutAlignment || 'center');
   const [aboutPhotoFile, setAboutPhotoFile] = useState<File | null>(existingData?.aboutPhotoFile || null);
   const [aboutPhotoPreview, setAboutPhotoPreview] = useState<string | null>(null);
   const [socials, setSocials] = useState({
@@ -143,6 +145,7 @@ export const Step4Extras = ({ onNext, onBack, onSkip, existingData }: Step4Extra
     onNext({
       aboutTitle: aboutTitle.trim() || undefined,
       aboutDescription: aboutDescription.trim() || undefined,
+      aboutAlignment,
       aboutPhotoFile: aboutPhotoFile || undefined,
       socials: Object.fromEntries(
         Object.entries(socials).filter(([_, value]) => value.trim())
@@ -162,12 +165,10 @@ export const Step4Extras = ({ onNext, onBack, onSkip, existingData }: Step4Extra
   return (
     <OnboardingLayout
       currentStep={4}
-      totalSteps={5}
+      totalSteps={7}
       title={existingData?.aboutTitle || existingData?.socials ? "Your extras" : "Optional extras"}
       subtitle={existingData?.aboutTitle || existingData?.socials ? "Your additional information is saved." : "Add more details to make your page stand out."}
       onBack={onBack}
-      onSkip={onSkip}
-      canSkip={true}
     >
       <div className="space-y-8">
         {/* About section */}
@@ -212,32 +213,19 @@ export const Step4Extras = ({ onNext, onBack, onSkip, existingData }: Step4Extra
           </div>
 
           <div className="space-y-2">
-            <Label className="text-base font-medium">Portrait Photo</Label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                {aboutPhotoPreview ? (
-                  <img src={aboutPhotoPreview} alt="About photo preview" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-6 h-6 text-muted-foreground" />
-                )}
-              </div>
+            <Label className="text-base font-medium">Text Alignment</Label>
+            <div className="flex gap-2">
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => aboutPhotoInputRef.current?.click()}
-                className="h-10"
+                variant={aboutAlignment === 'center' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setAboutAlignment('center')}
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Photo
+                Center
               </Button>
-              <input
-                ref={aboutPhotoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAboutPhotoChange}
-                className="hidden"
-              />
+             
             </div>
+            
           </div>
         </div>
 
@@ -280,7 +268,7 @@ export const Step4Extras = ({ onNext, onBack, onSkip, existingData }: Step4Extra
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Show your best work with up to 6 photos or videos. The first image will be featured prominently.
+            Upload 6 of your best images to show your work and what you do.
           </p>
 
           {mediaPreviews.length > 0 && (

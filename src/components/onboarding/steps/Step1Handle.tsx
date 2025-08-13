@@ -274,7 +274,7 @@ export const Step1Handle = ({ onNext, existingData }: Step1HandleProps) => {
   return (
     <OnboardingLayout
       currentStep={1}
-      totalSteps={5}
+      totalSteps={7}
       title={isHandleLocked ? "Your Bookr handle" : "Claim your Bookr handle"}
       subtitle={isHandleLocked ? "Your handle is already claimed and locked." : "Takes less than 3 minutes."}
     >

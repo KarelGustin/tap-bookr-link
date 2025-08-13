@@ -4,28 +4,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OnboardingLayout } from '../OnboardingLayout';
-import { Upload, User } from 'lucide-react';
+import { Upload } from 'lucide-react';
 
 interface Step3BrandingProps {
   onNext: (data: { 
-    name?: string; 
+    businessName?: string; 
     slogan?: string; 
-    avatarFile?: File; 
+    category?: string;
     bannerType: 'color' | 'image';
     bannerColor?: string;
     bannerFile?: File;
-    category?: string;
+    bannerTextColor?: string;
   }) => void;
   onBack: () => void;
   requiresName: boolean;
   existingData?: {
     name?: string;
     slogan?: string;
-    avatar_url?: string;
     banner?: {
       type?: 'color' | 'image';
       color?: string;
       imageUrl?: string;
+      textColor?: string;
     };
     category?: string;
   };
@@ -51,25 +51,19 @@ const brandColors = [
 ];
 
 export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: Step3BrandingProps) => {
-  const [name, setName] = useState(existingData?.name || '');
+  const [businessName, setBusinessName] = useState(existingData?.name || '');
   const [slogan, setSlogan] = useState(existingData?.slogan || '');
   const [category, setCategory] = useState(existingData?.category || '');
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerType, setBannerType] = useState<'color' | 'image'>(existingData?.banner?.type || 'color');
   const [bannerColor, setBannerColor] = useState(existingData?.banner?.color || brandColors[0]);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(existingData?.avatar_url || null);
+  const [bannerTextColor, setBannerTextColor] = useState(existingData?.banner?.textColor || '#ffffff');
   const [bannerPreview, setBannerPreview] = useState<string | null>(existingData?.banner?.imageUrl || null);
 
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Update previews when existing data changes
   useEffect(() => {
-    if (existingData?.avatar_url) {
-      setAvatarPreview(existingData.avatar_url);
-      console.log('Updated avatar preview with existing data:', existingData.avatar_url);
-    }
     if (existingData?.banner?.imageUrl) {
       setBannerPreview(existingData.banner.imageUrl);
       console.log('Updated banner preview with existing data:', existingData.banner.imageUrl);
@@ -77,7 +71,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
     
     // Also update other fields when existing data changes
     if (existingData?.name) {
-      setName(existingData.name);
+      setBusinessName(existingData.name);
     }
     if (existingData?.slogan) {
       setSlogan(existingData.slogan);
@@ -91,79 +85,72 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
     if (existingData?.banner?.color) {
       setBannerColor(existingData.banner.color);
     }
-  }, [existingData]);
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setAvatarPreview(reader.result as string);
-      reader.readAsDataURL(file);
+    if (existingData?.banner?.textColor) {
+      setBannerTextColor(existingData.banner.textColor);
     }
-  };
+  }, [existingData]);
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setBannerFile(file);
       const reader = new FileReader();
-      reader.onload = () => setBannerPreview(reader.result as string);
+      reader.onload = (e) => {
+        setBannerPreview(e.target?.result as string);
+      };
       reader.readAsDataURL(file);
     }
   };
 
   const handleSubmit = () => {
-    if (requiresName && !name.trim()) {
+    if (requiresName && !businessName.trim()) {
       return;
     }
 
     onNext({
-      name: name.trim() || undefined,
+      businessName: businessName.trim() || undefined,
       slogan: slogan.trim() || undefined,
-      avatarFile: avatarFile || undefined,
+      category: category || undefined,
       bannerType,
       bannerColor: bannerType === 'color' ? bannerColor : undefined,
       bannerFile: bannerType === 'image' ? bannerFile || undefined : undefined,
-      category: category || undefined,
+      bannerTextColor
     });
   };
 
-  const canContinue = !requiresName || name.trim().length >= 2;
+  const canContinue = !requiresName || businessName.trim().length >= 2;
 
   return (
     <OnboardingLayout
       currentStep={3}
-      totalSteps={5}
-      title="Make it yours"
-      subtitle="Add your personal touch with just a few details."
+      totalSteps={7}
+      title="Banner & Branding"
+      subtitle="Customize your banner and business identity."
       onBack={onBack}
     >
       <div className="space-y-6">
-        {/* Name */}
+        {/* Business Name */}
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-base font-medium">
-            {requiresName ? 'Business Name *' : 'Name'}
+          <Label htmlFor="businessName" className="text-base font-medium">
+            Business Name *
           </Label>
           <Input
-            id="name"
+            id="businessName"
             placeholder="Glow Brow Studio"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
             className="rounded-lg h-12"
             maxLength={60}
           />
-          {requiresName && (
-            <p className="text-sm text-muted-foreground">
-              Required for business profiles
-            </p>
-          )}
+          <p className="text-sm text-muted-foreground">
+            This will be displayed prominently on your banner and throughout your page
+          </p>
         </div>
 
         {/* Slogan */}
         <div className="space-y-2">
           <Label htmlFor="slogan" className="text-base font-medium">
-            Professional Slogan
+            Business Slogan
           </Label>
           <Input
             id="slogan"
@@ -174,59 +161,38 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
             maxLength={80}
           />
           <p className="text-sm text-muted-foreground">
-            {slogan.length}/80 characters
+            A short, memorable phrase that describes your business
           </p>
         </div>
 
-        {/* Avatar upload */}
+        {/* Category */}
         <div className="space-y-2">
-          <Label className="text-base font-medium">Avatar/Logo</Label>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-6 h-6 text-muted-foreground" />
-              )}
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => avatarInputRef.current?.click()}
-                className="h-10"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {avatarPreview ? 'Change Photo' : 'Upload Photo'}
-              </Button>
-              {avatarPreview && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setAvatarPreview(null);
-                    setAvatarFile(null);
-                  }}
-                  className="h-8 text-sm text-muted-foreground hover:text-destructive"
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
-          </div>
+          <Label htmlFor="category" className="text-base font-medium">
+            Business Category
+          </Label>
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="rounded-lg h-12">
+              <SelectValue placeholder="Select your business type" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">
+            Helps customers find and understand your business
+          </p>
         </div>
 
         {/* Banner */}
         <div className="space-y-4">
-          <Label className="text-base font-medium">Banner</Label>
+          <Label className="text-base font-medium">Banner Background</Label>
+          <p className="text-sm text-muted-foreground">
+            Choose between a solid color or upload an image for your banner background
+          </p>
           
           {/* Banner type selection */}
           <div className="flex gap-2">
@@ -236,7 +202,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
               onClick={() => setBannerType('color')}
               className="flex-1"
             >
-              Color
+              Solid Color
             </Button>
             <Button
               type="button"
@@ -244,23 +210,26 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
               onClick={() => setBannerType('image')}
               className="flex-1"
             >
-              Image
+              Background Image
             </Button>
           </div>
 
           {bannerType === 'color' ? (
-            <div className="grid grid-cols-6 gap-2">
-              {brandColors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => setBannerColor(color)}
-                  className={`w-10 h-10 rounded-lg border-2 ${
-                    bannerColor === color ? 'border-foreground' : 'border-transparent'
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Choose a color:</Label>
+              <div className="grid grid-cols-6 gap-2">
+                {brandColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setBannerColor(color)}
+                    className={`w-10 h-10 rounded-lg border-2 ${
+                      bannerColor === color ? 'border-foreground' : 'border-transparent'
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -281,7 +250,8 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
                   onClick={() => bannerInputRef.current?.click()}
                   className="flex-1"
                 >
-                  {bannerPreview ? 'Change Image' : 'Choose Image'}
+                  <Upload className="w-4 h-4 mr-2" />
+                  {bannerPreview ? 'Change Image' : 'Upload Image'}
                 </Button>
                 {bannerPreview && (
                   <Button
@@ -292,7 +262,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
                       setBannerPreview(null);
                       setBannerFile(null);
                     }}
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-8 text-sm text-muted-foreground hover:text-destructive"
                   >
                     Remove
                   </Button>
@@ -309,86 +279,28 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
           )}
         </div>
 
-        {/* Category */}
+        {/* Banner Text Color */}
         <div className="space-y-2">
-          <Label className="text-base font-medium">Category</Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-12 rounded-lg">
-              <SelectValue placeholder="Select your profession" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Mobile Preview */}
-        {(avatarPreview || bannerPreview || bannerColor || name || slogan) && (
-          <div className="space-y-3">
-            <Label className="text-base font-medium">
-              Preview of your public page
-            </Label>
-            <div className="border rounded-lg overflow-hidden bg-white">
-              <div className="bg-gray-100 p-3 border-b">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div className="text-xs text-gray-600">tapBookr.com/yourhandle</div>
-                </div>
-              </div>
-              
-              {/* Banner */}
-              <div className="relative">
-                <div 
-                  className="h-20 w-full"
-                  style={{ 
-                    backgroundColor: bannerType === 'color' ? bannerColor : 'transparent',
-                    backgroundImage: bannerType === 'image' && bannerPreview ? `url(${bannerPreview})` : 'none',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
-                  }}
-                />
-                {/* Curved bottom edge */}
-                <div className="absolute bottom-0 left-0 right-0 h-6 bg-white" style={{
-                  clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%)',
-                  borderRadius: '50% 50% 0 0 / 100% 100% 0 0'
-                }}></div>
-              </div>
-              
-              {/* Content */}
-              <div className="p-4 space-y-4">
-                <div className="text-center space-y-2 -mt-12">
-                  <div className="w-16 h-16 rounded-full mx-auto border-4 border-white overflow-hidden relative z-10">
-                    {avatarPreview ? (
-                      <img src={avatarPreview} alt="Avatar preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <User className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                  <h1 className="text-lg font-semibold">{name || 'Your Business Name'}</h1>
-                  <p className="text-sm text-gray-600">{slogan || 'Your business slogan'}</p>
-                  {category && (
-                    <span className="inline-block px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded">
-                      {category}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              This is how your public page will look to visitors
-            </p>
+          <Label htmlFor="bannerTextColor" className="text-base font-medium">
+            Banner Text Color
+          </Label>
+          <div className="grid grid-cols-6 gap-2">
+            {['#ffffff', '#000000', '#f3f4f6', '#1f2937', '#ef4444', '#10b981'].map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => setBannerTextColor(color)}
+                className={`w-10 h-10 rounded-lg border-2 ${
+                  bannerTextColor === color ? 'border-foreground' : 'border-transparent'
+                }`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
           </div>
-        )}
+          <p className="text-sm text-muted-foreground">
+            Choose a color that ensures your text is readable on your banner background
+          </p>
+        </div>
 
         {/* Continue button */}
         <Button 
@@ -399,16 +311,6 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
         >
           Continue
         </Button>
-        
-        {requiresName && !name.trim() && (
-          <p className="text-center text-sm text-orange-600">
-            Business name is required to continue
-          </p>
-        )}
-        
-        <p className="text-center text-sm text-muted-foreground">
-          You can change this later in Edit Page.
-        </p>
       </div>
     </OnboardingLayout>
   );
