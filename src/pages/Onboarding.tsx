@@ -16,6 +16,7 @@ import { Step4PersonalImage } from '@/components/onboarding/steps/Step4PersonalI
 import { Step5SocialTestimonials } from '@/components/onboarding/steps/Step5SocialTestimonials';
 import { Step6Footer } from '@/components/onboarding/steps/Step6Footer';
 import { Step7Preview } from '@/components/onboarding/steps/Step7Preview';
+import { Json } from '@/integrations/supabase/types';
 
 interface BusinessHours {
   monday: { open: string; close: string; closed: boolean };
@@ -25,6 +26,7 @@ interface BusinessHours {
   friday: { open: string; close: string; closed: boolean };
   saturday: { open: string; close: string; closed: boolean };
   sunday: { open: string; close: string; closed: boolean };
+  [key: string]: { open: string; close: string; closed: boolean };
 }
 
 interface OnboardingData {
@@ -34,8 +36,10 @@ interface OnboardingData {
   isBusiness: boolean;
   
   // Step 2
-  bookingUrl: string;
-  bookingMode: 'embed' | 'new_tab';
+  bookingUrl?: string;
+  bookingMode?: 'embed' | 'new_tab';
+  useWhatsApp?: boolean;
+  whatsappNumber?: string;
   
   // Step 3 - Enhanced Branding
   name?: string;
@@ -68,6 +72,14 @@ interface OnboardingData {
     whatsapp?: string;
   };
   mediaFiles: File[];
+  media?: {
+    items: Array<{
+      id: string;
+      url: string;
+      type: string;
+      order: number;
+    }>;
+  };
   
   // Step 5 - Enhanced Social & Testimonials
   socialLinks: Array<{
@@ -108,6 +120,8 @@ export default function Onboarding() {
     isBusiness: false,
     bookingUrl: '',
     bookingMode: 'embed',
+    useWhatsApp: false,
+    whatsappNumber: '',
     bannerType: 'image',
     socials: {},
     mediaFiles: [],
@@ -149,11 +163,27 @@ export default function Onboarding() {
             category: existingProfile.category || prev.category,
             bookingUrl: existingProfile.booking_url || prev.bookingUrl,
             bookingMode: (existingProfile.booking_mode as 'embed' | 'new_tab') || prev.bookingMode,
+            useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
+            whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
+            media: existingProfile.media as OnboardingData['media'] || prev.media,
+            // Load footer data
+            footerBusinessName: existingProfile.footer && typeof existingProfile.footer === 'object' && 'businessName' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).businessName as string : prev.footerBusinessName,
+            footerAddress: existingProfile.footer && typeof existingProfile.footer === 'object' && 'address' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).address as string : prev.footerAddress,
+            footerEmail: existingProfile.footer && typeof existingProfile.footer === 'object' && 'email' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).email as string : prev.footerEmail,
+            footerPhone: existingProfile.footer && typeof existingProfile.footer === 'object' && 'phone' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).phone as string : prev.footerPhone,
+            footerHours: existingProfile.footer && typeof existingProfile.footer === 'object' && 'hours' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).hours as BusinessHours : prev.footerHours,
+            footerNextAvailable: existingProfile.footer && typeof existingProfile.footer === 'object' && 'nextAvailable' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).nextAvailable as string : prev.footerNextAvailable,
+            footerCancellationPolicy: existingProfile.footer && typeof existingProfile.footer === 'object' && 'cancellationPolicy' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).cancellationPolicy as string : prev.footerCancellationPolicy,
+            footerPrivacyPolicy: existingProfile.footer && typeof existingProfile.footer === 'object' && 'privacyPolicy' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).privacyPolicy as string : prev.footerPrivacyPolicy,
+            footerTermsOfService: existingProfile.footer && typeof existingProfile.footer === 'object' && 'termsOfService' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).termsOfService as string : prev.footerTermsOfService,
+            footerShowMaps: existingProfile.footer && typeof existingProfile.footer === 'object' && 'showMaps' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).showMaps as boolean : prev.footerShowMaps,
+            footerShowAttribution: existingProfile.footer && typeof existingProfile.footer === 'object' && 'showAttribution' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).showAttribution as boolean : prev.footerShowAttribution,
           }));
           
           // Log what was loaded for debugging
           console.log('Loaded avatar_url:', existingProfile.avatar_url);
           console.log('Loaded banner:', existingProfile.banner);
+          console.log('Loaded footer:', existingProfile.footer);
         }
       } catch (error) {
         console.error('Error loading existing profile:', error);
@@ -221,26 +251,6 @@ export default function Onboarding() {
           .limit(1);
         
         console.log('Read test result:', { data: readTest, error: readError });
-        
-        // Test if we can insert a test record (it will be rolled back)
-        const { data: insertTest, error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            handle: 'test-handle-' + Date.now(),
-            status: 'draft'
-          })
-          .select('id');
-        
-        console.log('Insert test result:', { data: insertTest, error: insertError });
-        
-        // Clean up test record
-        if (insertTest?.[0]?.id) {
-          await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', insertTest[0].id);
-        }
         
       } catch (error) {
         console.error('Database connection test failed:', error);
@@ -657,6 +667,32 @@ export default function Onboarding() {
         }
         profileId = existingProfile.id;
       } else {
+        // Check if handle is available before creating profile
+        const { data: handleCheck, error: handleError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('handle', data.handle.toLowerCase())
+          .maybeSingle();
+
+        if (handleError) {
+          console.error('Error checking handle availability:', handleError);
+          toast({
+            title: "Error",
+            description: "Unable to check handle availability. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (handleCheck) {
+          toast({
+            title: "Handle Already Taken",
+            description: "This handle is already taken. Please choose a different one.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         // Create new profile
         console.log('Creating new profile...');
         const { data: newProfile, error: insertError } = await supabase
@@ -674,28 +710,21 @@ export default function Onboarding() {
             about: {},
             socials: {},
             media: { items: [] },
-            contact: { email: user?.email }
+            contact: { email: user?.email },
+            use_whatsapp: false,
+            whatsapp_number: null,
+            booking_mode: 'embed' // Ensure default value is set
           })
           .select('id')
           .single();
 
         if (insertError) {
           console.error('Insert error:', insertError);
-          
-          // If it's a duplicate handle error, show specific message
-          if (insertError.code === '23505' && insertError.message.includes('handle')) {
-            toast({
-              title: "Handle Already Taken",
-              description: "This handle is already taken. Please choose a different one.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Creation Failed",
-              description: "Failed to create your profile. Please try again.",
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: "Creation Failed",
+            description: "Failed to create your profile. Please try again.",
+            variant: "destructive",
+          });
           return;
         }
         profileId = newProfile.id;
@@ -716,7 +745,12 @@ export default function Onboarding() {
     }
   };
 
-  const handleStep2 = async (data: { bookingUrl: string; bookingMode: 'embed' | 'new_tab' }) => {
+  const handleStep2 = async (data: {
+    bookingUrl?: string;
+    bookingMode?: 'embed' | 'new_tab';
+    useWhatsApp?: boolean;
+    whatsappNumber?: string;
+  }) => {
     console.log('Step 2 data received:', data);
     const updatedData = { ...onboardingData, ...data };
     console.log('Updated onboarding data after Step 2:', updatedData);
@@ -734,13 +768,31 @@ export default function Onboarding() {
       }
 
       console.log('Saving Step 2 data to database...');
+      const updateData: {
+        booking_url?: string | null;
+        booking_mode?: string | null;
+        whatsapp_number?: string | null;
+        use_whatsapp?: boolean;
+        updated_at: string;
+      } = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (data.useWhatsApp) {
+        updateData.booking_url = null;
+        updateData.booking_mode = 'embed'; // Set default value to satisfy NOT NULL constraint
+        updateData.whatsapp_number = data.whatsappNumber;
+        updateData.use_whatsapp = true;
+      } else {
+        updateData.booking_url = data.bookingUrl;
+        updateData.booking_mode = data.bookingMode || 'embed'; // Ensure we always have a value
+        updateData.whatsapp_number = null;
+        updateData.use_whatsapp = false;
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({
-          booking_url: data.bookingUrl,
-          booking_mode: data.bookingMode,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', onboardingData.profileId);
 
       if (updateError) {
@@ -817,19 +869,20 @@ export default function Onboarding() {
         updated_at: new Date().toISOString()
       };
 
-      if (bannerUrl) {
+      // Always set banner data, but ensure type is correct
+      if (data.bannerType === 'image' && bannerUrl) {
         updateData.banner = {
-          type: data.bannerType,
-          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
-          imageUrl: data.bannerType === 'image' ? bannerUrl : undefined,
+          type: 'image', // Force type to 'image' when file is uploaded
+          color: 'hsl(var(--accent))', // Fallback color
+          imageUrl: bannerUrl,
           heading: data.businessName,
           subheading: data.slogan,
           textColor: data.bannerTextColor || '#ffffff'
         };
       } else {
         updateData.banner = {
-          type: data.bannerType,
-          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
+          type: 'color',
+          color: data.bannerColor || '#6E56CF',
           heading: data.businessName,
           subheading: data.slogan,
           textColor: data.bannerTextColor || '#ffffff'
@@ -970,7 +1023,7 @@ export default function Onboarding() {
           photoUrl?: string;
         };
         socials: OnboardingData['socials'];
-        media: { items: { url: string; kind: string }[] };
+        media: { items: Array<{ id: string; url: string; type: string; order: number }> };
         updated_at: string;
       } = {
         about: {
@@ -981,12 +1034,17 @@ export default function Onboarding() {
         },
         socials: data.socials,
         media: {
-          items: mediaUrls.map(url => ({ url, kind: 'image' }))
+          items: mediaUrls.map((url, index) => ({ 
+            id: `media_${Date.now()}_${index}`, 
+            url, 
+            type: 'image', 
+            order: index 
+          }))
         },
         updated_at: new Date().toISOString()
       };
 
-      console.log('Saving Step 5 data to database...');
+      console.log('Saving Step 5 data to database with media:', updateData.media);
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
@@ -1033,18 +1091,33 @@ export default function Onboarding() {
       }
 
       // Handle testimonial image uploads first
-      const updatedTestimonials = [...data.testimonials];
-      for (let i = 0; i < updatedTestimonials.length; i++) {
-        const testimonial = updatedTestimonials[i];
+      const updatedTestimonials = data.testimonials.map(testimonial => {
         if (testimonial._file) {
-          console.log(`Uploading testimonial image ${i + 1}...`);
-          const imageUrl = await uploadFile(testimonial._file, 'media') || undefined;
+          console.log(`Uploading testimonial image for ${testimonial.customer_name}...`);
+          return {
+            customer_name: testimonial.customer_name,
+            review_title: testimonial.review_title,
+            review_text: testimonial.review_text,
+            image_url: testimonial.image_url // Keep existing if no new file
+          };
+        } else {
+          // No file to upload, just return the testimonial without _file
+          return {
+            customer_name: testimonial.customer_name,
+            review_title: testimonial.review_title,
+            review_text: testimonial.review_text,
+            image_url: testimonial.image_url
+          };
+        }
+      });
+
+      // Upload files and update image_urls
+      for (let i = 0; i < data.testimonials.length; i++) {
+        const testimonial = data.testimonials[i];
+        if (testimonial._file) {
+          const imageUrl = await uploadFile(testimonial._file, 'media');
           if (imageUrl) {
-            updatedTestimonials[i] = {
-              ...testimonial,
-              image_url: imageUrl,
-              _file: undefined // Remove the file object as it's no longer needed
-            };
+            updatedTestimonials[i].image_url = imageUrl;
           }
         }
       }
@@ -1070,17 +1143,13 @@ export default function Onboarding() {
       const existingAbout = existingProfile.about || {};
       const existingSocials = existingProfile.socials || {};
 
-      const updateData: {
-        socials: any;
-        about: any;
-        updated_at: string;
-      } = {
+      const updateData = {
         socials: {
-          ...existingSocials,
+          ...(existingSocials as Record<string, unknown>),
           socialLinks: data.socialLinks
         },
         about: {
-          ...existingAbout,
+          ...(existingAbout as Record<string, unknown>),
           testimonials: updatedTestimonials
         },
         updated_at: new Date().toISOString()
@@ -1119,7 +1188,7 @@ export default function Onboarding() {
     footerAddress?: string;
     footerEmail?: string;
     footerPhone?: string;
-    footerHours?: string;
+    footerHours?: BusinessHours;
     footerNextAvailable?: string;
     footerCancellationPolicy?: string;
     footerPrivacyPolicy?: string;
@@ -1141,14 +1210,14 @@ export default function Onboarding() {
         return;
       }
 
-      // Prepare update data
+      // Prepare update data for footer column
       const updateData: {
         footer: {
           businessName?: string;
           address?: string;
           email?: string;
           phone?: string;
-          hours?: string;
+          hours?: BusinessHours;
           nextAvailable?: string;
           cancellationPolicy?: string;
           privacyPolicy?: string;
@@ -1175,6 +1244,7 @@ export default function Onboarding() {
       };
 
       console.log('Saving Step 7 data to database...');
+      console.log('Footer data being saved:', updateData.footer);
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updateData)
@@ -1191,6 +1261,53 @@ export default function Onboarding() {
       }
 
       console.log('Step 7 data saved successfully');
+      
+      // Temporarily publish the page for 15 minutes to show live iframe
+      console.log('Temporarily publishing page for preview...');
+      const { error: publishError } = await supabase
+        .from('profiles')
+        .update({
+          status: 'published',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', onboardingData.profileId);
+
+      if (publishError) {
+        console.error('Preview publish error:', publishError);
+        toast({
+          title: "Preview Error",
+          description: "Failed to enable preview mode. You can still continue to see the preview.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('Page temporarily published for preview');
+        toast({
+          title: "Preview Mode Enabled",
+          description: "Your page is now live for 15 minutes so you can test the iframe!",
+        });
+        
+        // Set up timer to revert to draft after 15 minutes
+        setTimeout(async () => {
+          try {
+            const { error: revertError } = await supabase
+              .from('profiles')
+              .update({
+                status: 'draft',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', onboardingData.profileId);
+            
+            if (revertError) {
+              console.error('Failed to revert to draft:', revertError);
+            } else {
+              console.log('Page reverted to draft after preview period');
+            }
+          } catch (error) {
+            console.error('Error reverting to draft:', error);
+          }
+        }, 15 * 60 * 1000); // 15 minutes
+      }
+      
       updateStep(8);
     } catch (error) {
       console.error('Step 6 save error:', error);
@@ -1322,8 +1439,38 @@ export default function Onboarding() {
     return null; // Will redirect via useEffect
   }
 
-  // Render current step
-  switch (currentStep) {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* TapBookr Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* TapBookr Branding */}
+            <div className="flex items-center">
+              <h1 className="text-xl font-bold text-gray-900">TapBookr</h1>
+            </div>
+            
+            {/* Progress Indicator */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
+                <span>Step {currentStep}/7</span>
+                <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${(currentStep / 7) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content with Header Spacing */}
+      <div className="pt-20">
+        {/* Render current step */}
+        {(() => {
+          switch (currentStep) {
     case 1:
       return (
         <Step1Handle 
@@ -1344,6 +1491,8 @@ export default function Onboarding() {
           existingData={{
             bookingUrl: onboardingData.bookingUrl,
             bookingMode: onboardingData.bookingMode,
+            useWhatsApp: onboardingData.useWhatsApp,
+            whatsappNumber: onboardingData.whatsappNumber,
           }}
         />
       );
@@ -1357,7 +1506,6 @@ export default function Onboarding() {
           existingData={{
             name: onboardingData.name || onboardingData.businessName,
             slogan: onboardingData.slogan,
-            avatar_url: onboardingData.avatar_url,
             banner: onboardingData.banner,
             category: onboardingData.category,
           }}
@@ -1387,6 +1535,8 @@ export default function Onboarding() {
             aboutPhotoFile: onboardingData.aboutPhotoFile,
             socials: onboardingData.socials,
             mediaFiles: onboardingData.mediaFiles,
+            whatsappNumber: onboardingData.whatsappNumber,
+            media: onboardingData.media,
           }}
         />
       );
@@ -1429,7 +1579,6 @@ export default function Onboarding() {
         <Step7Preview 
           onPublish={handlePublish}
           onSaveDraft={handleSaveDraft}
-          onEditPage={handleEditPage}
           onBack={goBack}
           profileData={{
             handle: onboardingData.handle || '',
@@ -1470,5 +1619,9 @@ export default function Onboarding() {
       // Invalid step, redirect to step 1
       updateStep(1);
       return null;
-  }
+          }
+        })()}
+      </div>
+    </div>
+  );
 }

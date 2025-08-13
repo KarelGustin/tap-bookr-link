@@ -7,11 +7,18 @@ import { OnboardingLayout } from '../OnboardingLayout';
 import { Calendar, Globe, ExternalLink } from 'lucide-react';
 
 interface Step2BookingProps {
-  onNext: (data: { bookingUrl: string; bookingMode: 'embed' | 'new_tab' }) => void;
+  onNext: (data: { 
+    bookingUrl?: string; 
+    bookingMode?: 'embed' | 'new_tab';
+    useWhatsApp?: boolean;
+    whatsappNumber?: string;
+  }) => void;
   onBack: () => void;
   existingData?: {
     bookingUrl?: string;
     bookingMode?: 'embed' | 'new_tab';
+    useWhatsApp?: boolean;
+    whatsappNumber?: string;
   };
 }
 
@@ -19,6 +26,8 @@ interface Step2BookingProps {
 export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps) => {
   const [bookingUrl, setBookingUrl] = useState(existingData?.bookingUrl || '');
   const [embedMode, setEmbedMode] = useState(existingData?.bookingMode === 'new_tab' ? false : true);
+  const [useWhatsApp, setUseWhatsApp] = useState(existingData?.useWhatsApp || false);
+  const [whatsappNumber, setWhatsappNumber] = useState(existingData?.whatsappNumber || '');
   const [selectedProvider, setSelectedProvider] = useState<number | null>(null);
 
   const isValidUrl = (url: string) => {
@@ -32,17 +41,27 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
 
 
   const handleSubmit = () => {
-    if (!isValidUrl(bookingUrl)) {
-      return;
+    if (useWhatsApp) {
+      if (!whatsappNumber.trim()) {
+        return;
+      }
+      onNext({ 
+        useWhatsApp: true,
+        whatsappNumber: whatsappNumber.trim()
+      });
+    } else {
+      if (!isValidUrl(bookingUrl)) {
+        return;
+      }
+      onNext({ 
+        bookingUrl, 
+        bookingMode: embedMode ? 'embed' : 'new_tab',
+        useWhatsApp: false
+      });
     }
-
-    onNext({ 
-      bookingUrl, 
-      bookingMode: embedMode ? 'embed' : 'new_tab' 
-    });
   };
 
-  const canContinue = isValidUrl(bookingUrl);
+  const canContinue = useWhatsApp ? whatsappNumber.trim().length > 0 : isValidUrl(bookingUrl);
 
   return (
     <OnboardingLayout
@@ -54,34 +73,111 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
     >
       <div className="space-y-6">
 
-        {/* URL input */}
-        <div className="space-y-2">
-          <Label htmlFor="bookingUrl" className="text-base font-medium">
-            Booking URL
-            {existingData?.bookingUrl && (
-              <span className="ml-2 text-sm text-muted-foreground">
-                (Already saved)
-              </span>
-            )}
-          </Label>
-          <Input
-            id="bookingUrl"
-            type="url"
-            placeholder="https://calendly.com/yourusername"
-            value={bookingUrl}
-            onChange={(e) => setBookingUrl(e.target.value)}
-            className="rounded-lg h-12"
-          />
-          {existingData?.bookingUrl ? (
-            <p className="text-sm text-green-600">
-              ✅ Your booking URL is saved. You can update it if needed.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Must be a secure HTTPS link
-            </p>
-          )}
+        {/* Booking Method Selection */}
+        <div className="space-y-4">
+          <Label className="text-base font-medium">How do you want customers to book?</Label>
+          
+          <div className="grid gap-3">
+            <button
+              type="button"
+              onClick={() => setUseWhatsApp(false)}
+              className={`p-4 border-2 rounded-lg text-left transition-all ${
+                !useWhatsApp 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-full border-2 ${
+                  !useWhatsApp ? 'border-primary bg-primary' : 'border-gray-300'
+                }`}>
+                  {!useWhatsApp && <div className="w-2 h-2 bg-white rounded-full m-auto" />}
+                </div>
+                <div>
+                  <div className="font-medium">Use a booking system</div>
+                  <div className="text-sm text-muted-foreground">
+                    Connect Calendly, Acuity, or other booking platforms
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setUseWhatsApp(true)}
+              className={`p-4 border-2 rounded-lg text-left transition-all ${
+                useWhatsApp 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-full border-2 ${
+                  useWhatsApp ? 'border-primary bg-primary' : 'border-gray-300'
+                }`}>
+                  {useWhatsApp && <div className="w-2 h-2 bg-white rounded-full m-auto" />}
+                </div>
+                <div>
+                  <div className="font-medium">Use WhatsApp</div>
+                  <div className="text-sm text-muted-foreground">
+                    Customers contact you directly via WhatsApp
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
+
+        {/* URL input - only show if not using WhatsApp */}
+        {!useWhatsApp && (
+          <div className="space-y-2">
+            <Label htmlFor="bookingUrl" className="text-base font-medium">
+              Booking URL
+              {existingData?.bookingUrl && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  (Already saved)
+                </span>
+              )}
+            </Label>
+            <Input
+              id="bookingUrl"
+              type="url"
+              placeholder="https://calendly.com/yourusername"
+              value={bookingUrl}
+              onChange={(e) => setBookingUrl(e.target.value)}
+              className="rounded-lg h-12"
+            />
+            {existingData?.bookingUrl ? (
+              <p className="text-sm text-green-600">
+                ✅ Your booking URL is saved. You can update it if needed.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Must be a secure HTTPS link
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* WhatsApp input - only show if using WhatsApp */}
+        {useWhatsApp && (
+          <div className="space-y-2">
+            <Label htmlFor="whatsappNumber" className="text-base font-medium">
+              WhatsApp Number
+            </Label>
+            <Input
+              id="whatsappNumber"
+              type="tel"
+              placeholder="+1 (555) 123-4567"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              className="rounded-lg h-12"
+            />
+            <p className="text-sm text-muted-foreground">
+              Customers will be able to contact you directly via WhatsApp
+            </p>
+          </div>
+        )}
 
         {/* Embed mode toggle */}
         {/* <div className="space-y-3 p-4 bg-muted/50 rounded-lg">
@@ -108,8 +204,8 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
           )}
         </div> */}
 
-        {/* Iframe Preview */}
-        {bookingUrl && isValidUrl(bookingUrl) && (
+        {/* Iframe Preview - only show if not using WhatsApp */}
+        {!useWhatsApp && bookingUrl && isValidUrl(bookingUrl) && (
           <div className="space-y-3">
             <Label className="text-base font-medium">
               Preview of your booking page

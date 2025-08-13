@@ -352,13 +352,29 @@ export const Step6Footer = ({ onNext, onBack, existingData }: Step6FooterProps) 
         </CardContent>
       </Card>
 
+      {/* Preview Mode Info */}
+      <Card className="bg-green-50 border-green-200">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-2">
+            <h4 className="font-medium text-green-900">Live Preview Mode</h4>
+            <p className="text-sm text-green-800">
+              Clicking "Enable Live Preview" will temporarily publish your page for 15 minutes, 
+              allowing you to test the real iframe and see exactly how customers will experience your page.
+            </p>
+            <p className="text-xs text-green-700 mt-2">
+              ⚡ Your page will automatically return to draft mode after 15 minutes
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Navigation */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
         <Button onClick={handleSubmit}>
-          Continue to Preview
+          Enable Live Preview (15 min)
         </Button>
       </div>
     </div>

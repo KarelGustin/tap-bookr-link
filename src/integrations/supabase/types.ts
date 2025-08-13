@@ -35,6 +35,9 @@ export type Database = {
           theme_mode: string
           updated_at: string
           user_id: string
+          use_whatsapp: boolean | null
+          whatsapp_number: string | null
+          footer: Json
         }
         Insert: {
           about?: Json
@@ -56,6 +59,9 @@ export type Database = {
           theme_mode?: string
           updated_at?: string
           user_id: string
+          use_whatsapp?: boolean | null
+          whatsapp_number?: string | null
+          footer?: Json
         }
         Update: {
           about?: Json
@@ -77,6 +83,9 @@ export type Database = {
           theme_mode?: string
           updated_at?: string
           user_id?: string
+          use_whatsapp?: boolean | null
+          whatsapp_number?: string | null
+          footer?: Json
         }
         Relationships: []
       }

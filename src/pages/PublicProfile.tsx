@@ -30,12 +30,22 @@ interface AboutData {
   description?: string;
   alignment?: 'center' | 'left';
   testimonials?: Testimonial[];
-  // Footer data
+}
+
+interface FooterData {
   businessName?: string;
   address?: string;
   email?: string;
   phone?: string;
-  hours?: string;
+  hours?: {
+    monday: { open: string; close: string; closed: boolean };
+    tuesday: { open: string; close: string; closed: boolean };
+    wednesday: { open: string; close: string; closed: boolean };
+    thursday: { open: string; close: string; closed: boolean };
+    friday: { open: string; close: string; closed: boolean };
+    saturday: { open: string; close: string; closed: boolean };
+    sunday: { open: string; close: string; closed: boolean };
+  };
   nextAvailable?: string;
   cancellationPolicy?: string;
   privacyPolicy?: string;
@@ -97,6 +107,9 @@ export default function PublicProfile() {
       console.log('Media field:', data.media);
       console.log('Media type:', typeof data.media);
       console.log('Media is array:', Array.isArray(data.media));
+      console.log('Footer field:', data.footer);
+      console.log('Footer type:', typeof data.footer);
+      console.log('Footer content:', data.footer);
 
       setProfile(data);
     } catch (error) {
@@ -122,7 +135,9 @@ export default function PublicProfile() {
   const bannerConfig: BannerSection = {
     background_image: profile.banner && typeof profile.banner === 'object' && 'imageUrl' in profile.banner && typeof profile.banner.imageUrl === 'string'
       ? profile.banner.imageUrl 
-      : undefined,
+      : (profile.banner && typeof profile.banner === 'object' && 'image_url' in profile.banner && typeof profile.banner.image_url === 'string'
+        ? profile.banner.image_url 
+        : undefined),
     profile_image: profile.avatar_url || undefined,
     title: profile.banner && typeof profile.banner === 'object' && 'heading' in profile.banner && typeof profile.banner.heading === 'string'
       ? profile.banner.heading
@@ -137,6 +152,25 @@ export default function PublicProfile() {
       ? profile.banner.textColor
       : 'white'
   };
+
+  // Debug banner configuration
+  console.log('Banner config:', bannerConfig);
+  console.log('Banner background_image:', bannerConfig.background_image);
+  console.log('Banner background_color:', bannerConfig.background_color);
+  console.log('Raw footer data from profile:', profile.footer);
+  console.log('Footer data type:', typeof profile.footer);
+  console.log('Footer data stringified:', JSON.stringify(profile.footer, null, 2));
+  
+  // Check if footer data needs to be parsed
+  let parsedFooter = profile.footer;
+  if (typeof profile.footer === 'string') {
+    try {
+      parsedFooter = JSON.parse(profile.footer);
+      console.log('Footer data was string, parsed to:', parsedFooter);
+    } catch (error) {
+      console.error('Failed to parse footer data:', error);
+    }
+  }
 
   // Strict helpers to normalize media from DB (supports { items: [...] } or array)
   type UnknownRecord = Record<string, unknown>;
@@ -163,6 +197,18 @@ export default function PublicProfile() {
   };
 
   const mediaList: unknown[] = extractMediaArray(rawMedia);
+
+  // Debug logging
+  console.log('Raw media data:', rawMedia);
+  console.log('Raw media type:', typeof rawMedia);
+  console.log('Raw media is object:', typeof rawMedia === 'object' && rawMedia !== null);
+  console.log('Raw media keys:', typeof rawMedia === 'object' && rawMedia !== null ? Object.keys(rawMedia as object) : 'N/A');
+  console.log('Extracted media list:', mediaList);
+  console.log('Media list length:', mediaList.length);
+  console.log('Banner data:', profile.banner);
+  console.log('Banner type:', profile.banner && typeof profile.banner === 'object' ? (profile.banner as Record<string, unknown>).type : 'N/A');
+  console.log('Banner imageUrl:', profile.banner && typeof profile.banner === 'object' ? (profile.banner as Record<string, unknown>).imageUrl : 'N/A');
+  console.log('Footer data:', profile.footer);
 
   return (
     <div className="min-h-screen bg-white">
@@ -324,7 +370,7 @@ export default function PublicProfile() {
       {profile.socials && Array.isArray(profile.socials) && profile.socials.length > 0 && (
         <section className="py-8 px-4">
           <div className="max-w-4xl mx-auto text-center">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Connect With Us</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Social Media</h3>
             <div className="flex flex-wrap justify-center gap-4">
               {(profile.socials as SocialLink[]).map((social: SocialLink, index: number) => {
                 // Defensive: allow for string or object, but only render if object with url
@@ -352,13 +398,7 @@ export default function PublicProfile() {
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            {(() => {
-              if (profile.about && typeof profile.about === 'object' && 'title' in profile.about) {
-                const aboutData = profile.about as AboutData;
-                return aboutData.title || 'Our Work(Space)';
-              }
-              return 'Our Work(Space)';
-            })()}
+            Our Work
           </h3>
           
           {/* Horizontal Scrolling Container */}
@@ -369,6 +409,7 @@ export default function PublicProfile() {
             {mediaList.length > 0 ? (
               mediaList.map((mediaItem: unknown, index: number) => {
                 const imageUrl = getImageUrl(mediaItem);
+                console.log(`Media item ${index}:`, mediaItem, 'Image URL:', imageUrl);
                 return (
                   <div key={index} className="flex-shrink-0">
                     <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
@@ -402,26 +443,56 @@ export default function PublicProfile() {
       </section>
 
       {/* Booking Section */}
-      {profile.booking_url && (
-        <section className="w-full" id="booking-section">
+      <section className="w-full" id="booking-section">
           <div className="w-full">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center px-4">
-              Book Your Appointment
+              {profile.booking_url && !profile.use_whatsapp ? 'Book Your Appointment' : 'Get In Touch'}
             </h3>
             
-            {/* Booking iframe - 100% width */}
-            <div className="w-full">
-              <iframe
-                src={profile.booking_url}
-                className="w-full min-h-[1000px] border-0"
-                title="Book Appointment"
-                allow="camera; microphone; geolocation"
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-              />
-            </div>
+            {/* WhatsApp CTA - Show when using WhatsApp OR when no booking URL */}
+            {(profile.use_whatsapp || !profile.booking_url) && profile.whatsapp_number && (
+              <div className="text-center px-4 py-8">
+                <div className="max-w-md mx-auto space-y-4">
+                  <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+                    </svg>
+                  </div>
+                  <h4 className="text-xl font-semibold text-gray-900">
+                    Contact us on WhatsApp
+                  </h4>
+                  <p className="text-gray-600">
+                    Get in touch with us directly for appointments, questions, or inquiries
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      const phoneNumber = profile.whatsapp_number?.replace(/\D/g, '');
+                      if (phoneNumber) {
+                        window.open(`https://wa.me/${phoneNumber}`, '_blank');
+                      }
+                    }}
+                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg font-medium"
+                  >
+                    Chat on WhatsApp
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Booking iframe - only show if not using WhatsApp */}
+            {!profile.use_whatsapp && profile.booking_url && (
+              <div className="w-full">
+                <iframe
+                  src={profile.booking_url}
+                  className="w-full min-h-[1000px] border-0"
+                  title="Book Appointment"
+                  allow="camera; microphone; geolocation"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+                />
+              </div>
+            )}
           </div>
         </section>
-      )}
 
       {/* Reviews Section */}
       {(() => {
@@ -502,7 +573,7 @@ export default function PublicProfile() {
           {/* Primary Actions */}
           <div className="text-center mb-8">
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-              {profile.booking_url && (
+              {profile.booking_url && !profile.use_whatsapp ? (
                 <Button 
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-black px-8 py-3 text-lg"
@@ -514,10 +585,22 @@ export default function PublicProfile() {
                 >
                   Book Now
                 </Button>
+              ) : profile.whatsapp_number && (
+                <Button 
+                  size="lg"
+                  className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg"
+                  onClick={() => {
+                    document.getElementById('booking-section')?.scrollIntoView({ 
+                      behavior: 'smooth' 
+                    });
+                  }}
+                >
+                  Contact on WhatsApp
+                </Button>
               )}
                              {(() => {
-                 const about = profile.about as AboutData;
-                 const phone = about?.phone;
+                 const footer = parsedFooter as FooterData;
+                 const phone = footer?.phone;
                  if (phone) {
                   return (
                     <Button 
@@ -543,13 +626,18 @@ export default function PublicProfile() {
             {/* Business Details */}
             <div className="space-y-4">
               {(() => {
-                const about = profile.about as AboutData;
-                const businessName = about?.businessName || profile.name;
-                const address = about?.address;
-                const email = about?.email;
-                const phone = about?.phone;
-                const hours = about?.hours;
-                const nextAvailable = about?.nextAvailable;
+                const footer = parsedFooter as FooterData;
+                console.log('Footer data in business details:', footer);
+                console.log('Footer data type:', typeof footer);
+                console.log('Footer data keys:', footer && typeof footer === 'object' ? Object.keys(footer) : 'N/A');
+                const businessName = footer?.businessName || profile.name;
+                const address = footer?.address;
+                const email = footer?.email;
+                const phone = footer?.phone;
+                const hours = footer?.hours;
+                const nextAvailable = footer?.nextAvailable;
+                
+                console.log('Footer extracted values:', { businessName, address, email, phone, hours, nextAvailable });
                 
                 return (
                   <div className="space-y-4">
@@ -599,7 +687,12 @@ export default function PublicProfile() {
                         <div className="w-5 h-5 text-gray-400 mt-0.5">
                           🕒
                         </div>
-                        <p className="text-gray-300">{hours}</p>
+                        <p className="text-gray-300">
+                          {Object.entries(hours)
+                            .filter(([_, day]) => !day.closed)
+                            .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)} ${time.open}-${time.close}`)
+                            .join(', ')}
+                        </p>
                       </div>
                     )}
                     
@@ -620,9 +713,9 @@ export default function PublicProfile() {
 
             {/* Google Maps */}
             {(() => {
-              const about = profile.about as AboutData;
-              const address = about?.address;
-              const showMaps = about?.showMaps !== false;
+              const footer = parsedFooter as FooterData;
+              const address = footer?.address;
+              const showMaps = footer?.showMaps !== false;
               const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
               
               if (showMaps && address && apiKey) {
@@ -652,10 +745,10 @@ export default function PublicProfile() {
           <div className="border-t border-gray-700 pt-8 mb-8">
             <div className="grid md:grid-cols-3 gap-6">
               {(() => {
-                const about = profile.about as AboutData;
-                const cancellationPolicy = about?.cancellationPolicy;
-                const privacyPolicy = about?.privacyPolicy;
-                const termsOfService = about?.termsOfService;
+                const footer = parsedFooter as FooterData;
+                const cancellationPolicy = footer?.cancellationPolicy;
+                const privacyPolicy = footer?.privacyPolicy;
+                const termsOfService = footer?.termsOfService;
                 
                 return (
                   <>
@@ -687,8 +780,8 @@ export default function PublicProfile() {
 
           {/* Attribution */}
           {(() => {
-            const about = profile.about as AboutData;
-            const showAttribution = about?.showAttribution !== false;
+            const footer = parsedFooter as FooterData;
+            const showAttribution = footer?.showAttribution !== false;
             
             if (showAttribution) {
               return (

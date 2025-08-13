@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,6 @@ import { CheckCircle, Star, MapPin, Clock, Phone, Mail, Building2 } from 'lucide
 interface Step7PreviewProps {
   onPublish: () => void;
   onSaveDraft: () => void;
-  onEditPage: () => void;
   onBack: () => void;
   profileData: {
     handle: string;
@@ -15,11 +14,18 @@ interface Step7PreviewProps {
     slogan?: string;
     category?: string;
     avatar_url?: string;
-    banner: any;
+    banner: {
+      type?: 'color' | 'image';
+      color?: string;
+      imageUrl?: string;
+      heading?: string;
+      subheading?: string;
+      textColor?: string;
+    } | undefined;
     aboutTitle?: string;
     aboutDescription?: string;
     aboutAlignment?: 'center' | 'left';
-    socials: any;
+    socials: Record<string, string>;
     socialLinks: Array<{
       id: string;
       title: string;
@@ -38,7 +44,15 @@ interface Step7PreviewProps {
       address?: string;
       email?: string;
       phone?: string;
-      hours?: string;
+      hours?: {
+        monday: { open: string; close: string; closed: boolean };
+        tuesday: { open: string; close: string; closed: boolean };
+        wednesday: { open: string; close: string; closed: boolean };
+        thursday: { open: string; close: string; closed: boolean };
+        friday: { open: string; close: string; closed: boolean };
+        saturday: { open: string; close: string; closed: boolean };
+        sunday: { open: string; close: string; closed: boolean };
+      };
       nextAvailable?: string;
       cancellationPolicy?: string;
       privacyPolicy?: string;
@@ -53,10 +67,41 @@ interface Step7PreviewProps {
   isPublishing: boolean;
 }
 
+// Preview Countdown Component
+const PreviewCountdown = () => {
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+
+  if (timeLeft === 0) {
+    return <span className="text-red-600">Preview expired</span>;
+  }
+
+  return (
+    <span>
+      {minutes}:{seconds.toString().padStart(2, '0')} remaining
+    </span>
+  );
+};
+
 export const Step7Preview = ({ 
   onPublish, 
   onSaveDraft, 
-  onEditPage, 
   onBack, 
   profileData, 
   canPublish, 
@@ -66,144 +111,90 @@ export const Step7Preview = ({
 
   const renderPreview = () => (
     <div className="space-y-6">
-      {/* Banner Section */}
-      <div 
-        className="relative h-64 rounded-lg overflow-hidden"
-        style={{
-          backgroundColor: profileData.banner?.type === 'color' ? profileData.banner?.color : 'hsl(var(--accent))',
-          backgroundImage: profileData.banner?.type === 'image' && profileData.banner?.imageUrl ? `url(${profileData.banner.imageUrl})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white p-6">
-          <h1 className="text-3xl font-bold mb-2">
-            {profileData.banner?.heading || profileData.name || 'Your Business Name'}
-          </h1>
-          <p className="text-xl opacity-90">
-            {profileData.banner?.subheading || profileData.slogan || 'Your business tagline'}
-          </p>
-          {profileData.category && (
-            <Badge variant="secondary" className="mt-3 bg-white/20 text-white border-white/30">
-              {profileData.category}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* About Section */}
-      {(profileData.aboutTitle || profileData.aboutDescription) && (
-        <Card>
-          <CardContent className="p-6">
-            <div className={`text-center ${profileData.aboutAlignment === 'left' ? 'text-left' : ''}`}>
-              {profileData.aboutTitle && (
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">{profileData.aboutTitle}</h2>
-              )}
-              {profileData.aboutDescription && (
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">{profileData.aboutDescription}</p>
-              )}
+      {/* Live Iframe Preview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">Live Preview of Your Page</CardTitle>
+          <CardDescription className="text-center">
+            This is exactly how your customers will see your page at tapbookr.com/{profileData.handle}
+          </CardDescription>
+          {/* <p className="text-xs text-center text-green-600 mt-2">
+            🟢 Live iframe - your page is temporarily published for testing!
+          </p> */}
+          
+          {/* Preview Mode Countdown */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium text-blue-900">Preview Mode Active</span>
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              </div>
+              <p className="text-xs text-blue-700 mb-2">
+                Your page is live for testing! The iframe below shows your real, published page.
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
+                <Clock className="w-3 h-3 text-blue-600" />
+                <span className="text-xs font-medium text-blue-800">
+                  <PreviewCountdown />
+                </span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Testimonials Section */}
-      {profileData.testimonials && profileData.testimonials.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">What Our Customers Say</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              {profileData.testimonials.map((testimonial, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-current" />
-                      ))}
-                    </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="relative w-full max-w-md mx-auto">
+            {/* iPhone Mockup */}
+            <div className="relative mx-auto w-[320px] h-[640px] bg-black rounded-[3rem] p-2 shadow-2xl">
+              <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
+                {/* Status Bar */}
+                <div className="h-6 bg-black rounded-t-[2.5rem] flex items-center justify-between px-6 text-white text-xs">
+                  <span>9:41</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1 h-3 bg-white rounded-full"></div>
+                    <div className="w-1 h-3 bg-white rounded-full"></div>
+                    <div className="w-1 h-3 bg-white rounded-full"></div>
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-1">{testimonial.review_title}</h4>
-                  <p className="text-gray-600 mb-2">{testimonial.review_text}</p>
-                  <p className="text-sm text-gray-500">— {testimonial.customer_name}</p>
                 </div>
-              ))}
+                
+                {/* Iframe Content */}
+                <div className="relative w-full h-[calc(100%-24px)]">
+                  <iframe
+                    src={`https://tapbookr.com/${profileData.handle}`}
+                    className="w-full h-full border-0"
+                    title="Page Preview"
+                    sandbox="allow-scripts allow-same-origin allow-forms"
+                    style={{
+                      transform: "scale(1)",
+                      transformOrigin: "top left",
+                      width: "100%",
+                      height: "100%"
+                    }}
+                  />
+                  
+                  {/* Overlay to prevent clicks but allow scrolling */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none z-10"
+                    style={{ pointerEvents: "none" }}
+                  ></div>
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Social Links */}
-      {profileData.socialLinks && profileData.socialLinks.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Connect With Us</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {profileData.socialLinks.map((link) => (
-                <Badge key={link.id} variant="outline" className="px-4 py-2">
-                  {link.title}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Footer Section */}
-      {(profileData.footer?.businessName || profileData.footer?.address || profileData.footer?.email || profileData.footer?.phone) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 text-center">
-              {profileData.footer?.businessName && (
-                <div className="flex items-center justify-center gap-2">
-                  <Building2 className="w-5 h-5 text-gray-500" />
-                  <span className="font-medium">{profileData.footer.businessName}</span>
-                </div>
-              )}
-              {profileData.footer?.address && (
-                <div className="flex items-center justify-center gap-2">
-                  <MapPin className="w-5 h-5 text-gray-500" />
-                  <span>{profileData.footer.address}</span>
-                </div>
-              )}
-              {profileData.footer?.email && (
-                <div className="flex items-center justify-center gap-2">
-                  <Mail className="w-5 h-5 text-gray-500" />
-                  <span>{profileData.footer.email}</span>
-                </div>
-              )}
-              {profileData.footer?.phone && (
-                <div className="flex items-center justify-center gap-2">
-                  <Phone className="w-5 h-5 text-gray-500" />
-                  <span>{profileData.footer.phone}</span>
-                </div>
-              )}
-              {profileData.footer?.hours && (
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="w-5 h-5 text-gray-500" />
-                  <span>{profileData.footer.hours}</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Booking Section */}
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-6 text-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to Book?</h3>
-          <p className="text-gray-600 mb-4">Click below to schedule your appointment</p>
-          <Button className="bg-primary text-gray-900 hover:bg-primary/90">
-            Book Now
-          </Button>
+            
+            {/* Preview Label */}
+            {/* <div className="text-center mt-4 space-y-2">
+              <p className="text-sm text-gray-600">
+                Preview: {profileData.handle}
+              </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-green-700 font-medium">Live Page</span>
+              </div>
+              <p className="text-xs text-green-600">
+                This iframe shows your real, published page that customers can visit
+              </p>
+            </div> */}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -344,9 +335,6 @@ export const Step7Preview = ({
         <Button variant="outline" onClick={onBack}>
           Back to Footer Settings
         </Button>
-        <Button variant="outline" onClick={onEditPage}>
-          Edit Page Later
-        </Button>
         <Button 
           onClick={onPublish} 
           disabled={!canPublish || isPublishing}
@@ -355,15 +343,22 @@ export const Step7Preview = ({
           {isPublishing ? 'Publishing...' : 'Publish Page'}
         </Button>
       </div>
+      
+      {/* Edit Info */}
+      <div className="text-center">
+        <p className="text-sm text-gray-500">
+          You can edit the page at any time
+        </p>
+      </div>
 
       {/* Save Draft Option */}
       <div className="text-center">
         <Button variant="ghost" onClick={onSaveDraft}>
           Save as Draft
         </Button>
-        <p className="text-sm text-gray-500 mt-2">
+        {/* <p className="text-sm text-gray-500 mt-2">
           You can always come back and finish later
-        </p>
+        </p> */}
       </div>
     </div>
   );

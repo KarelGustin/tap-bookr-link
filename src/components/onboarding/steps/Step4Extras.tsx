@@ -35,6 +35,15 @@ interface Step4ExtrasProps {
       whatsapp?: string;
     };
     mediaFiles?: File[];
+    whatsappNumber?: string;
+    media?: {
+      items: Array<{
+        id: string;
+        url: string;
+        type: string;
+        order: number;
+      }>;
+    };
   };
 }
 
@@ -49,7 +58,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
     facebook: existingData?.socials?.facebook || '',
     linkedin: existingData?.socials?.linkedin || '',
     youtube: existingData?.socials?.youtube || '',
-    whatsapp: existingData?.socials?.whatsapp || '',
+    whatsapp: existingData?.socials?.whatsapp || existingData?.whatsappNumber || '',
   });
   const [mediaFiles, setMediaFiles] = useState<File[]>(existingData?.mediaFiles || []);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -63,13 +72,24 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
     if (existingData?.mediaFiles && existingData.mediaFiles.length > 0) {
       const previews = existingData.mediaFiles.map(file => URL.createObjectURL(file));
       setMediaPreviews(previews);
+    } else if (existingData?.media?.items && existingData.media.items.length > 0) {
+      // Use existing media from database
+      const previews = existingData.media.items
+        .sort((a, b) => a.order - b.order)
+        .map(item => item.url);
+      setMediaPreviews(previews);
     }
     
     // Cleanup function to revoke object URLs
     return () => {
-      mediaPreviews.forEach(url => URL.revokeObjectURL(url));
+      mediaPreviews.forEach(url => {
+        // Only revoke URLs that were created with createObjectURL (local files)
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
     };
-  }, [existingData?.mediaFiles]);
+  }, [existingData?.mediaFiles, existingData?.media]);
 
   const handleAboutPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -83,7 +103,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const newFiles = files.slice(0, 6 - mediaFiles.length);
+    const newFiles = files.slice(0, 6 - mediaPreviews.length);
     
     if (newFiles.length > 0) {
       const updatedMediaFiles = [...mediaFiles, ...newFiles];
@@ -99,12 +119,13 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
   };
 
   const removeMedia = (index: number) => {
-    // Revoke the URL for the removed preview
+    // Revoke the URL for the removed preview if it's a local file
     const removedPreview = mediaPreviews[index];
     if (removedPreview && removedPreview.startsWith('blob:')) {
       URL.revokeObjectURL(removedPreview);
     }
     
+    // Remove from both arrays
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
     setMediaPreviews(prev => prev.filter((_, i) => i !== index));
   };
@@ -159,7 +180,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
     { key: 'facebook' as const, icon: Facebook, label: 'Facebook', placeholder: 'facebook.com/yourpage' },
     { key: 'linkedin' as const, icon: Linkedin, label: 'LinkedIn', placeholder: 'linkedin.com/in/yourname' },
     { key: 'youtube' as const, icon: Youtube, label: 'YouTube', placeholder: 'youtube.com/yourchannel' },
-    { key: 'whatsapp' as const, icon: MessageCircle, label: 'WhatsApp', placeholder: '+1234567890' },
+    { key: 'whatsapp' as const, icon: MessageCircle, label: 'WhatsApp', placeholder: existingData?.whatsappNumber || '+1234567890' },
   ];
 
   return (
@@ -213,7 +234,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
           </div>
 
           <div className="space-y-2">
-            <Label className="text-base font-medium">Text Alignment</Label>
+            {/* <Label className="text-base font-medium">Text Alignment</Label>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -224,7 +245,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                 Center
               </Button>
              
-            </div>
+            </div> */}
             
           </div>
         </div>
@@ -263,12 +284,15 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Media Gallery</h3>
             <p className="text-sm text-muted-foreground">
-              {mediaFiles.length}/6 images
+              {mediaPreviews.length}/6 images
             </p>
           </div>
           
           <p className="text-sm text-muted-foreground">
-            Upload 6 of your best images to show your work and what you do.
+            {existingData?.media?.items && existingData.media.items.length > 0 
+              ? "Your existing media gallery is shown below. You can add more images or reorder them."
+              : "Upload 6 of your best images to show your work and what you do."
+            }
           </p>
 
           {mediaPreviews.length > 0 && (
@@ -312,7 +336,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
             </div>
           )}
 
-          {mediaFiles.length < 6 && (
+          {mediaPreviews.length < 6 && (
             <Button
               type="button"
               variant="outline"
@@ -320,7 +344,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
               className="w-full h-12 border-dashed"
             >
               <Upload className="w-4 h-4 mr-2" />
-              Add Media ({6 - mediaFiles.length} remaining)
+              Add Media ({6 - mediaPreviews.length} remaining)
             </Button>
           )}
           
