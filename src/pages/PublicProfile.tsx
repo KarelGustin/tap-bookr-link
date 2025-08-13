@@ -398,7 +398,7 @@ export default function PublicProfile() {
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Our Work
+            Work & Results
           </h3>
           
           {/* Horizontal Scrolling Container */}
