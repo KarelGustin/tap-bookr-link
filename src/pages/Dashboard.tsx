@@ -25,6 +25,8 @@ import {
   Lock,
   ExternalLink
 } from 'lucide-react';
+import { LanguageSelector } from '@/components/ui/language-selector';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Strong, shared types (top-level)
 export type SocialItem = { title?: string; platform?: string; url?: string };
@@ -63,6 +65,7 @@ export default function Dashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   // Sample social links data
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
@@ -1115,34 +1118,6 @@ export default function Dashboard() {
               <div className="space-y-1">
                 <button
                   onClick={() => {
-                    setActiveSection('overview');
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'overview' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <BarChart3 className="w-4 h-4 mr-3" />
-                  Overview
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveSection('links');
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'links' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <LinkIcon className="w-4 h-4 mr-3" />
-                  Links
-                </button>
-                <button
-                  onClick={() => {
                     setActiveSection('design');
                     setSidebarOpen(false);
                   }}
@@ -1175,51 +1150,10 @@ export default function Dashboard() {
               >
                 <Menu className="w-5 h-5" />
               </Button>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
             </div>
             <div className="flex items-center space-x-2 lg:space-x-3">
-              {profile ? (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate('/edit')}
-                    className="hidden sm:inline-flex"
-                  >
-                    <Edit3 className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/${profile.handle}`)}
-                    className="hidden sm:inline-flex"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View Public Page
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  onClick={() => navigate('/onboarding')}
-                  className="bg-purple-600 hover:bg-purple-700 hidden sm:inline-flex"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your Profile
-                </Button>
-              )}
-              <Button variant="outline" size="sm" className="hidden lg:inline-flex">
-                <Palette className="w-4 h-4 mr-2" />
-                Design
-              </Button>
-              <Button variant="outline" size="sm" className="hidden lg:inline-flex">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
+              <LanguageSelector />
             </div>
           </div>
         </header>
@@ -1257,236 +1191,20 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Overview Section */}
-            {activeSection === 'overview' && (
-              <div className="space-y-6">
-                {/* Stats Grid - Locked as Placeholders */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-                  <Card className="opacity-60">
-                    <CardContent className="p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-600">Total Views</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-400">Coming Soon</p>
-                        </div>
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Lock className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="mt-3 lg:mt-4 flex items-center text-sm text-gray-400">
-                        <span>Feature locked - Coming in next update</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="opacity-60">
-                    <CardContent className="p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-600">Total Clicks</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-400">Coming Soon</p>
-                        </div>
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Lock className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="mt-3 lg:mt-4 flex items-center text-sm text-gray-400">
-                        <span>Feature locked - Coming in next update</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="opacity-60">
-                    <CardContent className="p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-400">Coming Soon</p>
-                        </div>
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Lock className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="mt-3 lg:mt-4 flex items-center text-sm text-gray-400">
-                        <span>Feature locked - Coming in next update</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="opacity-60">
-                    <CardContent className="p-4 lg:p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-600">Top Link</p>
-                          <p className="text-xl lg:text-2xl font-bold text-gray-400">Coming Soon</p>
-                        </div>
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Lock className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
-                        </div>
-                      </div>
-                      <div className="mt-3 lg:mt-4 flex items-center text-sm text-gray-400">
-                        <span>Feature locked - Coming in next update</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Recent Activity - Locked as Placeholder */}
-                <Card className="opacity-60">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Lock className="w-5 h-5 mr-2" />
-                      Recent Activity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-                      <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-500 mb-2">Feature Locked</h3>
-                      <p className="text-gray-400">Recent activity tracking will be available in the next update</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Links Section */}
-            {activeSection === 'links' && (
-              <div className="space-y-6">
-                {/* Booking Link Section */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <LinkIcon className="w-5 h-5 mr-2" />
-                      Booking Link
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="bookingUrl" className="text-sm font-medium text-gray-700">
-                          Your Booking Software URL
-                        </Label>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Add your Calendly, Salonized, Treatwell, or any other booking software link
-                        </p>
-                      </div>
-                      <div className="flex space-x-3">
-                        <Input
-                          id="bookingUrl"
-                          type="url"
-                          placeholder="https://calendly.com/yourname"
-                          value={bookingUrl}
-                          onChange={(e) => setBookingUrl(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button 
-                          onClick={saveBookingUrl}
-                          disabled={isSaving}
-                          className="bg-purple-600 hover:bg-purple-700"
-                        >
-                          {isSaving ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                          ) : (
-                            <Save className="w-4 h-4 mr-2" />
-                          )}
-                          Save
-                        </Button>
-                      </div>
-                      {/* Save Status Indicator */}
-                      {profile?.booking_url && (
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm text-green-600 font-medium">Saved</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Social Links Section */}
-                <div className="space-y-4">
-                  <h2 className="text-xl font-semibold text-gray-900">Social Links</h2>
-                  
-                  {socialLinks.map((link) => (
-                    <Card key={link.id} className="border border-gray-200">
-                      <CardContent className="p-4">
-                        <div className="space-y-4">
-                          {/* Link Title */}
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-gray-900">{link.title}</h3>
-                            {/* Save Status Indicator */}
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-3 h-3 rounded-full animate-pulse ${
-                                link.isSaved ? 'bg-green-500' : 'bg-red-500'
-                              }`}></div>
-                              <span className={`text-sm font-medium ${
-                                link.isSaved ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                                {link.isSaved ? 'Saved' : 'Not Saved'}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* URL Input */}
-                          <div>
-                            <Label htmlFor={`url-${link.id}`} className="text-sm font-medium text-gray-700">
-                              URL
-                            </Label>
-                            <div className="flex space-x-3 mt-1">
-                              <Input
-                                id={`url-${link.id}`}
-                                type="url"
-                                placeholder={`Enter your ${link.title} profile URL`}
-                                value={link.url}
-                                onChange={(e) => {
-                                  setSocialLinks(prev => 
-                                    prev.map(l => 
-                                      l.id === link.id 
-                                        ? { ...l, url: e.target.value, isSaved: false }
-                                        : l
-                                    )
-                                  );
-                                }}
-                                className="flex-1"
-                              />
-                              <Button 
-                                onClick={() => updateSocialLink(link.id, link.url)}
-                                disabled={link.isSaved}
-                                variant={link.isSaved ? "outline" : "default"}
-                                className={link.isSaved ? "text-green-600 border-green-600" : ""}
-                              >
-                                {link.isSaved ? (
-                                  <span className="text-green-600">✓</span>
-                                ) : (
-                                  <Save className="w-4 h-4 mr-2" />
-                                )}
-                                {link.isSaved ? 'Saved' : 'Save'}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Design Section */}
             {activeSection === 'design' && (
               <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Design your public page</h3>
+                  <h3 className="text-lg font-semibold">Ontwerp je publieke pagina</h3>
                   <Button onClick={saveDesign} disabled={designLoading}>
-                    {designLoading ? 'Saving…' : 'Save changes'}
+                    {designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}
                   </Button>
                 </div>
 
                 {/* Live Preview */}
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-gray-700">Live Preview</h4>
+                    <h4 className="font-medium text-gray-700">Live Voorvertoning</h4>
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -1506,7 +1224,7 @@ export default function Dashboard() {
                       }}
                       className="text-xs"
                     >
-                      Refresh Preview
+                      Voorvertoning Vernieuwen
                     </Button>
                   </div>
                   <div className="relative">
@@ -1555,9 +1273,9 @@ export default function Dashboard() {
                 {/* 1) Banner */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Landing Page Banner</h4>
+                    <h4 className="font-medium">Landingspagina Banner</h4>
                     <Button onClick={saveBanner} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Banner'}
+                      {designLoading ? 'Opslaan…' : 'Banner Opslaan'}
                     </Button>
                   </div>
                   <div className="flex gap-3">
@@ -1566,18 +1284,18 @@ export default function Dashboard() {
                       variant={design.bannerType === 'color' ? 'default' : 'outline'}
                       onClick={() => setDesign((d) => ({ ...d, bannerType: 'color' }))}
                     >
-                      Use color
+                      Kleur gebruiken
                     </Button>
                     <Button
                       type="button"
                       variant={design.bannerType === 'image' ? 'default' : 'outline'}
                       onClick={() => setDesign((d) => ({ ...d, bannerType: 'image' }))}
                     >
-                      Use image
+                      Afbeelding gebruiken
                     </Button>
                   </div>
                   <p className="text-sm text-gray-500">
-                    Image is selected by default. If no image is uploaded, the TapBookr accent color will be used as a fallback.
+                    Afbeelding is standaard geselecteerd. Als er geen afbeelding wordt geüpload, wordt de TapBookr accentkleur gebruikt als fallback.
                   </p>
 
                   {/* Banner Content */}
@@ -1591,9 +1309,9 @@ export default function Dashboard() {
                       />
                     </div> */}
                     <div>
-                      <Label>Category</Label>
+                      <Label>Categorie</Label>
                       <Input
-                        placeholder="e.g., Photographer, Designer, Consultant"
+                        placeholder="bijv. Fotograaf, Designer, Consultant"
                         value={design.category}
                         onChange={(e) => setDesign((d) => ({ ...d, category: e.target.value }))}
                       />
@@ -1607,23 +1325,23 @@ export default function Dashboard() {
                       />
                     </div> */}
                     <div>
-                      <Label>Banner Heading</Label>
+                      <Label>Banner Hoofdtitel</Label>
                       <Input
-                        placeholder="Your main banner title (optional - uses name if empty)"
+                        placeholder="Je hoofdtitel voor de banner (optioneel - gebruikt naam als leeg)"
                         value={design.bannerHeading}
                         onChange={(e) => setDesign((d) => ({ ...d, bannerHeading: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Banner Subheading</Label>
+                      <Label>Banner Ondertitel</Label>
                       <Input
-                        placeholder="Your banner subtitle or tagline (optional - uses slogan if empty)"
+                        placeholder="Je ondertitel of tagline voor de banner (optioneel - gebruikt slogan als leeg)"
                         value={design.bannerSubheading}
                         onChange={(e) => setDesign((d) => ({ ...d, bannerSubheading: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Text Color</Label>
+                      <Label>Tekstkleur</Label>
                       <Input
                         type="color"
                         value={design.bannerTextColor}
@@ -1635,7 +1353,7 @@ export default function Dashboard() {
 
                   {design.bannerType === 'color' ? (
                     <div className="flex items-center gap-3">
-                      <Label className="w-32">Color</Label>
+                      <Label className="w-32">Kleur</Label>
                       <Input
                         type="color"
                         value={design.bannerColor}
@@ -1645,10 +1363,10 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Label>Banner image</Label>
+                      <Label>Banner afbeelding</Label>
                       <div className="flex items-center gap-3">
                         <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
-                          {bannerPreview ? 'Change banner' : 'Upload banner'}
+                          {bannerPreview ? 'Banner wijzigen' : 'Banner uploaden'}
                         </Button>
                         <input
                           ref={bannerInputRef}
@@ -1664,7 +1382,7 @@ export default function Dashboard() {
                       </div>
                       {/* Current banner preview */}
                       <div className="mt-2">
-                        <p className="text-xs text-muted-foreground mb-1">Current banner</p>
+                        <p className="text-xs text-muted-foreground mb-1">Huidige banner</p>
                         <div className="w-full max-w-md aspect-[3/1] rounded-md overflow-hidden border bg-muted/30">
                           {bannerPreview ? (
                             <img src={bannerPreview} className="w-full h-full object-cover" />
@@ -1686,16 +1404,16 @@ export default function Dashboard() {
                 {/* 2) Profile */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Profile</h4>
+                    <h4 className="font-medium">Profiel</h4>
                     <Button onClick={saveProfile} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Profile'}
+                      {designLoading ? 'Opslaan…' : 'Profiel Opslaan'}
                     </Button>
                   </div>
                   <div className="space-y-2">
                     <Label>Avatar</Label>
                     <div className="flex items-center gap-3">
                       <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()}>
-                        {avatarPreview ? 'Change avatar' : 'Upload avatar'}
+                        {avatarPreview ? 'Avatar wijzigen' : 'Avatar uploaden'}
                       </Button>
                       <input
                         ref={avatarInputRef}
@@ -1718,11 +1436,11 @@ export default function Dashboard() {
                           <div className="w-full h-full" />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">Currently used avatar</p>
+                      <p className="text-xs text-muted-foreground">Momenteel gebruikte avatar</p>
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Name, category, and slogan are now configured in the Banner section above.
+                    Naam, categorie en slogan worden nu geconfigureerd in de Banner sectie hierboven.
                   </div>
                 </div>
 
@@ -1731,18 +1449,18 @@ export default function Dashboard() {
                 {/* 3) About */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">About section</h4>
+                    <h4 className="font-medium">Over sectie</h4>
                     <Button onClick={saveAbout} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save About'}
+                      {designLoading ? 'Opslaan…' : 'Over Opslaan'}
                     </Button>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
-                      <Label>Title</Label>
+                      <Label>Titel</Label>
                       <Input value={design.aboutTitle} onChange={(e) => setDesign((d) => ({ ...d, aboutTitle: e.target.value }))} />
                     </div>
                     <div>
-                      <Label>Text Alignment</Label>
+                      <Label>Tekstuitlijning</Label>
                       <div className="flex gap-2">
                         <Button
                           type="button"
@@ -1750,7 +1468,7 @@ export default function Dashboard() {
                           size="sm"
                           onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'center' }))}
                         >
-                          Center
+                          Midden
                         </Button>
                         <Button
                           type="button"
@@ -1758,20 +1476,20 @@ export default function Dashboard() {
                           size="sm"
                           onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'left' }))}
                         >
-                          Left
+                          Links
                         </Button>
                       </div>
                     </div>
                     <div className="sm:col-span-2">
-                      <Label>Description</Label>
+                      <Label>Beschrijving</Label>
                       <Textarea 
                         rows={6} 
                         value={design.aboutDescription} 
                         onChange={(e) => setDesign((d) => ({ ...d, aboutDescription: e.target.value }))}
-                        placeholder="Enter your description here. Use Enter/Return to create new paragraphs."
+                        placeholder="Voer je beschrijving hier in. Gebruik Enter/Return om nieuwe paragrafen te maken."
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Use Enter/Return to create new paragraphs. Line breaks will be preserved.
+                        Gebruik Enter/Return om nieuwe paragrafen te maken. Regelafbrekingen worden bewaard.
                       </p>
                     </div>
                   </div>
@@ -1782,13 +1500,13 @@ export default function Dashboard() {
                 {/* 4) Media gallery */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Media gallery</h4>
+                    <h4 className="font-medium">Media galerij</h4>
                     <Button onClick={saveMedia} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Gallery'}
+                      {designLoading ? 'Opslaan…' : 'Galerij Opslaan'}
                     </Button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Up to 6 images</p>
+                    <p className="text-sm text-muted-foreground">Maximaal 6 afbeeldingen</p>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>{design.mediaOrder.length + galleryNewPreviews.length}/6</span>
                       <Button
@@ -1797,7 +1515,7 @@ export default function Dashboard() {
                         onClick={() => galleryInputRef.current?.click()}
                         disabled={design.mediaOrder.length + galleryNewPreviews.length >= 6}
                       >
-                        + Add image
+                        + Afbeelding toevoegen
                       </Button>
                       <input
                         ref={galleryInputRef}
@@ -1860,7 +1578,7 @@ export default function Dashboard() {
                       </div>
                     ))}
                     {design.mediaOrder.length + galleryNewPreviews.length === 0 && (
-                      <p className="text-xs text-muted-foreground">No images yet</p>
+                      <p className="text-xs text-muted-foreground">Nog geen afbeeldingen</p>
                     )}
                   </div>
                 </div>
@@ -1870,16 +1588,16 @@ export default function Dashboard() {
                 {/* 5) Social links */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Social links</h4>
+                    <h4 className="font-medium">Sociale links</h4>
                     <Button onClick={saveSocials} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Socials'}
+                      {designLoading ? 'Opslaan…' : 'Sociale Links Opslaan'}
                     </Button>
                   </div>
                   <div className="space-y-2">
                     {design.socials.map((s, i) => (
                       <div key={i} className="grid sm:grid-cols-3 gap-2">
                         <Input
-                          placeholder="Title (e.g., Instagram)"
+                          placeholder="Titel (bijv. Instagram)"
                           value={s.title || ''}
                           onChange={(e) => {
                             const next = [...design.socials];
@@ -1888,7 +1606,7 @@ export default function Dashboard() {
                           }}
                         />
                         <Input
-                          placeholder="Platform (optional)"
+                          placeholder="Platform (optioneel)"
                           value={s.platform || ''}
                           onChange={(e) => {
                             const next = [...design.socials];
@@ -1914,7 +1632,7 @@ export default function Dashboard() {
                               setDesign((d) => ({ ...d, socials: next }));
                             }}
                           >
-                            Remove
+                            Verwijderen
                           </Button>
                         </div>
                       </div>
@@ -1924,7 +1642,7 @@ export default function Dashboard() {
                       variant="outline"
                       onClick={() => setDesign((d) => ({ ...d, socials: [...d.socials, { title: '', url: '' }] }))}
                     >
-                      Add social
+                      Sociale link toevoegen
                     </Button>
                   </div>
                 </div>
@@ -1934,20 +1652,20 @@ export default function Dashboard() {
                 {/* 6) Booking */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Booking</h4>
+                    <h4 className="font-medium">Boeken</h4>
                     <Button onClick={saveBooking} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Booking'}
+                      {designLoading ? 'Opslaan…' : 'Boeken Opslaan'}
                     </Button>
                   </div>
                   <div className="grid sm:grid-cols-3 gap-3">
                     <div className="sm:col-span-3">
-                      <Label>Booking URL</Label>
+                      <Label>Boekings-URL</Label>
                       <Input
                         placeholder="https://..."
                         value={design.bookingUrl}
                         onChange={(e) => setDesign((d) => ({ ...d, bookingUrl: e.target.value }))}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Embed mode is used by default.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Embed modus wordt standaard gebruikt.</p>
                     </div>
                   </div>
                 </div>
@@ -1958,14 +1676,14 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-medium">Testimonials</h4>
+                      <h4 className="font-medium">Aanbevelingen</h4>
                       {design.testimonials.length > 0 && design.testimonials.every(t => 
                         t.customer_name === 'Sarah Johnson' || 
                         t.customer_name === 'Mike Chen' || 
                         t.customer_name === 'Emily Rodriguez'
                       ) && (
                         <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                          Using placeholders
+                          Gebruikt placeholders
                         </span>
                       )}
                       {(() => {
@@ -1976,7 +1694,7 @@ export default function Dashboard() {
                         if (design.testimonials.length > 0 && !hasTestimonialsInDB) {
                           return (
                             <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full animate-pulse">
-                              Auto-saving...
+                              Auto-opslaan...
                             </span>
                           );
                         }
@@ -1984,11 +1702,11 @@ export default function Dashboard() {
                       })()}
                     </div>
                     <Button onClick={saveTestimonials} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Testimonials'}
+                      {designLoading ? 'Opslaan…' : 'Aanbevelingen Opslaan'}
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Add a few short reviews (image optional). Placeholder testimonials are shown by default and will be automatically saved to your public page. You can edit, replace, or remove them anytime.
+                    Voeg een paar korte beoordelingen toe (afbeelding optioneel). Placeholder aanbevelingen worden standaard getoond en worden automatisch opgeslagen op je publieke pagina. Je kunt ze altijd bewerken, vervangen of verwijderen.
                   </p>
                   {design.testimonials.map((t, i) => (
                     <div key={i} className="grid sm:grid-cols-4 gap-2 items-start">
@@ -2031,7 +1749,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <Input
-                        placeholder="Customer name"
+                        placeholder="Klantnaam"
                         value={t.customer_name}
                         onChange={(e) => {
                           const next = [...design.testimonials];
@@ -2040,7 +1758,7 @@ export default function Dashboard() {
                         }}
                       />
                       <Input
-                        placeholder="Review title"
+                        placeholder="Beoordelingstitel"
                         value={t.review_title}
                         onChange={(e) => {
                           const next = [...design.testimonials];
@@ -2049,7 +1767,7 @@ export default function Dashboard() {
                         }}
                       />
                       <Input
-                        placeholder="Review text"
+                        placeholder="Beoordelingstekst"
                         value={t.review_text}
                         onChange={(e) => {
                           const next = [...design.testimonials];
@@ -2063,7 +1781,7 @@ export default function Dashboard() {
                           variant="outline"
                           onClick={() => setDesign((d) => ({ ...d, testimonials: d.testimonials.filter((_, idx) => idx !== i) }))}
                         >
-                          Remove
+                          Verwijderen
                         </Button>
                       </div>
                     </div>
@@ -2075,7 +1793,7 @@ export default function Dashboard() {
                       disabled={design.testimonials.length >= 6}
                       onClick={() => setDesign((d) => ({ ...d, testimonials: [...d.testimonials, { customer_name: '', review_title: '', review_text: '' }] }))}
                     >
-                      + Add testimonial
+                      + Aanbeveling toevoegen
                     </Button>
                     {design.testimonials.length > 0 && (
                       <Button
@@ -2084,7 +1802,7 @@ export default function Dashboard() {
                         onClick={() => setDesign((d) => ({ ...d, testimonials: [] }))}
                         className="text-red-600 hover:text-red-700"
                       >
-                        Clear All
+                        Alles Wissen
                       </Button>
                     )}
                   </div>
@@ -2095,63 +1813,63 @@ export default function Dashboard() {
                 {/* 8) Footer */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Footer Settings</h4>
+                    <h4 className="font-medium">Footer Instellingen</h4>
                     <Button onClick={saveAbout} disabled={designLoading} size="sm">
-                      {designLoading ? 'Saving…' : 'Save Footer'}
+                      {designLoading ? 'Opslaan…' : 'Footer Opslaan'}
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Configure your footer information and policies. This appears at the bottom of your public page.
+                    Configureer je footer informatie en beleid. Dit verschijnt onderaan je publieke pagina.
                   </p>
                   
                   {/* Business Information */}
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
-                      <Label>Business Name</Label>
+                      <Label>Bedrijfsnaam</Label>
                       <Input 
-                        placeholder="Your business name"
+                        placeholder="Je bedrijfsnaam"
                         value={design.footerBusinessName}
                         onChange={(e) => setDesign((d) => ({ ...d, footerBusinessName: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Address</Label>
+                      <Label>Adres</Label>
                       <Input 
-                        placeholder="Your business address"
+                        placeholder="Je bedrijfsadres"
                         value={design.footerAddress}
                         onChange={(e) => setDesign((d) => ({ ...d, footerAddress: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Email</Label>
+                      <Label>E-mail</Label>
                       <Input 
                         type="email"
-                        placeholder="your@email.com"
+                        placeholder="jouw@email.com"
                         value={design.footerEmail}
                         onChange={(e) => setDesign((d) => ({ ...d, footerEmail: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Phone</Label>
+                      <Label>Telefoon</Label>
                       <Input 
                         type="tel"
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="+31 (0) 6 12345678"
                         value={design.footerPhone}
                         onChange={(e) => setDesign((d) => ({ ...d, footerPhone: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Business Hours</Label>
+                      <Label>Openingstijden</Label>
                       <Input 
-                        placeholder="Mon-Fri 9AM-6PM, Sat 10AM-4PM"
+                        placeholder="Ma-Vr 9:00-18:00, Za 10:00-16:00"
                         value={design.footerHours}
                         onChange={(e) => setDesign((d) => ({ ...d, footerHours: e.target.value }))}
                       />
                     </div>
                     <div>
-                      <Label>Next Available</Label>
+                      <Label>Volgende Beschikbaar</Label>
                       <Input 
-                        placeholder="Tue 14:30 (optional)"
+                        placeholder="Di 14:30 (optioneel)"
                         value={design.footerNextAvailable}
                         onChange={(e) => setDesign((d) => ({ ...d, footerNextAvailable: e.target.value }))}
                       />
@@ -2160,31 +1878,31 @@ export default function Dashboard() {
 
                   {/* Policies */}
                   <div className="space-y-3">
-                    <h5 className="font-medium text-sm">Policies & Trust</h5>
+                    <h5 className="font-medium text-sm">Beleid & Vertrouwen</h5>
                     <div className="grid gap-3">
                       <div>
-                        <Label>Cancellation Policy</Label>
+                        <Label>Annuleringsbeleid</Label>
                         <Textarea 
                           rows={2}
-                          placeholder="Plans changed? Reschedule or cancel 24h in advance to avoid a fee."
+                          placeholder="Plannen gewijzigd? Herplan of annuleer 24 uur van tevoren om een vergoeding te voorkomen."
                           value={design.footerCancellationPolicy}
                           onChange={(e) => setDesign((d) => ({ ...d, footerCancellationPolicy: e.target.value }))}
                         />
                       </div>
                       <div>
-                        <Label>Privacy Policy</Label>
+                        <Label>Privacybeleid</Label>
                         <Textarea 
                           rows={2}
-                          placeholder="We only use your details to manage your appointment. No spam."
+                          placeholder="We gebruiken je gegevens alleen om je afspraak te beheren. Geen spam."
                           value={design.footerPrivacyPolicy}
                           onChange={(e) => setDesign((d) => ({ ...d, footerPrivacyPolicy: e.target.value }))}
                         />
                       </div>
                       <div>
-                        <Label>Terms of Service</Label>
+                        <Label>Algemene Voorwaarden</Label>
                         <Textarea 
                           rows={2}
-                          placeholder="Secure booking handled by top booking platforms."
+                          placeholder="Veilige boeking afgehandeld door toonaangevende boekingsplatforms."
                           value={design.footerTermsOfService}
                           onChange={(e) => setDesign((d) => ({ ...d, footerTermsOfService: e.target.value }))}
                         />
@@ -2194,7 +1912,7 @@ export default function Dashboard() {
 
                   {/* Display Options */}
                   <div className="space-y-3">
-                    <h5 className="font-medium text-sm">Display Options</h5>
+                    <h5 className="font-medium text-sm">Weergave-opties</h5>
                     <div className="flex items-center space-x-6">
                       <div className="flex items-center space-x-2">
                         <input
@@ -2204,10 +1922,10 @@ export default function Dashboard() {
                           onChange={(e) => setDesign((d) => ({ ...d, footerShowMaps: e.target.checked }))}
                           className="rounded"
                         />
-                        <Label htmlFor="showMaps">Show Google Maps</Label>
+                        <Label htmlFor="showMaps">Google Maps tonen</Label>
                       </div>
                      
-                      <div className="flex items-center space-x-2">
+                      {/* <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           id="showAttribution"
@@ -2216,13 +1934,13 @@ export default function Dashboard() {
                           className="rounded"
                         />
                         <Label htmlFor="showAttribution">Show "Powered by Bookr"</Label>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button onClick={saveDesign} disabled={designLoading}>{designLoading ? 'Saving…' : 'Save changes'}</Button>
+                  <Button onClick={saveDesign} disabled={designLoading}>{designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}</Button>
                 </div>
               </div>
             )}

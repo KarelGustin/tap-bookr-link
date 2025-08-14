@@ -11,19 +11,18 @@ interface Step3BrandingProps {
     businessName?: string; 
     slogan?: string; 
     category?: string;
-    bannerType: 'color' | 'image';
-    bannerColor?: string;
+    bannerType: 'image';
     bannerFile?: File;
     bannerTextColor?: string;
   }) => void;
   onBack: () => void;
   requiresName: boolean;
+  handle?: string;
   existingData?: {
     name?: string;
     slogan?: string;
     banner?: {
-      type?: 'color' | 'image';
-      color?: string;
+      type?: 'image';
       imageUrl?: string;
       textColor?: string;
     };
@@ -33,29 +32,18 @@ interface Step3BrandingProps {
 
 const categories = [
   'Salon',
-  'Pet Groomer', 
+  'Dierenverzorging', 
   'Consultant/Coach',
-  'Nails',
-  'Brows/Lashes',
+  'Nagels',
+  'Wenkbrauwen/Wimpers',
   'Fitness',
-  'Other'
+  'Anders'
 ];
 
-const brandColors = [
-  '#FFBE0B', // Primary yellow
-  '#FB5607', // Accent orange
-  '#3A86FF', // Secondary blue
-  '#8338EC', // Purple
-  '#FF006E', // Pink
-  '#06FFA5'  // Green
-];
-
-export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: Step3BrandingProps) => {
+export const Step3Branding = ({ onNext, onBack, requiresName, existingData, handle }: Step3BrandingProps) => {
   const [businessName, setBusinessName] = useState(existingData?.name || '');
   const [slogan, setSlogan] = useState(existingData?.slogan || '');
   const [category, setCategory] = useState(existingData?.category || '');
-  const [bannerType, setBannerType] = useState<'color' | 'image'>(existingData?.banner?.type || 'color');
-  const [bannerColor, setBannerColor] = useState(existingData?.banner?.color || brandColors[0]);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerTextColor, setBannerTextColor] = useState(existingData?.banner?.textColor || '#ffffff');
   const [bannerPreview, setBannerPreview] = useState<string | null>(existingData?.banner?.imageUrl || null);
@@ -78,12 +66,6 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
     }
     if (existingData?.category) {
       setCategory(existingData.category);
-    }
-    if (existingData?.banner?.type) {
-      setBannerType(existingData.banner.type);
-    }
-    if (existingData?.banner?.color) {
-      setBannerColor(existingData.banner.color);
     }
     if (existingData?.banner?.textColor) {
       setBannerTextColor(existingData.banner.textColor);
@@ -111,9 +93,8 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
       businessName: businessName.trim() || undefined,
       slogan: slogan.trim() || undefined,
       category: category || undefined,
-      bannerType,
-      bannerColor: bannerType === 'color' ? bannerColor : undefined,
-      bannerFile: bannerType === 'image' ? bannerFile || undefined : undefined,
+      bannerType: 'image',
+      bannerFile: bannerFile || undefined,
       bannerTextColor
     });
   };
@@ -124,15 +105,18 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
     <OnboardingLayout
       currentStep={3}
       totalSteps={7}
+      onNext={handleSubmit}
+      canGoNext={canContinue}
       title="Banner & Branding"
       subtitle="Customize your banner and business identity."
       onBack={onBack}
+      handle={handle}
     >
       <div className="space-y-6">
         {/* Business Name */}
         <div className="space-y-2">
           <Label htmlFor="businessName" className="text-base font-medium">
-            Business Name *
+            Bedrijfsnaam *
           </Label>
           <Input
             id="businessName"
@@ -143,14 +127,14 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
             maxLength={60}
           />
           <p className="text-sm text-muted-foreground">
-            This will be displayed prominently on your banner and throughout your page
+            Dit wordt prominent op je banner en doorheen je pagina getoond
           </p>
         </div>
 
         {/* Slogan */}
         <div className="space-y-2">
           <Label htmlFor="slogan" className="text-base font-medium">
-            Business Slogan
+            Bedrijfsslogan
           </Label>
           <Input
             id="slogan"
@@ -161,18 +145,18 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
             maxLength={80}
           />
           <p className="text-sm text-muted-foreground">
-            A short, memorable phrase that describes your business
+            Een korte, herkenbare uitdrukking die je bedrijf beschrijft
           </p>
         </div>
 
         {/* Category */}
         <div className="space-y-2">
           <Label htmlFor="category" className="text-base font-medium">
-            Business Category
+            Bedrijfscategorie
           </Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="rounded-lg h-12">
-              <SelectValue placeholder="Select your business type" />
+              <SelectValue placeholder="Selecteer je bedrijfstype" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((cat) => (
@@ -183,106 +167,55 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
             </SelectContent>
           </Select>
           <p className="text-sm text-muted-foreground">
-            Helps customers find and understand your business
+            Helpt klanten je bedrijf te vinden en te begrijpen
           </p>
         </div>
 
         {/* Banner */}
         <div className="space-y-4">
-          <Label className="text-base font-medium">Banner Background</Label>
+          <Label className="text-base font-medium">Banner Achtergrond</Label>
           <p className="text-sm text-muted-foreground">
-            Choose between a solid color or upload an image for your banner background
+            Upload een afbeelding voor je bannerachtergrond. Dit is het eerste wat klanten zien.
           </p>
           
-          {/* Banner type selection */}
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant={bannerType === 'color' ? 'default' : 'outline'}
-              onClick={() => setBannerType('color')}
-              className="flex-1"
-            >
-              Solid Color
-            </Button>
-            <Button
-              type="button"
-              variant={bannerType === 'image' ? 'default' : 'outline'}
-              onClick={() => setBannerType('image')}
-              className="flex-1"
-            >
-              Background Image
-            </Button>
-          </div>
-
-          {bannerType === 'color' ? (
-            <div className="space-y-3">
-              <Label className="text-sm font-medium">Choose a color:</Label>
-              <div className="grid grid-cols-6 gap-2">
-                {brandColors.map((color) => (
-                  <button
-                    key={color}
-                    type="button"
-                    onClick={() => setBannerColor(color)}
-                    className={`w-10 h-10 rounded-lg border-2 ${
-                      bannerColor === color ? 'border-foreground' : 'border-transparent'
-                    }`}
-                    style={{ backgroundColor: color }}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="h-24 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                {bannerPreview ? (
-                  <img src={bannerPreview} alt="Banner preview" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="text-center">
-                    <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Upload banner image</p>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => bannerInputRef.current?.click()}
-                  className="flex-1"
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  {bannerPreview ? 'Change Image' : 'Upload Image'}
-                </Button>
-                {bannerPreview && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setBannerPreview(null);
-                      setBannerFile(null);
-                    }}
-                    className="h-8 text-sm text-muted-foreground hover:text-destructive"
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
+          {/* Banner image upload */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Banner afbeelding</Label>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
+                {bannerPreview ? 'Banner wijzigen' : 'Banner uploaden'}
+              </Button>
               <input
                 ref={bannerInputRef}
                 type="file"
                 accept="image/*"
-                onChange={handleBannerChange}
                 className="hidden"
+                onChange={handleBannerChange}
               />
             </div>
-          )}
+            {/* Current banner preview */}
+            <div className="mt-2">
+              <p className="text-xs text-muted-foreground mb-1">Huidige banner</p>
+              <div className="w-full max-w-md aspect-[3/1] rounded-md overflow-hidden border bg-muted/30">
+                {bannerPreview ? (
+                  <img src={bannerPreview} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-muted/30 flex items-center justify-center">
+                    <div className="text-center">
+                      <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Upload banner afbeelding</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Banner Text Color */}
         <div className="space-y-2">
           <Label htmlFor="bannerTextColor" className="text-base font-medium">
-            Banner Text Color
+            Banner Tekst Kleur
           </Label>
           <div className="grid grid-cols-6 gap-2">
             {['#ffffff', '#000000', '#f3f4f6', '#1f2937', '#ef4444', '#10b981'].map((color) => (
@@ -298,7 +231,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
             ))}
           </div>
           <p className="text-sm text-muted-foreground">
-            Choose a color that ensures your text is readable on your banner background
+            Kies een kleur die ervoor zorgt dat je tekst leesbaar is op je bannerachtergrond
           </p>
         </div>
 
@@ -309,7 +242,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData }: St
           className="w-full h-12 text-base rounded-lg"
           size="lg"
         >
-          Continue
+          Volgende
         </Button>
       </div>
     </OnboardingLayout>

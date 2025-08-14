@@ -46,12 +46,10 @@ interface OnboardingData {
   slogan?: string;
   avatarFile?: File;
   avatar_url?: string;
-  bannerType: 'color' | 'image';
-  bannerColor?: string;
+  bannerType: 'image';
   bannerFile?: File;
   banner?: {
-    type?: 'color' | 'image';
-    color?: string;
+    type?: 'image';
     imageUrl?: string;
     heading?: string;
     subheading?: string;
@@ -159,14 +157,13 @@ export default function Onboarding() {
             businessName: existingProfile.name || prev.businessName,
             slogan: existingProfile.slogan || prev.slogan,
             avatar_url: existingProfile.avatar_url || prev.avatar_url,
-            banner: existingProfile.banner as OnboardingData['banner'] || prev.banner,
             category: existingProfile.category || prev.category,
-            bookingUrl: existingProfile.booking_url || prev.bookingUrl,
-            bookingMode: (existingProfile.booking_mode as 'embed' | 'new_tab') || prev.bookingMode,
-            useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
-            whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
+            banner: existingProfile.banner as OnboardingData['banner'] || prev.banner,
+            aboutTitle: existingProfile.about && typeof existingProfile.about === 'object' && 'title' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).title as string : prev.aboutTitle,
+            aboutDescription: existingProfile.about && typeof existingProfile.about === 'object' && 'description' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).description as string : prev.aboutDescription,
+            aboutAlignment: existingProfile.about && typeof existingProfile.about === 'object' && 'alignment' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).alignment as 'center' | 'left' : prev.aboutAlignment,
+            socials: existingProfile.socials as OnboardingData['socials'] || prev.socials,
             media: existingProfile.media as OnboardingData['media'] || prev.media,
-            // Load footer data
             footerBusinessName: existingProfile.footer && typeof existingProfile.footer === 'object' && 'businessName' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).businessName as string : prev.footerBusinessName,
             footerAddress: existingProfile.footer && typeof existingProfile.footer === 'object' && 'address' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).address as string : prev.footerAddress,
             footerEmail: existingProfile.footer && typeof existingProfile.footer === 'object' && 'email' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).email as string : prev.footerEmail,
@@ -178,12 +175,11 @@ export default function Onboarding() {
             footerTermsOfService: existingProfile.footer && typeof existingProfile.footer === 'object' && 'termsOfService' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).termsOfService as string : prev.footerTermsOfService,
             footerShowMaps: existingProfile.footer && typeof existingProfile.footer === 'object' && 'showMaps' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).showMaps as boolean : prev.footerShowMaps,
             footerShowAttribution: existingProfile.footer && typeof existingProfile.footer === 'object' && 'showAttribution' in existingProfile.footer ? (existingProfile.footer as Record<string, unknown>).showAttribution as boolean : prev.footerShowAttribution,
+            bookingUrl: existingProfile.booking_url || prev.bookingUrl,
+            bookingMode: (existingProfile.booking_mode as 'embed' | 'new_tab') || prev.bookingMode,
+            useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
+            whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
           }));
-          
-          // Log what was loaded for debugging
-          console.log('Loaded avatar_url:', existingProfile.avatar_url);
-          console.log('Loaded banner:', existingProfile.banner);
-          console.log('Loaded footer:', existingProfile.footer);
         }
       } catch (error) {
         console.error('Error loading existing profile:', error);
@@ -440,8 +436,7 @@ export default function Onboarding() {
         accent_color: '#6E56CF',
         theme_mode: 'light',
         banner: {
-          type: data.bannerType || 'image',
-          color: data.bannerType === 'color' ? (data.bannerColor || '#6E56CF') : 'hsl(var(--accent))',
+          type: 'image',
           imageUrl: data.bannerType === 'image' ? bannerUrl : undefined,
           heading: data.banner?.heading || data.name,
           subheading: data.banner?.subheading || data.slogan,
@@ -705,7 +700,7 @@ export default function Onboarding() {
             theme_mode: 'light',
             banner: {
               type: 'image',
-              color: 'hsl(var(--accent))'
+              imageUrl: undefined
             },
             about: {},
             socials: {},
@@ -821,8 +816,7 @@ export default function Onboarding() {
     businessName?: string;
     slogan?: string;
     category?: string;
-    bannerType: 'color' | 'image';
-    bannerColor?: string;
+    bannerType: 'image';
     bannerFile?: File;
     bannerTextColor?: string;
   }) => {
@@ -854,8 +848,7 @@ export default function Onboarding() {
         slogan?: string;
         category?: string;
         banner?: {
-          type: 'color' | 'image';
-          color: string;
+          type: 'image';
           imageUrl?: string;
           heading?: string;
           subheading?: string;
@@ -872,17 +865,17 @@ export default function Onboarding() {
       // Always set banner data, but ensure type is correct
       if (data.bannerType === 'image' && bannerUrl) {
         updateData.banner = {
-          type: 'image', // Force type to 'image' when file is uploaded
-          color: 'hsl(var(--accent))', // Fallback color
+          type: 'image',
           imageUrl: bannerUrl,
           heading: data.businessName,
           subheading: data.slogan,
           textColor: data.bannerTextColor || '#ffffff'
         };
-      } else {
+      } else if (data.bannerType === 'image') {
+        // Even if no new file, preserve existing image data
         updateData.banner = {
-          type: 'color',
-          color: data.bannerColor || '#6E56CF',
+          type: 'image',
+          imageUrl: onboardingData.banner?.imageUrl,
           heading: data.businessName,
           subheading: data.slogan,
           textColor: data.bannerTextColor || '#ffffff'
@@ -1480,6 +1473,7 @@ export default function Onboarding() {
             businessName: onboardingData.businessName,
             isBusiness: onboardingData.isBusiness,
           }}
+          handle={onboardingData.handle}
         />
       );
     
@@ -1488,6 +1482,7 @@ export default function Onboarding() {
         <Step2Booking 
           onNext={handleStep2} 
           onBack={goBack}
+          handle={onboardingData.handle}
           existingData={{
             bookingUrl: onboardingData.bookingUrl,
             bookingMode: onboardingData.bookingMode,
@@ -1503,6 +1498,7 @@ export default function Onboarding() {
           onNext={handleStep3} 
           onBack={goBack}
           requiresName={onboardingData.isBusiness || false}
+          handle={onboardingData.handle}
           existingData={{
             name: onboardingData.name || onboardingData.businessName,
             slogan: onboardingData.slogan,
@@ -1517,8 +1513,10 @@ export default function Onboarding() {
         <Step4PersonalImage 
           onNext={handleStep4} 
           onBack={goBack}
+          handle={onboardingData.handle}
           existingData={{
             avatar_url: onboardingData.avatar_url,
+            avatarFile: onboardingData.avatarFile,
           }}
         />
       );
@@ -1528,11 +1526,13 @@ export default function Onboarding() {
         <Step4Extras 
           onNext={handleStep5} 
           onBack={goBack}
+          handle={onboardingData.handle}
           existingData={{
             aboutTitle: onboardingData.aboutTitle,
             aboutDescription: onboardingData.aboutDescription,
             aboutAlignment: onboardingData.aboutAlignment,
             aboutPhotoFile: onboardingData.aboutPhotoFile,
+            name: onboardingData.businessName || onboardingData.name,
             socials: onboardingData.socials,
             mediaFiles: onboardingData.mediaFiles,
             whatsappNumber: onboardingData.whatsappNumber,
@@ -1546,6 +1546,7 @@ export default function Onboarding() {
         <Step5SocialTestimonials 
           onNext={handleStep6} 
           onBack={goBack}
+          handle={onboardingData.handle}
           existingData={{
             socialLinks: onboardingData.socialLinks,
             testimonials: onboardingData.testimonials,
@@ -1558,6 +1559,7 @@ export default function Onboarding() {
         <Step6Footer 
           onNext={handleStep7} 
           onBack={goBack}
+          handle={onboardingData.handle}
           existingData={{
             footerBusinessName: onboardingData.footerBusinessName,
             footerAddress: onboardingData.footerAddress,
@@ -1580,6 +1582,7 @@ export default function Onboarding() {
           onPublish={handlePublish}
           onSaveDraft={handleSaveDraft}
           onBack={goBack}
+          handle={onboardingData.handle}
           profileData={{
             handle: onboardingData.handle || '',
             name: onboardingData.name || onboardingData.businessName,

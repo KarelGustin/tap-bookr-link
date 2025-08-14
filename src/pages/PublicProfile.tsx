@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { Button } from '@/components/ui/button';
 import NotFound from './NotFound';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Profile = Database['public']['Tables']['profiles']['Row'] & {
   testimonials?: Testimonial[];
@@ -77,6 +78,7 @@ interface Testimonial {
 
 export default function PublicProfile() {
   const { handle } = useParams();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -133,24 +135,42 @@ export default function PublicProfile() {
 
   // Default banner configuration
   const bannerConfig: BannerSection = {
-    background_image: profile.banner && typeof profile.banner === 'object' && 'imageUrl' in profile.banner && typeof profile.banner.imageUrl === 'string'
-      ? profile.banner.imageUrl 
-      : (profile.banner && typeof profile.banner === 'object' && 'image_url' in profile.banner && typeof profile.banner.image_url === 'string'
-        ? profile.banner.image_url 
-        : undefined),
+    background_image: (() => {
+      if (profile.banner && typeof profile.banner === 'object') {
+        if ('imageUrl' in profile.banner && typeof profile.banner.imageUrl === 'string') {
+          return profile.banner.imageUrl;
+        }
+        if ('image_url' in profile.banner && typeof profile.banner.image_url === 'string') {
+          return profile.banner.image_url;
+        }
+      }
+      return undefined;
+    })(),
     profile_image: profile.avatar_url || undefined,
-    title: profile.banner && typeof profile.banner === 'object' && 'heading' in profile.banner && typeof profile.banner.heading === 'string'
-      ? profile.banner.heading
-      : (profile.name || 'Your Business Name'),
-    subtitle: profile.banner && typeof profile.banner === 'object' && 'subheading' in profile.banner && typeof profile.banner.subheading === 'string'
-      ? profile.banner.subheading
-      : (profile.slogan || 'Your business description'),
-    background_color: profile.banner && typeof profile.banner === 'object' && 'color' in profile.banner && typeof profile.banner.color === 'string'
-      ? profile.banner.color
-      : (profile.accent_color || '#6E56CF'),
-    text_color: profile.banner && typeof profile.banner === 'object' && 'textColor' in profile.banner && typeof profile.banner.textColor === 'string'
-      ? profile.banner.textColor
-      : 'white'
+    title: (() => {
+      if (profile.banner && typeof profile.banner === 'object' && 'heading' in profile.banner && typeof profile.banner.heading === 'string') {
+        return profile.banner.heading;
+      }
+      return profile.name || 'Your Business Name';
+    })(),
+    subtitle: (() => {
+      if (profile.banner && typeof profile.banner === 'object' && 'subheading' in profile.banner && typeof profile.banner.subheading === 'string') {
+        return profile.banner.subheading;
+      }
+      return profile.slogan || 'Your business description';
+    })(),
+    background_color: (() => {
+      if (profile.banner && typeof profile.banner === 'object' && 'color' in profile.banner && typeof profile.banner.color === 'string') {
+        return profile.banner.color;
+      }
+      return profile.accent_color || '#6E56CF';
+    })(),
+    text_color: (() => {
+      if (profile.banner && typeof profile.banner === 'object' && 'textColor' in profile.banner && typeof profile.banner.textColor === 'string') {
+        return profile.banner.textColor;
+      }
+      return 'white';
+    })()
   };
 
   // Debug banner configuration
@@ -181,6 +201,13 @@ export default function PublicProfile() {
     if (typeof value === 'object' && value !== null) {
       const maybeItems = (value as UnknownRecord).items;
       if (Array.isArray(maybeItems)) return maybeItems as unknown[];
+      
+      // Also check for other common field names
+      const maybeMedia = (value as UnknownRecord).media;
+      if (Array.isArray(maybeMedia)) return maybeMedia as unknown[];
+      
+      const maybeFiles = (value as UnknownRecord).files;
+      if (Array.isArray(maybeFiles)) return maybeFiles as unknown[];
     }
     return [];
   };
@@ -192,12 +219,15 @@ export default function PublicProfile() {
       if (typeof rec.url === 'string') return rec.url;
       if (typeof rec.imageUrl === 'string') return rec.imageUrl;
       if (typeof rec.fileName === 'string') return rec.fileName;
+      if (typeof rec.image_url === 'string') return rec.image_url;
+      if (typeof rec.file_url === 'string') return rec.file_url;
     }
     return '';
   };
 
   const mediaList: unknown[] = extractMediaArray(rawMedia);
 
+  
   // Debug logging
   console.log('Raw media data:', rawMedia);
   console.log('Raw media type:', typeof rawMedia);
@@ -227,6 +257,15 @@ export default function PublicProfile() {
             backgroundPosition: bannerConfig.background_image ? 'center' : undefined,
           }}
         >
+          {/* Debug info - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="absolute top-4 left-4 bg-black/70 text-white text-xs p-2 rounded z-20">
+              <div>Banner Image: {bannerConfig.background_image || 'None'}</div>
+              <div>Banner Color: {bannerConfig.background_color}</div>
+              <div>Raw Banner: {JSON.stringify(profile.banner)}</div>
+            </div>
+          )}
+          
           {bannerConfig.background_image && (
             <div className="absolute inset-0 bg-black/20" />
           )}
@@ -274,7 +313,10 @@ export default function PublicProfile() {
       {/* About Section with Profile Avatar */}
       <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3 }}>
         <div className="max-w-6xl mx-auto">
-          {/* Mobile Layout - Stacked */}
+          <h2 className="text-3xl font-bold text-center mb-12">
+            {t('public.about', { name: (parsedFooter as FooterData)?.businessName || profile.name || 'jouw bedrijf' })}
+          </h2>
+                      {/* Mobile Layout - Stacked */}
           <div className="block md:hidden text-center">
             {/* Profile Avatar - Full width on mobile */}
             <div className="w-full mb-8">
@@ -282,13 +324,13 @@ export default function PublicProfile() {
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
-                    alt={profile.name || 'Profile'}
+                    alt={(parsedFooter as FooterData)?.businessName || profile.name || 'Profiel'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                     <span className="text-6xl font-bold text-gray-400">
-                      {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                      {(parsedFooter as FooterData)?.businessName?.charAt(0)?.toUpperCase() || profile.name?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                 )}
@@ -317,7 +359,7 @@ export default function PublicProfile() {
             )}
           </div>
 
-          {/* Desktop Layout - Side by side */}
+                      {/* Desktop Layout - Side by side */}
           <div className="hidden md:flex items-start gap-8">
             {/* Profile Avatar - Left side on desktop */}
             <div className="w-1/2">
@@ -325,13 +367,13 @@ export default function PublicProfile() {
                 {profile.avatar_url ? (
                   <img 
                     src={profile.avatar_url} 
-                    alt={profile.name || 'Profile'}
+                    alt={(parsedFooter as FooterData)?.businessName || profile.name || 'Profile'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                     <span className="text-6xl font-bold text-gray-400">
-                      {profile.name?.charAt(0)?.toUpperCase() || '?'}
+                      {(parsedFooter as FooterData)?.businessName?.charAt(0)?.toUpperCase() || profile.name?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                 )}
@@ -398,8 +440,19 @@ export default function PublicProfile() {
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            Work & Results
+            {t('public.workResults')}
           </h3>
+          
+          {/* Debug info - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-4 bg-gray-100 rounded-lg text-xs">
+              <div><strong>Media Debug Info:</strong></div>
+              <div>Raw media: {JSON.stringify(profile.media)}</div>
+              <div>Media type: {typeof profile.media}</div>
+              <div>Extracted media list length: {mediaList.length}</div>
+              <div>Media list: {JSON.stringify(mediaList)}</div>
+            </div>
+          )}
           
           {/* Horizontal Scrolling Container */}
           <div
@@ -418,10 +471,14 @@ export default function PublicProfile() {
                           src={imageUrl}
                           alt={`Media ${index + 1}`}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error(`Failed to load image ${index}:`, imageUrl);
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
-                          <span className="text-white text-lg font-medium">Image {index + 1}</span>
+                          <span className="text-white text-lg font-medium">Afbeelding {index + 1}</span>
                         </div>
                       )}
                     </div>
@@ -433,7 +490,7 @@ export default function PublicProfile() {
               <div className="flex-shrink-0">
                 <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
                   <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <span className="text-gray-500 text-lg font-medium">No images uploaded yet</span>
+                    <span className="text-gray-500 text-lg font-medium">Nog geen afbeeldingen geüpload</span>
                   </div>
                 </div>
               </div>
@@ -446,7 +503,7 @@ export default function PublicProfile() {
       <section className="w-full" id="booking-section">
           <div className="w-full">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center px-4">
-              {profile.booking_url && !profile.use_whatsapp ? 'Book Your Appointment' : 'Get In Touch'}
+              {profile.booking_url && !profile.use_whatsapp ? t('public.booking') : t('public.contact')}
             </h3>
             
             {/* WhatsApp CTA - Show when using WhatsApp OR when no booking URL */}
@@ -459,10 +516,10 @@ export default function PublicProfile() {
                     </svg>
                   </div>
                   <h4 className="text-xl font-semibold text-gray-900">
-                    Contact us on WhatsApp
+                    Neem contact op via WhatsApp
                   </h4>
                   <p className="text-gray-600">
-                    Get in touch with us directly for appointments, questions, or inquiries
+                    Neem direct contact op voor afspraken, vragen of informatie
                   </p>
                   <Button 
                     onClick={() => {
@@ -473,7 +530,7 @@ export default function PublicProfile() {
                     }}
                     className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg font-medium"
                   >
-                    Chat on WhatsApp
+                    Chat via WhatsApp
                   </Button>
                 </div>
               </div>
@@ -485,7 +542,7 @@ export default function PublicProfile() {
                 <iframe
                   src={profile.booking_url}
                   className="w-full min-h-[1000px] border-0"
-                  title="Book Appointment"
+                  title="Afspraak Boeken"
                   allow="camera; microphone; geolocation"
                   sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
                 />
@@ -515,7 +572,7 @@ export default function PublicProfile() {
           <section className="py-8 px-4">
             <div className="max-w-6xl mx-auto">
               <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                Customer Reviews
+                {t('public.testimonials')}
               </h3>
               
               {/* Horizontal Scrolling Reviews Container */}
@@ -527,7 +584,7 @@ export default function PublicProfile() {
                         <div className="w-full h-full relative">
                           <img 
                             src={testimonial.image_url} 
-                            alt={`${testimonial.customer_name} testimonial`}
+                            alt={`${testimonial.customer_name} aanbeveling`}
                             className="w-full h-full object-cover"
                           />
                           <div className="absolute inset-0 bg-black/30" />
@@ -583,7 +640,7 @@ export default function PublicProfile() {
                     });
                   }}
                 >
-                  Book Now
+                  {t('public.booking')}
                 </Button>
               ) : profile.whatsapp_number && (
                 <Button 
@@ -595,7 +652,7 @@ export default function PublicProfile() {
                     });
                   }}
                 >
-                  Contact on WhatsApp
+                  Neem contact op via WhatsApp
                 </Button>
               )}
                              {(() => {
@@ -612,7 +669,7 @@ export default function PublicProfile() {
                         window.open(whatsappUrl, '_blank');
                       }}
                     >
-                      Questions? WhatsApp!
+                      Vragen? WhatsApp!
                     </Button>
                   );
                 }
@@ -702,7 +759,7 @@ export default function PublicProfile() {
                           🎯
                         </div>
                         <p className="text-gray-300">
-                          Next available: <span className="font-medium">{nextAvailable}</span>
+                          Volgende beschikbaar: <span className="font-medium">{nextAvailable}</span>
                         </p>
                       </div>
                     )}
@@ -732,7 +789,7 @@ export default function PublicProfile() {
                       allowFullScreen
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
-                      title="Business Location"
+                      title="Bedrijfslocatie"
                     />
                   </div>
                 );
@@ -754,7 +811,7 @@ export default function PublicProfile() {
                   <>
                     {cancellationPolicy && (
                       <div>
-                        <h4 className="font-medium mb-2">Cancellation Policy</h4>
+                        <h4 className="font-medium mb-2">Annuleringsbeleid</h4>
                         <p className="text-sm text-gray-300">{cancellationPolicy}</p>
                       </div>
                     )}
@@ -768,7 +825,7 @@ export default function PublicProfile() {
                     
                     {termsOfService && (
                       <div>
-                        <h4 className="font-medium mb-2">Terms</h4>
+                        <h4 className="font-medium mb-2">Voorwaarden</h4>
                         <p className="text-sm text-gray-300">{termsOfService}</p>
                       </div>
                     )}
@@ -787,13 +844,13 @@ export default function PublicProfile() {
               return (
                 <div className="border-t border-gray-700 pt-6 text-center">
                   <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm text-gray-400">
-                    <span>Powered by Bookr</span>
+                    <span>Aangedreven door Bookr</span>
                     <span>•</span>
                     <a 
                       href="/onboarding" 
                       className="text-gray-300 hover:text-white transition-colors"
                     >
-                      Create your page
+                      Maak je pagina aan
                     </a>
                   </div>
                 </div>

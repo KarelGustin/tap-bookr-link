@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ interface Step2BookingProps {
     whatsappNumber?: string;
   }) => void;
   onBack: () => void;
+  handle?: string;
   existingData?: {
     bookingUrl?: string;
     bookingMode?: 'embed' | 'new_tab';
@@ -23,12 +24,22 @@ interface Step2BookingProps {
 }
 
 
-export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps) => {
+export const Step2Booking = ({ onNext, onBack, existingData, handle }: Step2BookingProps) => {
   const [bookingUrl, setBookingUrl] = useState(existingData?.bookingUrl || '');
   const [embedMode, setEmbedMode] = useState(existingData?.bookingMode === 'new_tab' ? false : true);
   const [useWhatsApp, setUseWhatsApp] = useState(existingData?.useWhatsApp || false);
   const [whatsappNumber, setWhatsappNumber] = useState(existingData?.whatsappNumber || '');
-  const [selectedProvider, setSelectedProvider] = useState<number | null>(null);
+
+  // Set initial state based on existing data
+  useEffect(() => {
+    if (existingData?.useWhatsApp) {
+      setUseWhatsApp(true);
+    } else if (existingData?.bookingUrl) {
+      setUseWhatsApp(false);
+      setBookingUrl(existingData.bookingUrl);
+      setEmbedMode(existingData.bookingMode === 'embed');
+    }
+  }, [existingData]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -67,15 +78,16 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
     <OnboardingLayout
       currentStep={2}
       totalSteps={5}
-      title={existingData?.bookingUrl ? "Your booking link" : "Add your booking link"}
-      subtitle={existingData?.bookingUrl ? "Your booking link is already connected." : "Connect your existing booking system."}
+      title={existingData?.bookingUrl ? "Je boekingslink" : "Voeg je boekingslink toe"}
+      subtitle={existingData?.bookingUrl ? "Je boekingslink is al verbonden." : "Verbind je bestaande boekingssysteem."}
       onBack={onBack}
+      handle={handle}
     >
       <div className="space-y-6">
 
         {/* Booking Method Selection */}
         <div className="space-y-4">
-          <Label className="text-base font-medium">How do you want customers to book?</Label>
+          <Label className="text-base font-medium">Hoe wil je dat klanten boeken?</Label>
           
           <div className="grid gap-3">
             <button
@@ -94,9 +106,9 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
                   {!useWhatsApp && <div className="w-2 h-2 bg-white rounded-full m-auto" />}
                 </div>
                 <div>
-                  <div className="font-medium">Use a booking system</div>
+                  <div className="font-medium">Gebruik een boekingssysteem</div>
                   <div className="text-sm text-muted-foreground">
-                    Connect Calendly, Acuity, or other booking platforms
+                    Verbind Salonized, Calendly, Acuity of andere boekingsplatforms
                   </div>
                 </div>
               </div>
@@ -118,9 +130,9 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
                   {useWhatsApp && <div className="w-2 h-2 bg-white rounded-full m-auto" />}
                 </div>
                 <div>
-                  <div className="font-medium">Use WhatsApp</div>
+                  <div className="font-medium">Gebruik WhatsApp</div>
                   <div className="text-sm text-muted-foreground">
-                    Customers contact you directly via WhatsApp
+                    Klanten nemen rechtstreeks contact op via WhatsApp
                   </div>
                 </div>
               </div>
@@ -132,28 +144,28 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
         {!useWhatsApp && (
           <div className="space-y-2">
             <Label htmlFor="bookingUrl" className="text-base font-medium">
-              Booking URL
+              Boekings-URL
               {existingData?.bookingUrl && (
                 <span className="ml-2 text-sm text-muted-foreground">
-                  (Already saved)
+                  (Al opgeslagen)
                 </span>
               )}
             </Label>
             <Input
               id="bookingUrl"
               type="url"
-              placeholder="https://calendly.com/yourusername"
+              placeholder="https://calendly.com/jegebruikersnaam"
               value={bookingUrl}
               onChange={(e) => setBookingUrl(e.target.value)}
               className="rounded-lg h-12"
             />
             {existingData?.bookingUrl ? (
               <p className="text-sm text-green-600">
-                ✅ Your booking URL is saved. You can update it if needed.
+                ✅ Je boekings-URL is opgeslagen. Je kunt deze bijwerken indien nodig.
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Must be a secure HTTPS link
+                Moet een beveiligde HTTPS-link zijn
               </p>
             )}
           </div>
@@ -163,18 +175,18 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
         {useWhatsApp && (
           <div className="space-y-2">
             <Label htmlFor="whatsappNumber" className="text-base font-medium">
-              WhatsApp Number
+              WhatsApp Nummer
             </Label>
             <Input
               id="whatsappNumber"
               type="tel"
-              placeholder="+1 (555) 123-4567"
+              placeholder="+31 (0) 6 12345678"
               value={whatsappNumber}
               onChange={(e) => setWhatsappNumber(e.target.value)}
               className="rounded-lg h-12"
             />
             <p className="text-sm text-muted-foreground">
-              Customers will be able to contact you directly via WhatsApp
+              Klanten kunnen rechtstreeks contact met je opnemen via WhatsApp
             </p>
           </div>
         )}
@@ -208,10 +220,10 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
         {!useWhatsApp && bookingUrl && isValidUrl(bookingUrl) && (
           <div className="space-y-3">
             <Label className="text-base font-medium">
-              Preview of your booking page
+              Voorvertoning van je boekingspagina
             </Label>
             <p className="text-sm text-muted-foreground">
-              See how your booking software will appear on your public page
+              Zie hoe je boekingssoftware eruit zal zien op je publieke pagina
             </p>
             <div className="border rounded-lg overflow-hidden bg-white">
               {embedMode ? (
@@ -219,11 +231,11 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
                   <iframe
                     src={bookingUrl}
                     className="w-full h-96 border-0"
-                    title="Booking preview"
+                    title="Boekingsvoorvertoning"
                     sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                   />
                   <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    Embedded Mode
+                    Ingebedde Modus
                   </div>
                 </div>
               ) : (
@@ -231,10 +243,10 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
                   <div className="text-center space-y-2">
                     <ExternalLink className="w-12 h-12 text-muted-foreground mx-auto" />
                     <p className="text-muted-foreground">
-                      Will open in new tab: {bookingUrl}
+                      Opent in nieuwe tab: {bookingUrl}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      New Tab Mode
+                      Nieuwe Tab Modus
                     </p>
                   </div>
                 </div>
@@ -242,14 +254,14 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
             </div>
             <p className="text-sm text-muted-foreground">
               {embedMode 
-                ? "This is how your booking form will appear on your public page."
-                : "Visitors will be redirected to your booking page in a new tab."
+                ? "Dit is hoe je boekingsformulier eruit zal zien op je publieke pagina."
+                : "Bezoekers worden doorgestuurd naar je boekingspagina in een nieuwe tab."
               }
             </p>
             {embedMode && (
               <p className="text-xs text-muted-foreground bg-blue-50 p-2 rounded">
-                💡 Tip: If the iframe doesn't load properly, it may be due to the booking platform's security settings. 
-                The form will still work correctly on your live page.
+                💡 Tip: Als de iframe niet goed laadt, kan dit komen door de beveiligingsinstellingen van het boekingsplatform. 
+                Het formulier zal nog steeds correct werken op je live pagina.
               </p>
             )}
           </div>
@@ -262,11 +274,11 @@ export const Step2Booking = ({ onNext, onBack, existingData }: Step2BookingProps
           className="w-full h-12 text-base rounded-lg"
           size="lg"
         >
-          {existingData?.bookingUrl ? 'Continue with saved booking link' : 'Continue'}
+          {existingData?.bookingUrl ? 'Doorgaan met opgeslagen boekingslink' : 'Doorgaan'}
         </Button>
         
         <p className="text-center text-sm text-muted-foreground">
-          You can change this later in Edit Page.
+          Je kunt dit later wijzigen in Pagina Bewerken.
         </p>
       </div>
     </OnboardingLayout>

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface Step5SocialTestimonialsProps {
     }>;
   }) => void;
   onBack: () => void;
+  handle?: string;
   existingData: {
     socialLinks: Array<{
       id: string;
@@ -40,32 +41,37 @@ interface Step5SocialTestimonialsProps {
   };
 }
 
-export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5SocialTestimonialsProps) => {
+export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }: Step5SocialTestimonialsProps) => {
   const [socialLinks, setSocialLinks] = useState(existingData.socialLinks.length > 0 ? existingData.socialLinks : [
     { id: '1', title: 'Instagram', platform: 'instagram', url: '' },
     { id: '2', title: 'Facebook', platform: 'facebook', url: '' },
+    { id: '3', title: 'LinkedIn', platform: 'linkedin', url: '' },
+    { id: '4', title: 'YouTube', platform: 'youtube', url: '' },
   ]);
-  
   const [testimonials, setTestimonials] = useState(existingData.testimonials.length > 0 ? existingData.testimonials : [
     {
-      customer_name: 'Sarah Johnson',
-      review_title: 'Amazing service!',
-      review_text: 'I was so impressed with the quality and professionalism. Highly recommend!',
+      customer_name: '',
+      review_title: 'Geweldige service!',
+      review_text: 'Ze overtrof mijn verwachtingen volledig.',
       image_url: '',
     },
     {
-      customer_name: 'Mike Chen',
-      review_title: 'Exceeded expectations',
-      review_text: 'The team went above and beyond to deliver exactly what I needed.',
-      image_url: '',
-    },
-    {
-      customer_name: 'Emily Rodriguez',
-      review_title: 'Fantastic experience',
-      review_text: 'Professional, reliable, and delivered results. Will definitely use again!',
+      customer_name: '',
+      review_title: 'Fantastische ervaring',
+      review_text: 'Zeer professioneel en betrouwbaar.',
       image_url: '',
     },
   ]);
+
+  // Set initial state based on existing data
+  useEffect(() => {
+    if (existingData.socialLinks.length > 0) {
+      setSocialLinks(existingData.socialLinks);
+    }
+    if (existingData.testimonials.length > 0) {
+      setTestimonials(existingData.testimonials);
+    }
+  }, [existingData]);
 
   const addSocialLink = () => {
     const newId = (socialLinks.length + 1).toString();
@@ -132,7 +138,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold text-gray-900">Connect & Build Trust</h1>
         <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Add your social media links and customer testimonials to build credibility and help customers find you online.
+          Voeg je sociale media links en klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
         </p>
       </div>
 
@@ -144,7 +150,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
             <div>
               <CardTitle>Social Media Links</CardTitle>
               <CardDescription>
-                Help customers find you on social media. Add your Instagram, Facebook, LinkedIn, or any other platforms you use.
+                Help klanten je te vinden op sociale media. Voeg je Instagram, Facebook, LinkedIn of andere platforms toe die je gebruikt.
               </CardDescription>
             </div>
           </div>
@@ -153,7 +159,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
           {socialLinks.map((link) => (
             <div key={link.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg">
               <div>
-                <Label htmlFor={`title-${link.id}`}>Platform Name</Label>
+                <Label htmlFor={`title-${link.id}`}>Platform Naam</Label>
                 <Input
                   id={`title-${link.id}`}
                   placeholder="e.g., Instagram, Facebook, LinkedIn"
@@ -202,7 +208,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
             className="w-full"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Another Social Platform
+            Nog een Sociale Platform Toevoegen
           </Button>
         </CardContent>
       </Card>
@@ -213,9 +219,9 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
           <div className="flex items-center gap-3">
             <Star className="w-6 h-6 text-primary" />
             <div>
-              <CardTitle>Customer Testimonials</CardTitle>
+              <CardTitle>Klantenbeoordelingen</CardTitle>
               <CardDescription>
-                Show potential customers what others are saying about you. Add customer photos to make testimonials more personal and trustworthy.
+                Toon potentiële klanten wat anderen over jou zeggen. Voeg klantenfoto's toe om beoordelingen persoonlijker en betrouwbaarder te maken.
               </CardDescription>
             </div>
           </div>
@@ -239,7 +245,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label htmlFor={`customer-${index}`}>Customer Name</Label>
+                  <Label htmlFor={`customer-${index}`}>Klant Naam</Label>
                   <Input
                     id={`customer-${index}`}
                     placeholder="e.g., Sarah Johnson"
@@ -248,7 +254,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`title-${index}`}>Review Title</Label>
+                  <Label htmlFor={`title-${index}`}>Beoordeling Titel</Label>
                   <Input
                     id={`title-${index}`}
                     placeholder="e.g., Amazing service!"
@@ -259,7 +265,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
               </div>
               
               <div>
-                <Label htmlFor={`review-${index}`}>Review Text</Label>
+                <Label htmlFor={`review-${index}`}>Beoordeling Tekst</Label>
                 <Textarea
                   id={`review-${index}`}
                   placeholder="Tell us what the customer said about your service..."
@@ -271,9 +277,9 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
 
               {/* Customer Photo Upload */}
               <div className="space-y-2">
-                <Label className="text-base font-medium">Customer Photo (Optional)</Label>
+                <Label className="text-base font-medium">Klant Foto (Optioneel)</Label>
                 <p className="text-sm text-muted-foreground">
-                  Adding a customer photo makes testimonials more personal and trustworthy
+                  Een klantfoto maakt beoordelingen persoonlijker en betrouwbaarder.
                 </p>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
@@ -315,7 +321,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
                         className="h-8 text-sm text-muted-foreground hover:text-destructive"
                       >
                         <X className="w-4 h-4 mr-2" />
-                        Remove Photo
+                        Verwijder Foto
                       </Button>
                     )}
                   </div>
@@ -332,11 +338,11 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
             disabled={testimonials.length >= 6}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Another Testimonial
+            Nog een Beoordeling Toevoegen
           </Button>
           
           <p className="text-sm text-gray-500 text-center">
-            You can add up to 6 testimonials. Customer photos help build trust and make testimonials more personal.
+            Je kunt maximaal 6 beoordelingen toevoegen. Klantenfoto's helpen vertrouwen te bouwen en beoordelingen persoonlijker te maken.
           </p>
         </CardContent>
       </Card>
@@ -344,10 +350,10 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData }: Step5S
       {/* Navigation */}
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
-          Back
+          Terug
         </Button>
         <Button onClick={handleSubmit}>
-          Continue to Footer Settings
+          Doorgaan naar Footer Instellingen
         </Button>
       </div>
     </div>

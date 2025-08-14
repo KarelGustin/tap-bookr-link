@@ -11,6 +11,7 @@ interface Step5PreviewProps {
   onSaveDraft: () => void;
   onEditPage: () => void;
   onBack: () => void;
+  handle?: string;
   profileData: {
     handle: string;
     name?: string;
@@ -46,7 +47,8 @@ export const Step5Preview = ({
   onBack, 
   profileData,
   canPublish,
-  isPublishing 
+  isPublishing,
+  handle 
 }: Step5PreviewProps) => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -55,8 +57,8 @@ export const Step5Preview = ({
   const handlePublish = async () => {
     if (!agreedToTerms) {
       toast({
-        title: "Terms Required",
-        description: "Please agree to the Terms & Privacy to publish your page.",
+        title: "Voorwaarden Vereist",
+        description: "Ga akkoord met de Algemene Voorwaarden & Privacy om je pagina te publiceren.",
         variant: "destructive",
       });
       return;
@@ -69,8 +71,8 @@ export const Step5Preview = ({
   const copyLink = () => {
     navigator.clipboard.writeText(`https://TapBookr.com/${profileData.handle}`);
     toast({
-      title: "Link copied!",
-      description: "Your Bookr link has been copied to clipboard.",
+      title: "Link gekopieerd!",
+      description: "Je Bookr link is naar het klembord gekopieerd.",
     });
   };
 
@@ -81,8 +83,9 @@ export const Step5Preview = ({
       <OnboardingLayout
         currentStep={5}
         totalSteps={5}
-        title="Your Bookr is live! 🎉"
-        subtitle="Congratulations! Your professional booking page is ready."
+        title="Je Bookr is live! 🎉"
+        subtitle="Gefeliciteerd! Je professionele boekingspagina is klaar."
+        handle={handle}
       >
         <div className="space-y-6 text-center">
           {/* Confetti effect placeholder */}
@@ -94,19 +97,19 @@ export const Step5Preview = ({
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center justify-center space-x-2 mb-2">
               <div className="text-green-600 text-lg">🎉</div>
-              <h3 className="text-lg font-semibold text-green-800">Your Bookr is Live!</h3>
+              <h3 className="text-lg font-semibold text-green-800">Je Bookr is Live!</h3>
             </div>
-            <p className="text-green-700 mb-3">Your professional booking page is now ready for visitors.</p>
+            <p className="text-green-700 mb-3">Je professionele boekingspagina is nu klaar voor bezoekers.</p>
             <div className="bg-white p-3 rounded border">
-              <p className="text-sm font-medium text-gray-800 mb-1">7-Day Free Trial Active</p>
-              <p className="text-xs text-gray-600">After your trial, continue for just €5/month</p>
+              <p className="text-sm font-medium text-gray-800 mb-1">7-Dagen Gratis Proefperiode Actief</p>
+              <p className="text-xs text-gray-600">Na je proefperiode, ga door voor slechts €5/maand</p>
             </div>
           </div>
 
           {/* Share section */}
           <div className="space-y-4">
             <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">Your Bookr page:</p>
+              <p className="text-sm text-muted-foreground mb-2">Je Bookr pagina:</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-left bg-background p-2 rounded border text-sm">
                   {shareLink}
@@ -128,20 +131,20 @@ export const Step5Preview = ({
                 onClick={() => window.open(shareLink, '_blank')}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                View Page
+                Bekijk Pagina
               </Button>
               <Button 
                 className="h-12"
                 onClick={onEditPage}
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Page
+                Bewerk Pagina
               </Button>
             </div>
           </div>
 
           <p className="text-muted-foreground">
-            Share your link and start getting bookings!
+            Deel je link en begin met het ontvangen van boekingen!
           </p>
         </div>
       </OnboardingLayout>
@@ -152,8 +155,8 @@ export const Step5Preview = ({
     <OnboardingLayout
       currentStep={5}
       totalSteps={5}
-      title="Preview & Publish"
-      subtitle="Review your page and go live when ready."
+      title="Voorvertoning & Publiceren"
+      subtitle="Bekijk je pagina en ga live wanneer je klaar bent."
       onBack={onBack}
     >
       <div className="space-y-8">
@@ -168,7 +171,7 @@ export const Step5Preview = ({
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-muted rounded-full"></div>
                   <div>
-                    <div className="font-semibold">{profileData.name || 'Your Name'}</div>
+                    <div className="font-semibold">{profileData.name || 'Je Naam'}</div>
                      <div className="text-sm text-muted-foreground">
                        TapBookr.com/{profileData.handle}
                      </div>
@@ -176,7 +179,7 @@ export const Step5Preview = ({
                 </div>
 
                 <div className="h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-medium">
-                  Book Now
+                  Boek Nu
                 </div>
 
                 <div className="space-y-2">
@@ -196,13 +199,13 @@ export const Step5Preview = ({
 
         {/* Checklist */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Ready to launch</h3>
+          <h3 className="font-semibold text-lg">Klaar om te lanceren</h3>
           
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <Check className="w-5 h-5 text-green-600" />
               <div>
-                <div className="font-medium">Handle locked</div>
+                <div className="font-medium">Handle vergrendeld</div>
                 <div className="text-sm text-muted-foreground">
                   TapBookr.com/{profileData.handle}
                 </div>
@@ -212,7 +215,7 @@ export const Step5Preview = ({
             <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
               <Check className="w-5 h-5 text-green-600" />
               <div>
-                <div className="font-medium">Booking link set</div>
+                <div className="font-medium">Boekingslink ingesteld</div>
                 <div className="text-sm text-muted-foreground truncate">
                   {new URL(profileData.bookingUrl).hostname}
                 </div>
@@ -223,7 +226,7 @@ export const Step5Preview = ({
               <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <Check className="w-5 h-5 text-green-600" />
                 <div>
-                  <div className="font-medium">Name set</div>
+                  <div className="font-medium">Naam ingesteld</div>
                   <div className="text-sm text-muted-foreground">
                     {profileData.name}
                   </div>
@@ -233,9 +236,9 @@ export const Step5Preview = ({
               <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <div className="w-5 h-5 rounded-full border-2 border-orange-500"></div>
                 <div>
-                  <div className="font-medium text-orange-700">Name missing</div>
+                  <div className="font-medium text-orange-700">Naam ontbreekt</div>
                   <div className="text-sm text-orange-600">
-                    Recommended for professional appearance
+                    Aanbevolen voor professionele uitstraling
                   </div>
                 </div>
               </div>
@@ -246,10 +249,10 @@ export const Step5Preview = ({
         {/* Mobile Preview */}
         <div className="space-y-3">
           <Label className="text-base font-medium">
-            Final preview of your public page
+            Eindvoorvertoning van je publieke pagina
           </Label>
           <p className="text-sm text-muted-foreground">
-            This preview shows how your complete Bookr page will appear to visitors. All sections are included: banner, profile, about, social links, work gallery, and booking.
+            Deze voorvertoning toont hoe je complete Bookr pagina eruit zal zien voor bezoekers. Alle secties zijn inbegrepen: banner, profiel, over, sociale links, werkgalerij en boeken.
           </p>
           <div className="border rounded-lg overflow-hidden bg-white">
             <div className="bg-gray-100 p-3 border-b">
@@ -293,7 +296,7 @@ export const Step5Preview = ({
                     </div>
                   )}
                 </div>
-                <h1 className="text-lg font-semibold">{profileData.name || 'Your Business Name'}</h1>
+                <h1 className="text-lg font-semibold">{profileData.name || 'Je Bedrijfsnaam'}</h1>
                 {profileData.slogan && (
                   <p className="text-sm text-gray-600">{profileData.slogan}</p>
                 )}
@@ -319,7 +322,7 @@ export const Step5Preview = ({
               {/* Social Links */}
               {profileData.socials && Object.values(profileData.socials).some(s => s) && (
                 <div className="p-4 border-b">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Connect with me</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Verbind met mij</h3>
                   <div className="flex flex-wrap justify-center gap-3">
                     {profileData.socials.instagram && (
                       <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-full text-xs">
@@ -358,13 +361,13 @@ export const Step5Preview = ({
               {/* Media Gallery */}
               {profileData.mediaFiles && profileData.mediaFiles.length > 0 && (
                 <div className="p-4 border-b">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">My Work</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Mijn Werk</h3>
                   <div className="flex space-x-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {profileData.mediaFiles.map((file, index) => (
                       <div key={index} className="flex-shrink-0 w-64 h-80 rounded-lg overflow-hidden border shadow-sm relative">
                         <img 
                           src={URL.createObjectURL(file)} 
-                          alt={`Work ${index + 1}`} 
+                          alt={`Werk ${index + 1}`} 
                           className="w-full h-full object-cover" 
                         />
                         <div className="absolute top-2 left-2 bg-black/70 text-white text-sm px-2 py-1 rounded">
@@ -374,7 +377,7 @@ export const Step5Preview = ({
                     ))}
                   </div>
                   <p className="text-xs text-gray-500 text-center mt-2">
-                    Swipe to see more • {profileData.mediaFiles.length} image{profileData.mediaFiles.length !== 1 ? 's' : ''}
+                    Veeg om meer te zien • {profileData.mediaFiles.length} afbeelding{profileData.mediaFiles.length !== 1 ? 'en' : ''}
                   </p>
                 </div>
               )}
@@ -388,17 +391,17 @@ export const Step5Preview = ({
                         <iframe
                           src={profileData.bookingUrl}
                           className="w-full h-[800px] border-0"
-                          title="Booking form"
+                          title="Boekingsformulier"
                           sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
                         />
                       </div>
                     ) : (
                       <div className="space-y-2">
                         <div className="h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-medium">
-                          📅 Book Now
+                          📅 Boek Nu
                         </div>
                         <p className="text-xs text-gray-500 text-center">
-                          Opens in new tab
+                          Opent in nieuwe tab
                         </p>
                       </div>
                     )
@@ -408,7 +411,7 @@ export const Step5Preview = ({
               
               {/* Reviews Section */}
               <div className="p-4 border-b">
-                <h3 className="text-lg font-semibold text-center mb-4">Client Reviews</h3>
+                <h3 className="text-lg font-semibold text-center mb-4">Klantbeoordelingen</h3>
                 <div className="flex space-x-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                   {/* Review Card 1 */}
                   <div className="flex-shrink-0 w-64 h-80 rounded-lg overflow-hidden border shadow-sm relative bg-white">
@@ -421,7 +424,7 @@ export const Step5Preview = ({
                     <div className="p-4">
                       <h4 className="font-medium text-sm mb-2">Sarah M.</h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        "Amazing service! They really went above and beyond my expectations. Highly recommend!"
+                        "Geweldige service! Ze gingen echt boven en buiten mijn verwachtingen. Zeer aanbevolen!"
                       </p>
                     </div>
                   </div>
@@ -437,7 +440,7 @@ export const Step5Preview = ({
                     <div className="p-4">
                       <h4 className="font-medium text-sm mb-2">Michael R.</h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        "Professional, reliable, and excellent quality. Will definitely use their services again."
+                        "Professioneel, betrouwbaar en uitstekende kwaliteit. Zal zeker hun diensten opnieuw gebruiken."
                       </p>
                     </div>
                   </div>
@@ -453,7 +456,7 @@ export const Step5Preview = ({
                     <div className="p-4">
                       <h4 className="font-medium text-sm mb-2">Emma L.</h4>
                       <p className="text-xs text-gray-600 leading-relaxed">
-                        "Outstanding work! They delivered exactly what I was looking for and more."
+                        "Uitstekend werk! Ze leverden precies wat ik zocht en meer."
                       </p>
                     </div>
                   </div>
@@ -461,13 +464,13 @@ export const Step5Preview = ({
                 
                 <div className="text-center mt-4">
                   <p className="text-xs text-gray-500">
-                    Reviews will appear here once you've collected and added them. Curated by yourself.
+                    Beoordelingen verschijnen hier zodra je ze hebt verzameld en toegevoegd. Gecureerd door jezelf.
                   </p>
                 </div>
               </div>
               
               <div className="text-center text-xs text-gray-500 p-4 bg-gray-50">
-                This is exactly how visitors will see your page
+                Dit is precies hoe bezoekers je pagina zullen zien
               </div>
             </div>
           </div>
@@ -483,13 +486,13 @@ export const Step5Preview = ({
               className="mt-1"
             />
             <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
-              I agree to the{' '}
+              Ik ga akkoord met de{' '}
               <a href="/terms" className="text-primary hover:underline">
-                Terms of Service
+                Algemene Voorwaarden
               </a>{' '}
-              and{' '}
+              en{' '}
               <a href="/privacy" className="text-primary hover:underline">
-                Privacy Policy
+                Privacybeleid
               </a>
             </Label>
           </div>
@@ -513,15 +516,15 @@ export const Step5Preview = ({
             className="w-full h-12 text-base rounded-lg"
             size="lg"
           >
-            {isPublishing ? 'Publishing...' : 'Publish My Bookr (7-Day Free Trial)'}
+            {isPublishing ? 'Publiceren...' : 'Publiceer Mijn Bookr (7-Dagen Gratis Proefperiode)'}
           </Button>
           
           <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-start space-x-2">
               <div className="text-blue-600 text-sm">ℹ️</div>
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Free Trial Included</p>
-                <p>Your Bookr page will be live for 7 days completely free. After the trial, continue for just €5/month.</p>
+                <p className="font-medium mb-1">Gratis Proefperiode Inbegrepen</p>
+                <p>Je Bookr pagina zal 7 dagen volledig gratis live zijn. Na de proefperiode, ga door voor slechts €5/maand.</p>
               </div>
             </div>
           </div>
@@ -546,7 +549,7 @@ export const Step5Preview = ({
 
         {!canPublish && (
           <p className="text-center text-sm text-orange-600">
-            Complete required fields to publish
+            Vul verplichte velden in om te publiceren
           </p>
         )}
       </div>

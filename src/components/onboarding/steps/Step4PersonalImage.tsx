@@ -9,12 +9,14 @@ interface Step4PersonalImageProps {
     avatarFile?: File;
   }) => void;
   onBack: () => void;
+  handle?: string;
   existingData?: {
     avatar_url?: string;
+    avatarFile?: File;
   };
 }
 
-export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4PersonalImageProps) => {
+export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Step4PersonalImageProps) => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(existingData?.avatar_url || null);
 
@@ -51,17 +53,18 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4Person
     <OnboardingLayout
       currentStep={4}
       totalSteps={7}
-      title="Personal Image"
-      subtitle="Add a photo to introduce yourself to your customers."
+      title="Persoonlijke Afbeelding"
+      subtitle="Voeg een foto toe om jezelf aan je klanten voor te stellen."
       onBack={onBack}
+      handle={handle}
     >
       <div className="space-y-6">
         {/* Personal Image Upload */}
         <div className="space-y-4">
           <div className="text-center space-y-2">
-            <Label className="text-base font-medium">Personal Introduction Photo</Label>
+            <Label className="text-base font-medium">Persoonlijke Introductiefoto</Label>
             <p className="text-sm text-muted-foreground">
-              This image will be displayed prominently on your page to help customers connect with you personally
+              Deze afbeelding wordt prominent op je pagina getoond. <u><b>Dit wekt meer vertrouwen bij onbekende bezoekers.</b></u>
             </p>
           </div>
           
@@ -69,7 +72,7 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4Person
             {/* Image Preview */}
             <div className="w-32 h-32 rounded-xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden shadow-lg">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="Personal photo preview" className="w-full h-full object-cover" />
+                <img src={avatarPreview} alt="Persoonlijke foto voorvertoning" className="w-full h-full object-cover" />
               ) : (
                 <User className="w-12 h-12 text-muted-foreground" />
               )}
@@ -84,7 +87,7 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4Person
                 className="h-11 px-6"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {avatarPreview ? 'Change Photo' : 'Upload Photo'}
+                {avatarPreview ? 'Wijzig Foto' : 'Upload Foto'}
               </Button>
               
               {avatarPreview && (
@@ -98,32 +101,22 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4Person
                   }}
                   className="h-8 text-sm text-muted-foreground hover:text-destructive"
                 >
-                  <X className="w-4 h-4 mr-2" />
-                  Remove Photo
+                  <X className="w-4 h-4 mr-1" />
+                  Verwijder
                 </Button>
               )}
             </div>
-            
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
           </div>
         </div>
 
-        {/* Help Text */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-          <h4 className="font-medium text-blue-900">Why add a personal photo?</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>• Builds trust and personal connection with customers</li>
-            <li>• Makes your business feel more approachable and human</li>
-            <li>• Helps customers recognize you when they visit</li>
-            <li>• Professional appearance that enhances your brand</li>
-          </ul>
-        </div>
+        {/* Hidden file input */}
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarChange}
+        />
 
         {/* Continue button */}
         <Button 
@@ -132,11 +125,11 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData }: Step4Person
           className="w-full h-12 text-base rounded-lg"
           size="lg"
         >
-          Continue
+          Volgende
         </Button>
         
         <p className="text-center text-sm text-muted-foreground">
-          You can skip this step and add a photo later
+          Mocht je geen persoonlijke foto hebben, gebruik dan een afbeelding van je bedrijf.
         </p>
       </div>
     </OnboardingLayout>

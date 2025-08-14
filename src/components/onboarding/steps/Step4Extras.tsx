@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { Upload, User, Instagram, Facebook, Linkedin, Youtube, MessageCircle, GripVertical } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Step4ExtrasProps {
   onNext: (data: {
@@ -22,11 +23,13 @@ interface Step4ExtrasProps {
     mediaFiles: File[];
   }) => void;
   onBack: () => void;
+  handle?: string;
   existingData?: {
     aboutTitle?: string;
     aboutDescription?: string;
     aboutAlignment?: 'center' | 'left';
     aboutPhotoFile?: File;
+    name?: string;
     socials?: {
       instagram?: string;
       facebook?: string;
@@ -47,7 +50,8 @@ interface Step4ExtrasProps {
   };
 }
 
-export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) => {
+export const Step4Extras = ({ onNext, onBack, existingData, handle }: Step4ExtrasProps) => {
+  const { t } = useLanguage();
   const [aboutTitle, setAboutTitle] = useState(existingData?.aboutTitle || '');
   const [aboutDescription, setAboutDescription] = useState(existingData?.aboutDescription || '');
   const [aboutAlignment, setAboutAlignment] = useState<'center' | 'left'>(existingData?.aboutAlignment || 'center');
@@ -80,6 +84,11 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
       setMediaPreviews(previews);
     }
     
+    // Initialize about photo preview from existing data
+    if (existingData?.aboutPhotoFile) {
+      setAboutPhotoFile(existingData.aboutPhotoFile);
+    }
+    
     // Cleanup function to revoke object URLs
     return () => {
       mediaPreviews.forEach(url => {
@@ -89,7 +98,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
         }
       });
     };
-  }, [existingData?.mediaFiles, existingData?.media]);
+  }, [existingData?.mediaFiles, existingData?.media, existingData?.aboutPhotoFile]);
 
   const handleAboutPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -187,29 +196,30 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
     <OnboardingLayout
       currentStep={4}
       totalSteps={7}
-      title={existingData?.aboutTitle || existingData?.socials ? "Your extras" : "Optional extras"}
-      subtitle={existingData?.aboutTitle || existingData?.socials ? "Your additional information is saved." : "Add more details to make your page stand out."}
+      title={existingData?.aboutTitle || existingData?.socials ? t('onboarding.step4.extras.title') : t('onboarding.step4.extras.optionalTitle')}
+      subtitle={existingData?.aboutTitle || existingData?.socials ? t('onboarding.step4.extras.subtitle') : t('onboarding.step4.extras.optionalSubtitle')}
       onBack={onBack}
+      handle={handle}
     >
       <div className="space-y-8">
         {/* About section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
-            About You
+            {t('onboarding.step4.aboutYou.title')}
             {existingData?.aboutTitle && (
               <span className="ml-2 text-sm text-muted-foreground">
-                (Already saved)
+                {t('onboarding.step4.aboutYou.alreadySaved')}
               </span>
             )}
           </h3>
           
           <div className="space-y-2">
             <Label htmlFor="aboutTitle" className="text-base font-medium">
-              Title
+              {t('onboarding.step4.aboutYou.titleLabel')}
             </Label>
             <Input
               id="aboutTitle"
-              placeholder="Meet Sarah"
+              placeholder={t('onboarding.step4.aboutTitle.placeholder', { name: existingData?.name || 'jouw bedrijf' })}
               value={aboutTitle}
               onChange={(e) => setAboutTitle(e.target.value)}
               className="rounded-lg h-12"
@@ -218,45 +228,90 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
 
           <div className="space-y-2">
             <Label htmlFor="aboutDescription" className="text-base font-medium">
-              Description
+              {t('onboarding.step4.aboutYou.descriptionLabel')}
             </Label>
             <Textarea
               id="aboutDescription"
-              placeholder="Hi! I'm Sara. I help clients feel their best with natural, long-lasting results."
+              placeholder={t('onboarding.step4.aboutYou.descriptionPlaceholder', { name: existingData?.name || 'jouw bedrijf' })}
               value={aboutDescription}
               onChange={(e) => setAboutDescription(e.target.value)}
               className="rounded-lg min-h-[100px]"
               maxLength={200}
             />
             <p className="text-sm text-muted-foreground">
-              {aboutDescription.length}/200 characters
+              {aboutDescription.length}/200 {t('onboarding.step4.aboutYou.characters')}
             </p>
           </div>
 
+          {/* About Photo */}
           <div className="space-y-2">
-            {/* <Label className="text-base font-medium">Text Alignment</Label>
-            <div className="flex gap-2">
+            <Label className="text-base font-medium">
+              {t('onboarding.step4.aboutPhoto.title')}
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              {t('onboarding.step4.aboutPhoto.description')}
+            </p>
+            
+            {aboutPhotoPreview || existingData?.aboutPhotoFile ? (
+              <div className="space-y-2">
+                <div className="w-32 h-32 rounded-lg overflow-hidden border">
+                  <img 
+                    src={aboutPhotoPreview || (existingData?.aboutPhotoFile ? URL.createObjectURL(existingData.aboutPhotoFile) : '')} 
+                    alt="About photo preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => aboutPhotoInputRef.current?.click()}
+                  >
+                    {t('onboarding.step4.aboutPhoto.changePhoto')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setAboutPhotoFile(null);
+                      setAboutPhotoPreview(null);
+                    }}
+                  >
+                    {t('onboarding.step4.aboutPhoto.removePhoto')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <Button
                 type="button"
-                variant={aboutAlignment === 'center' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAboutAlignment('center')}
+                variant="outline"
+                onClick={() => aboutPhotoInputRef.current?.click()}
+                className="w-full h-12 border-dashed"
               >
-                Center
+                <Upload className="w-4 h-4 mr-2" />
+                {t('onboarding.step4.aboutPhoto.uploadPhoto')}
               </Button>
-             
-            </div> */}
+            )}
             
+            <input
+              ref={aboutPhotoInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAboutPhotoChange}
+              className="hidden"
+            />
           </div>
         </div>
 
         {/* Social links */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
-            Social Links
+            {t('onboarding.step4.socialLinks.title')}
             {existingData?.socials && Object.values(existingData.socials).some(s => s) && (
               <span className="ml-2 text-sm text-muted-foreground">
-                (Already saved)
+                {t('onboarding.step4.aboutYou.alreadySaved')}
               </span>
             )}
           </h3>
@@ -282,23 +337,23 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
         {/* Media gallery */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Media Gallery</h3>
+            <h3 className="text-lg font-semibold">{t('onboarding.step4.mediaGallery.title')}</h3>
             <p className="text-sm text-muted-foreground">
-              {mediaPreviews.length}/6 images
+              {mediaPreviews.length}/6 {t('onboarding.step4.mediaGallery.images')}
             </p>
           </div>
           
           <p className="text-sm text-muted-foreground">
             {existingData?.media?.items && existingData.media.items.length > 0 
-              ? "Your existing media gallery is shown below. You can add more images or reorder them."
-              : "Upload 6 of your best images to show your work and what you do."
+              ? t('onboarding.step4.mediaGallery.existingDescription')
+              : t('onboarding.step4.mediaGallery.uploadDescription')
             }
           </p>
 
           {mediaPreviews.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">
-                Drag and drop to reorder images. First image will be the main image.
+                {t('onboarding.step4.mediaGallery.dragDropDescription')}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {mediaPreviews.map((preview, index) => (
@@ -315,7 +370,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                   >
                     <img 
                       src={preview} 
-                      alt={`Media ${index + 1}`} 
+                      alt={`${t('onboarding.step4.mediaGallery.mediaAlt')} ${index + 1}`} 
                       className="w-full aspect-square object-cover rounded-lg"
                     />
                     <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
@@ -344,7 +399,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
               className="w-full h-12 border-dashed"
             >
               <Upload className="w-4 h-4 mr-2" />
-              Add Media ({6 - mediaPreviews.length} remaining)
+              {t('onboarding.step4.mediaGallery.addMedia')} ({6 - mediaPreviews.length} {t('onboarding.step4.mediaGallery.remaining')})
             </Button>
           )}
           
@@ -359,10 +414,10 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
         </div>
 
         {/* Mobile Preview */}
-        {(aboutTitle || aboutDescription || Object.values(socials).some(s => s) || mediaPreviews.length > 0) && (
+        {(aboutTitle || aboutDescription || aboutPhotoPreview || Object.values(socials).some(s => s) || mediaPreviews.length > 0) && (
           <div className="space-y-3">
             <Label className="text-base font-medium">
-              Preview of your public page
+              {t('onboarding.step4.preview.title')}
             </Label>
             <div className="border rounded-lg overflow-hidden bg-white">
               <div className="bg-gray-100 p-3 border-b">
@@ -372,14 +427,25 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                     <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   </div>
-                  <div className="text-xs text-gray-600">tapBookr.com/yourhandle</div>
+                  <div className="text-xs text-gray-600">{t('common.urlPrefix')}yourhandle</div>
                 </div>
               </div>
               
               <div className="space-y-0">
                 {/* About Section */}
-                {(aboutTitle || aboutDescription) && (
+                {(aboutTitle || aboutDescription || aboutPhotoPreview) && (
                   <div className="p-4 bg-gray-50">
+                    {aboutPhotoPreview && (
+                      <div className="flex justify-center mb-3">
+                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md">
+                          <img 
+                            src={aboutPhotoPreview} 
+                            alt="About photo" 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
                     {aboutTitle && (
                       <h2 className="text-lg font-semibold text-center mb-2">{aboutTitle}</h2>
                     )}
@@ -392,7 +458,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                 {/* Social Links */}
                 {Object.values(socials).some(s => s) && (
                   <div className="p-4 border-b">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">Connect with me</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">{t('onboarding.step4.preview.socialTitle')}</h3>
                     <div className="flex flex-wrap justify-center gap-3">
                       {socialPlatforms.map(({ key, icon: Icon, label }) => {
                         if (socials[key]) {
@@ -412,7 +478,7 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                 {/* Media Gallery - Horizontal Slider */}
                 {mediaPreviews.length > 0 && (
                   <div className="p-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">My Work</h3>
+                    <h3 className="text-sm font-medium text-gray-700 mb-3 text-center">{t('onboarding.step4.preview.mediaTitle')}</h3>
                     <div className="flex space-x-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                       {mediaPreviews.map((preview, index) => (
                         <div key={index} className="flex-shrink-0 w-64 h-80 rounded-lg overflow-hidden border shadow-sm relative">
@@ -424,14 +490,14 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
                       ))}
                     </div>
                     <p className="text-xs text-gray-500 text-center mt-2">
-                      Swipe to see more • {mediaPreviews.length} image{mediaPreviews.length !== 1 ? 's' : ''}
+                      {t('onboarding.step4.preview.swipeText', { count: mediaPreviews.length.toString() })}
                     </p>
                   </div>
                 )}
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              This is how your public page will look to visitors
+              {t('onboarding.step4.preview.description')}
             </p>
           </div>
         )}
@@ -442,11 +508,11 @@ export const Step4Extras = ({ onNext, onBack, existingData }: Step4ExtrasProps) 
           className="w-full h-12 text-base rounded-lg"
           size="lg"
         >
-          {existingData?.aboutTitle || existingData?.socials ? 'Continue with saved extras' : 'Continue'}
+          {existingData?.aboutTitle || existingData?.socials || existingData?.media?.items?.length > 0 ? t('onboarding.step4.continueWithSaved') : t('onboarding.step4.continue')}
         </Button>
         
         <p className="text-center text-sm text-muted-foreground">
-          Everything auto-saves as you type.
+          {t('onboarding.step4.autoSaveNote')}
         </p>
       </div>
     </OnboardingLayout>
