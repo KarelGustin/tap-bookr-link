@@ -724,7 +724,7 @@ export default function PublicProfile() {
                     <div className="w-full">
                       <iframe
                         src={profile.booking_url}
-                        className="w-full min-h-[1000px] border-0"
+                        className="w-full min-h-[800px] border-0"
                         title="Afspraak Boeken"
                         allow="camera; microphone; geolocation"
                         sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
@@ -736,6 +736,9 @@ export default function PublicProfile() {
 
             
 
+            {/* Debug Section - Temporary for development */}
+           
+
             {/* Reviews Section */}
             {(() => {
               console.log('🔍 Starting testimonials section rendering...');
@@ -745,27 +748,57 @@ export default function PublicProfile() {
                 aboutKeys: profile.about && typeof profile.about === 'object' ? Object.keys(profile.about as Record<string, unknown>) : null
               });
               
+              // Debug button - temporary
+              if (process.env.NODE_ENV === 'development') {
+                console.log('🧪 Development mode - showing debug info');
+                console.log('🧪 Full profile object:', profile);
+                console.log('🧪 Profile ID:', profile.id);
+                console.log('🧪 Profile status:', profile.status);
+                console.log('🧪 Profile about section:', profile.about);
+              }
+              
               // Check for testimonials in multiple locations with better fallback logic
               let testimonials: Testimonial[] = [];
               
-              // First priority: testimonials in about section (main location where onboarding saves them)
-              if (profile.about && typeof profile.about === 'object' && 'testimonials' in profile.about) {
-                const aboutData = profile.about as AboutData & { testimonials?: Testimonial[] };
+              // First priority: testimonials from dedicated testimonials column (NEW APPROACH)
+              if (profile.testimonials && Array.isArray(profile.testimonials)) {
+                testimonials = profile.testimonials;
+                console.log('✅ Found testimonials in profile.testimonials column:', testimonials);
+                console.log('✅ Testimonials array length:', testimonials.length);
+                console.log('✅ First testimonial structure:', testimonials[0]);
+              } else {
+                console.log('❌ No testimonials found in testimonials column');
+              }
+              
+              // Second priority: testimonials in about section (backward compatibility)
+              if (testimonials.length === 0 && profile.about && typeof profile.about === 'object' && 'testimonials' in profile.about) {
+                const aboutData = profile.about as Record<string, unknown>;
                 if (aboutData.testimonials && Array.isArray(aboutData.testimonials)) {
                   testimonials = aboutData.testimonials;
-                  console.log('✅ Found testimonials in profile.about.testimonials:', testimonials);
+                  console.log('✅ Found testimonials in profile.about.testimonials (fallback):', testimonials);
+                  console.log('✅ Testimonials array length:', testimonials.length);
+                  console.log('✅ First testimonial structure:', testimonials[0]);
+                } else {
+                  console.log('❌ Testimonials in about section is not an array:', aboutData.testimonials);
+                  console.log('❌ Testimonials type:', typeof aboutData.testimonials);
                 }
+              } else {
+                console.log('❌ No testimonials key found in about section');
               }
-              // Second priority: check if testimonials exist in socialLinks structure (onboarding data structure)
-              else if (profile.about && typeof profile.about === 'object' && 'socialLinks' in profile.about) {
+              
+              // Third priority: check if testimonials exist in socialLinks structure (onboarding data structure)
+              if (testimonials.length === 0 && profile.about && typeof profile.about === 'object' && 'socialLinks' in profile.about) {
                 const aboutData = profile.about as Record<string, unknown>;
                 if (aboutData.testimonials && Array.isArray(aboutData.testimonials)) {
                   testimonials = aboutData.testimonials as Testimonial[];
                   console.log('✅ Found testimonials in profile.about (socialLinks structure):', testimonials);
+                } else {
+                  console.log('❌ No testimonials found in socialLinks structure');
                 }
               }
-              // Third priority: check for testimonials in any about section structure
-              else if (profile.about && typeof profile.about === 'object') {
+              
+              // Fourth priority: check for testimonials in any about section structure
+              if (testimonials.length === 0 && profile.about && typeof profile.about === 'object') {
                 const aboutData = profile.about as Record<string, unknown>;
                 console.log('🔍 Checking about section for testimonials:', aboutData);
                 console.log('🔍 About section keys:', Object.keys(aboutData));
@@ -781,10 +814,27 @@ export default function PublicProfile() {
                 }
               }
               
-              // Fourth priority: direct testimonials field (if it exists in future)
-              if (testimonials.length === 0 && profile.testimonials && Array.isArray(profile.testimonials)) {
-                testimonials = profile.testimonials;
-                console.log('✅ Found testimonials in profile.testimonials:', testimonials);
+              // Fifth priority: check for testimonials in the about JSON structure (most common case)
+              if (testimonials.length === 0 && profile.about && typeof profile.about === 'object') {
+                const aboutData = profile.about as Record<string, unknown>;
+            
+                
+                // Check if testimonials exists as a direct property
+                if ('testimonials' in aboutData) {
+                  const testimonialsData = aboutData.testimonials;
+                  console.log('🔍 Found testimonials property:', testimonialsData);
+                  console.log('🔍 Testimonials type:', typeof testimonialsData);
+                  
+                  if (Array.isArray(testimonialsData)) {
+                    testimonials = testimonialsData as Testimonial[];
+                    console.log('✅ Found testimonials array in about JSON:', testimonials);
+                    console.log('✅ Testimonials count:', testimonials.length);
+                  } else {
+                    console.log('❌ Testimonials property is not an array:', testimonialsData);
+                  }
+                } else {
+                  console.log('❌ No testimonials property found in about JSON');
+                }
               }
               
               console.log('🔍 Final testimonials array:', testimonials);
@@ -792,12 +842,23 @@ export default function PublicProfile() {
               
               // Filter out testimonials without required content
               const validTestimonials = testimonials.filter(testimonial => {
-                const isValid = testimonial.customer_name && 
-                  testimonial.customer_name.trim() && 
-                  testimonial.review_title && 
-                  testimonial.review_title.trim() && 
-                  testimonial.review_text && 
-                  testimonial.review_text.trim();
+                console.log('🔍 Checking testimonial for validity:', testimonial);
+                
+                const hasCustomerName = testimonial.customer_name && testimonial.customer_name.trim();
+                const hasReviewTitle = testimonial.review_title && testimonial.review_title.trim();
+                const hasReviewText = testimonial.review_text && testimonial.review_text.trim();
+                
+                const isValid = hasCustomerName && hasReviewTitle && hasReviewText;
+                
+                console.log('🔍 Testimonial validation:', {
+                  customer_name: testimonial.customer_name,
+                  review_title: testimonial.review_title,
+                  review_text: testimonial.review_text,
+                  hasCustomerName,
+                  hasReviewTitle,
+                  hasReviewText,
+                  isValid
+                });
                 
                 if (!isValid) {
                   console.log('❌ Invalid testimonial filtered out:', testimonial);
@@ -812,6 +873,8 @@ export default function PublicProfile() {
               // Only show section if there are valid testimonials
               if (validTestimonials.length === 0) {
                 console.log('❌ No valid testimonials found, hiding section');
+                console.log('❌ Raw testimonials data:', testimonials);
+                console.log('❌ About section content:', profile.about);
                 return null;
               }
               
@@ -821,7 +884,7 @@ export default function PublicProfile() {
                 <section className="py-8 px-4">
                   <div className="max-w-6xl mx-auto">
                     <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-                      {t('public.testimonials')}
+                      Klantbeoordelingen
                     </h3>
                     
                     {/* Horizontal Scrolling Reviews Container */}

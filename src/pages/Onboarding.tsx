@@ -1289,24 +1289,7 @@ export default function Onboarding() {
     try {
       console.log('🔧 Saving testimonials data to database with profile ID:', onboardingData.profileId);
       
-      // 1. Save testimonials in the about section (main location)
-      const aboutData = {
-        ...existingAbout,
-        socialLinks: data.socialLinks,
-        testimonials: processedTestimonials
-      };
-      
-      console.log('🔧 About data to save:', aboutData);
-      console.log('🔧 About data JSON:', JSON.stringify(aboutData, null, 2));
-      console.log('🔧 Testimonials in about data:', aboutData.testimonials);
-      console.log('🔧 Testimonials count in about data:', aboutData.testimonials?.length || 0);
-      
-      console.log('🔧 Saving about data with testimonials...');
-      await patchFieldToDatabase('about', aboutData);
-      console.log('✅ About section saved successfully with testimonials');
-      
-      // 2. Also save testimonials as a separate field for easier access
-      // This ensures the public page can find testimonials data easily
+      // 1. Save testimonials directly to the testimonials column (NEW APPROACH)
       const testimonialsData = processedTestimonials.map(testimonial => ({
         id: `testimonial-${Date.now()}-${Math.random()}`,
         customer_name: testimonial.customer_name,
@@ -1315,11 +1298,34 @@ export default function Onboarding() {
         image_url: testimonial.image_url
       }));
       
-      console.log('🔧 Testimonials data for separate field:', testimonialsData);
+      console.log('🔧 Saving testimonials to testimonials column:', testimonialsData);
       
-      // Note: We'll only save testimonials in the about section for now
-      // The separate testimonials field can be added later if needed
-      console.log('✅ Testimonials will be saved in the about section');
+      // Save testimonials to the dedicated testimonials column
+      const { error: testimonialsError } = await supabase
+        .from('profiles')
+        .update({
+          testimonials: testimonialsData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', onboardingData.profileId);
+      
+      if (testimonialsError) {
+        console.error('❌ Error saving testimonials to testimonials column:', testimonialsError);
+        throw testimonialsError;
+      } else {
+        console.log('✅ Testimonials saved to testimonials column successfully');
+      }
+      
+      // 2. Also save testimonials in the about section for backward compatibility
+      const aboutData = {
+        ...existingAbout,
+        socialLinks: data.socialLinks,
+        testimonials: processedTestimonials
+      };
+      
+      console.log('🔧 Saving about data with testimonials (backward compatibility):', aboutData);
+      await patchFieldToDatabase('about', aboutData);
+      console.log('✅ About section saved successfully with testimonials');
       
       // 3. Update local state to ensure consistency
       setOnboardingData(prev => ({
@@ -1332,19 +1338,21 @@ export default function Onboarding() {
       console.log('🔧 Verifying saved data...');
       const { data: verifyData, error: verifyError } = await supabase
         .from('profiles')
-        .select('about')
+        .select('about, testimonials')
         .eq('id', onboardingData.profileId)
         .single();
       
       if (verifyError) {
         console.error('❌ Error verifying saved testimonials:', verifyError);
       } else {
-        console.log('✅ Verified saved data:', verifyData);
-        console.log('✅ Raw about data from DB:', verifyData?.about);
+        const verifiedData = verifyData as any;
+        console.log('✅ Verified saved data:', verifiedData);
+        console.log('✅ Raw about data from DB:', verifiedData?.about);
+        console.log('✅ Raw testimonials data from DB:', verifiedData?.testimonials);
         
         // Check about section
-        if (verifyData?.about && typeof verifyData.about === 'object') {
-          const savedAbout = verifyData.about as Record<string, unknown>;
+        if (verifiedData?.about && typeof verifiedData.about === 'object') {
+          const savedAbout = verifiedData.about as Record<string, unknown>;
           console.log('✅ About section contains:', {
             title: savedAbout.title,
             description: savedAbout.description,
@@ -1370,10 +1378,28 @@ export default function Onboarding() {
             console.log('❌ Testimonials in about section is not an array:', typeof savedAbout.testimonials);
           }
         } else {
-          console.log('❌ About section is not an object or is null:', verifyData?.about);
+          console.log('❌ About section is not an object or is null:', verifiedData?.about);
         }
         
-        console.log('✅ Verification complete - testimonials are saved in the about section');
+        // Check testimonials column
+        const testimonialsColumn = verifiedData?.testimonials;
+        if (testimonialsColumn && Array.isArray(testimonialsColumn)) {
+          console.log('✅ Testimonials column count:', testimonialsColumn.length);
+          testimonialsColumn.forEach((testimonial: Record<string, unknown>, index: number) => {
+            if (typeof testimonial === 'object' && testimonial !== null) {
+              console.log(`✅ Testimonials column testimonial ${index}:`, {
+                customer_name: testimonial.customer_name,
+                review_title: testimonial.review_title,
+                review_text: testimonial.review_text,
+                image_url: testimonial.image_url
+              });
+            }
+          });
+        } else {
+          console.log('❌ Testimonials column is not an array or is null:', testimonialsColumn);
+        }
+        
+        console.log('✅ Verification complete - testimonials are saved in both locations');
       }
       
       console.log('🎉 All testimonials data saved successfully!');
