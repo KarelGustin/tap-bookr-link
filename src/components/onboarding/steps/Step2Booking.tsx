@@ -77,7 +77,7 @@ export const Step2Booking = ({ onNext, onBack, existingData, handle }: Step2Book
   return (
     <OnboardingLayout
       currentStep={2}
-      totalSteps={5}
+      totalSteps={7}
       title={existingData?.bookingUrl ? "Je boekingslink" : "Voeg je boekingslink toe"}
       subtitle={existingData?.bookingUrl ? "Je boekingslink is al verbonden." : "Verbind je bestaande boekingssysteem."}
       onBack={onBack}

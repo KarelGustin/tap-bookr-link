@@ -11,9 +11,11 @@ interface Step3BrandingProps {
     businessName?: string; 
     slogan?: string; 
     category?: string;
-    bannerType: 'image';
-    bannerFile?: File;
-    bannerTextColor?: string;
+    banner?: { 
+      type: 'image'; 
+      imageUrl?: string; 
+      textColor?: string; 
+    };
   }) => void;
   onBack: () => void;
   requiresName: boolean;
@@ -93,9 +95,11 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
       businessName: businessName.trim() || undefined,
       slogan: slogan.trim() || undefined,
       category: category || undefined,
-      bannerType: 'image',
-      bannerFile: bannerFile || undefined,
-      bannerTextColor
+      banner: {
+        type: 'image',
+        imageUrl: bannerPreview || undefined,
+        textColor: bannerTextColor
+      },
     });
   };
 

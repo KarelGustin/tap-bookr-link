@@ -139,6 +139,13 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
 
     try {
       setIsAddressSearching(true);
+      
+      // Keep existing suggestions visible while searching
+      // Only clear if this is a completely new search
+      if (query !== addressSearchQuery) {
+        setAddressSuggestions([]);
+      }
+      
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=nl&limit=5&addressdetails=1`
       );
@@ -149,6 +156,7 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
       }
     } catch (error) {
       console.error('Error searching address:', error);
+      // Keep existing suggestions on error
     } finally {
       setIsAddressSearching(false);
     }
@@ -160,11 +168,12 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
       clearTimeout(addressSearchTimeoutRef.current);
     }
 
-    if (addressSearchQuery.trim()) {
+    if (addressSearchQuery.trim() && addressSearchQuery.length >= 3) {
       addressSearchTimeoutRef.current = setTimeout(() => {
         searchAddress(addressSearchQuery);
-      }, 500);
-    } else {
+      }, 600); // Increased delay for better UX
+    } else if (addressSearchQuery.trim().length < 3) {
+      // Clear suggestions if query is too short
       setAddressSuggestions([]);
     }
 
@@ -174,6 +183,14 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
       }
     };
   }, [addressSearchQuery]);
+
+  // Keep suggestions visible while typing
+  useEffect(() => {
+    if (addressSearchQuery.length >= 3 && !isAddressSearching) {
+      // Keep existing suggestions visible while user types
+      // Only clear if query becomes too short
+    }
+  }, [addressSearchQuery, isAddressSearching]);
 
   // Initialize address search query with existing data
   useEffect(() => {
@@ -212,7 +229,10 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
     
     // Synchronize address search query when address field is updated
     if (field === 'footerAddress') {
-      setAddressSearchQuery(value as string);
+      // Only update search query if it's different to prevent conflicts
+      if (value !== addressSearchQuery) {
+        setAddressSearchQuery(value as string);
+      }
     }
   };
 
@@ -249,6 +269,28 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
       sunday: 'Zondag'
     };
     return dayLabels[day] || day.charAt(0).toUpperCase() + day.slice(1);
+  };
+
+  const canGoNext = () => {
+    // Check if at least one contact method is provided
+    const hasContactMethod = footerData.footerEmail || footerData.footerPhone;
+    
+    // Check if business name is provided
+    const hasBusinessName = footerData.footerBusinessName && footerData.footerBusinessName.trim().length > 0;
+    
+    // Check if address is provided
+    const hasAddress = footerData.footerAddress && footerData.footerAddress.trim().length > 0;
+    
+    // Check if at least one policy is provided
+    const hasPolicy = footerData.footerCancellationPolicy || footerData.footerPrivacyPolicy || footerData.footerTermsOfService;
+    
+    // Check if opening hours are consistent (if not closed, open < close)
+    const hasConsistentHours = Object.values(footerData.footerHours || {}).every(day => {
+      if (day.closed) return true;
+      return day.open && day.close && day.open < day.close;
+    });
+    
+    return hasContactMethod && hasBusinessName && hasAddress && hasPolicy && hasConsistentHours;
   };
 
   return (
@@ -317,22 +359,46 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
                     placeholder="Hoofdstraat 123, Stad, Provincie 1234 AB"
                     value={addressSearchQuery || footerData.footerAddress}
                     onChange={(e) => {
-                      setAddressSearchQuery(e.target.value);
-                      setFooterData(prev => ({ ...prev, footerAddress: e.target.value }));
-                      setIsAddressPopoverOpen(true);
+                      const value = e.target.value;
+                      setAddressSearchQuery(value);
+                      // Don't update footerData immediately to prevent conflicts
+                      // Only update the search query for now
                     }}
-                    onFocus={() => setIsAddressPopoverOpen(true)}
+                    onFocus={() => {
+                      // Ensure popover opens and stays open
+                      setIsAddressPopoverOpen(true);
+                      // Set search query to current address if empty
+                      if (!addressSearchQuery && footerData.footerAddress) {
+                        setAddressSearchQuery(footerData.footerAddress);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // Small delay to allow clicking on suggestions
+                      setTimeout(() => {
+                        // Only close if no suggestion was clicked
+                        if (!e.relatedTarget || !e.relatedTarget.closest('[data-radix-popper-content-wrapper]')) {
+                          setIsAddressPopoverOpen(false);
+                        }
+                      }, 150);
+                    }}
                     className="pr-10"
                   />
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start">
+              <PopoverContent className="w-[400px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                 <Command>
                   <CommandInput 
                     placeholder="Zoek naar een adres..." 
                     value={addressSearchQuery}
-                    onValueChange={setAddressSearchQuery}
+                    onValueChange={(value) => {
+                      setAddressSearchQuery(value);
+                      // Start search after user stops typing
+                      if (value.length >= 3) {
+                        searchAddress(value);
+                      }
+                    }}
+                    onFocus={(e) => e.preventDefault()}
                   />
                   <CommandList>
                     {isAddressSearching && (
@@ -575,6 +641,20 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
           </div>
         </CardContent>
       </Card>
+
+      {/* Navigation */}
+      <div className="flex justify-between pt-6">
+        <Button variant="outline" onClick={onBack} className="rounded-lg">
+          Terug
+        </Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={!canGoNext()}
+          className="rounded-lg"
+        >
+          Bekijk 15 min. Live preview
+        </Button>
+      </div>
     </OnboardingLayout>
   );
 };

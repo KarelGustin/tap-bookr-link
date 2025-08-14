@@ -5,6 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X, Star, MessageCircle, Share2, Upload, User } from 'lucide-react';
+import { OnboardingLayout } from '../OnboardingLayout';
+import { supabase } from '../../../integrations/supabase/client';
 
 interface Step5SocialTestimonialsProps {
   onNext: (data: {
@@ -65,11 +67,29 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
 
   // Set initial state based on existing data
   useEffect(() => {
+    console.log('🔧 Step5SocialTestimonials: Loading existing data:', existingData);
+    
     if (existingData.socialLinks.length > 0) {
+      console.log('✅ Loading existing social links:', existingData.socialLinks);
       setSocialLinks(existingData.socialLinks);
     }
+    
     if (existingData.testimonials.length > 0) {
+      console.log('✅ Loading existing testimonials:', existingData.testimonials);
       setTestimonials(existingData.testimonials);
+      
+      // Validate testimonial structure
+      existingData.testimonials.forEach((testimonial, index) => {
+        console.log(`🔧 Testimonial ${index} loaded:`, {
+          customer_name: testimonial.customer_name,
+          review_title: testimonial.review_title,
+          review_text: testimonial.review_text,
+          image_url: testimonial.image_url,
+          has_file: '_file' in testimonial
+        });
+      });
+    } else {
+      console.log('❌ No existing testimonials found');
     }
   }, [existingData]);
 
@@ -119,243 +139,273 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
   };
 
   const handleSubmit = () => {
+    console.log('🔧 Step5SocialTestimonials: Submitting data...');
+    console.log('🔧 Current testimonials:', testimonials);
+    console.log('🔧 Current social links:', socialLinks);
+    
     // Filter out empty social links
     const validSocialLinks = socialLinks.filter(link => link.title.trim() && link.url.trim());
+    console.log('✅ Valid social links:', validSocialLinks);
     
     // Filter out empty testimonials
     const validTestimonials = testimonials.filter(testimonial => 
       testimonial.customer_name.trim() && testimonial.review_title.trim() && testimonial.review_text.trim()
     );
+    console.log('✅ Valid testimonials:', validTestimonials);
+    
+    // Log each testimonial for debugging
+    validTestimonials.forEach((testimonial, index) => {
+      console.log(`🔧 Submitting testimonial ${index}:`, {
+        customer_name: testimonial.customer_name,
+        review_title: testimonial.review_title,
+        review_text: testimonial.review_text,
+        image_url: testimonial.image_url,
+        has_file: '_file' in testimonial
+      });
+    });
 
-    onNext({
+    const submitData = {
       socialLinks: validSocialLinks,
       testimonials: validTestimonials,
-    });
+    };
+    
+    console.log('🔧 Final submit data:', submitData);
+    console.log('🔧 Submit data type:', typeof submitData);
+    console.log('🔧 Submit data JSON:', JSON.stringify(submitData, null, 2));
+    
+    // Call onNext with the data
+    console.log('🔧 Calling onNext with data...');
+    onNext(submitData);
+    console.log('🔧 onNext called successfully');
+  };
+
+  const canGoNext = () => {
+    // User can always proceed from this step as it's optional
+    return true;
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold text-gray-900">Connect & Build Trust</h1>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Voeg je sociale media links en klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
-        </p>
-      </div>
+    <OnboardingLayout 
+      currentStep={6}
+      totalSteps={7}
+      onBack={onBack} 
+      onNext={handleSubmit}
+      canGoNext={canGoNext()}
+      handle={handle}
+    >
+      <div className="max-w-4xl mx-auto p-6 space-y-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-gray-900">Connect & Build Trust</h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Voeg je sociale media links en klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
+          </p>
+        </div>
 
-      {/* Social Links Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Share2 className="w-6 h-6 text-primary" />
-            <div>
-              <CardTitle>Social Media Links</CardTitle>
-              <CardDescription>
-                Help klanten je te vinden op sociale media. Voeg je Instagram, Facebook, LinkedIn of andere platforms toe die je gebruikt.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {socialLinks.map((link) => (
-            <div key={link.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg">
+        {/* Social Links Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Share2 className="w-6 h-6 text-primary" />
               <div>
-                <Label htmlFor={`title-${link.id}`}>Platform Naam</Label>
-                <Input
-                  id={`title-${link.id}`}
-                  placeholder="e.g., Instagram, Facebook, LinkedIn"
-                  value={link.title}
-                  onChange={(e) => updateSocialLink(link.id, 'title', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor={`platform-${link.id}`}>Platform Type (Optional)</Label>
-                <Input
-                  id={`platform-${link.id}`}
-                  placeholder="e.g., instagram, facebook"
-                  value={link.platform}
-                  onChange={(e) => updateSocialLink(link.id, 'platform', e.target.value)}
-                />
-              </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor={`url-${link.id}`}>Profile URL</Label>
-                  <Input
-                    id={`url-${link.id}`}
-                    placeholder="https://instagram.com/yourusername"
-                    value={link.url}
-                    onChange={(e) => updateSocialLink(link.id, 'url', e.target.value)}
-                  />
-                </div>
-                {socialLinks.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeSocialLink(link.id)}
-                    className="mt-6"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
+                <CardTitle>Social Media Links</CardTitle>
+                <CardDescription>
+                  Help klanten je te vinden op sociale media. Voeg je Instagram, Facebook, LinkedIn of andere platforms toe die je gebruikt.
+                </CardDescription>
               </div>
             </div>
-          ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addSocialLink}
-            className="w-full"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nog een Sociale Platform Toevoegen
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Testimonials Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <Star className="w-6 h-6 text-primary" />
-            <div>
-              <CardTitle>Klantenbeoordelingen</CardTitle>
-              <CardDescription>
-                Toon potentiële klanten wat anderen over jou zeggen. Voeg klantenfoto's toe om beoordelingen persoonlijker en betrouwbaarder te maken.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Testimonial {index + 1}</h4>
-                {testimonials.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeTestimonial(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {socialLinks.map((link) => (
+              <div key={link.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 border border-gray-200 rounded-lg">
                 <div>
-                  <Label htmlFor={`customer-${index}`}>Klant Naam</Label>
+                  <Label htmlFor={`title-${link.id}`}>Platform Naam</Label>
                   <Input
-                    id={`customer-${index}`}
-                    placeholder="e.g., Sarah Johnson"
-                    value={testimonial.customer_name}
-                    onChange={(e) => updateTestimonial(index, 'customer_name', e.target.value)}
+                    id={`title-${link.id}`}
+                    placeholder="e.g., Instagram, Facebook, LinkedIn"
+                    value={link.title}
+                    onChange={(e) => updateSocialLink(link.id, 'title', e.target.value)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor={`title-${index}`}>Beoordeling Titel</Label>
+                  <Label htmlFor={`platform-${link.id}`}>Platform Type (Optional)</Label>
                   <Input
-                    id={`title-${index}`}
-                    placeholder="e.g., Amazing service!"
-                    value={testimonial.review_title}
-                    onChange={(e) => updateTestimonial(index, 'review_title', e.target.value)}
+                    id={`platform-${link.id}`}
+                    placeholder="e.g., instagram, facebook"
+                    value={link.platform}
+                    onChange={(e) => updateSocialLink(link.id, 'platform', e.target.value)}
                   />
                 </div>
-              </div>
-              
-              <div>
-                <Label htmlFor={`review-${index}`}>Beoordeling Tekst</Label>
-                <Textarea
-                  id={`review-${index}`}
-                  placeholder="Tell us what the customer said about your service..."
-                  value={testimonial.review_text}
-                  onChange={(e) => updateTestimonial(index, 'review_text', e.target.value)}
-                  rows={3}
-                />
-              </div>
-
-              {/* Customer Photo Upload */}
-              <div className="space-y-2">
-                <Label className="text-base font-medium">Klant Foto (Optioneel)</Label>
-                <p className="text-sm text-muted-foreground">
-                  Een klantfoto maakt beoordelingen persoonlijker en betrouwbaarder.
-                </p>
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                    {testimonial.image_url ? (
-                      <img src={testimonial.image_url} alt="Customer photo" className="w-full h-full object-cover" />
-                    ) : testimonial._file ? (
-                      <img src={URL.createObjectURL(testimonial._file)} alt="Customer photo preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-6 h-6 text-muted-foreground" />
-                    )}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor={`url-${link.id}`}>Profile URL</Label>
+                    <Input
+                      id={`url-${link.id}`}
+                      placeholder="https://instagram.com/yourusername"
+                      value={link.url}
+                      onChange={(e) => updateSocialLink(link.id, 'url', e.target.value)}
+                    />
                   </div>
-                  <div className="flex flex-col gap-2">
+                  {socialLinks.length > 1 && (
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => {
-                        const input = document.createElement('input');
-                        input.type = 'file';
-                        input.accept = 'image/*';
-                        input.onchange = (e) => {
-                          const file = (e.target as HTMLInputElement).files?.[0];
-                          if (file) {
-                            handleTestimonialImageChange(index, file);
-                          }
-                        };
-                        input.click();
-                      }}
-                      className="h-10"
+                      size="sm"
+                      onClick={() => removeSocialLink(link.id)}
+                      className="mt-6"
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      {testimonial.image_url || testimonial._file ? 'Change Photo' : 'Upload Photo'}
+                      <X className="w-4 h-4" />
                     </Button>
-                    {(testimonial.image_url || testimonial._file) && (
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addSocialLink}
+              className="w-full"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nog een Sociale Platform Toevoegen
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Testimonials Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Star className="w-6 h-6 text-primary" />
+              <div>
+                <CardTitle>Klantenbeoordelingen</CardTitle>
+                <CardDescription>
+                  Toon potentiële klanten wat anderen over jou zeggen. Voeg klantenfoto's toe om beoordelingen persoonlijker en betrouwbaarder te maken.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-gray-900">Testimonial {index + 1}</h4>
+                  {testimonials.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeTestimonial(index)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor={`customer-${index}`}>Klant Naam</Label>
+                    <Input
+                      id={`customer-${index}`}
+                      placeholder="e.g., Sarah Johnson"
+                      value={testimonial.customer_name}
+                      onChange={(e) => updateTestimonial(index, 'customer_name', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`title-${index}`}>Beoordeling Titel</Label>
+                    <Input
+                      id={`title-${index}`}
+                      placeholder="e.g., Amazing service!"
+                      value={testimonial.review_title}
+                      onChange={(e) => updateTestimonial(index, 'review_title', e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <Label htmlFor={`review-${index}`}>Beoordeling Tekst</Label>
+                  <Textarea
+                    id={`review-${index}`}
+                    placeholder="Tell us what the customer said about your service..."
+                    value={testimonial.review_text}
+                    onChange={(e) => updateTestimonial(index, 'review_text', e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Customer Photo Upload */}
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">Klant Foto (Optioneel)</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Een klantfoto maakt beoordelingen persoonlijker en betrouwbaarder.
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                      {testimonial.image_url ? (
+                        <img src={testimonial.image_url} alt="Customer photo" className="w-full h-full object-cover" />
+                      ) : testimonial._file ? (
+                        <img src={URL.createObjectURL(testimonial._file)} alt="Customer photo preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
                       <Button
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleTestimonialImageChange(index, null)}
-                        className="h-8 text-sm text-muted-foreground hover:text-destructive"
+                        variant="outline"
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              handleTestimonialImageChange(index, file);
+                            }
+                          };
+                          input.click();
+                        }}
+                        className="h-10"
                       >
-                        <X className="w-4 h-4 mr-2" />
-                        Verwijder Foto
+                        <Upload className="w-4 h-4 mr-2" />
+                        {testimonial.image_url || testimonial._file ? 'Change Photo' : 'Upload Photo'}
                       </Button>
-                    )}
+                      {(testimonial.image_url || testimonial._file) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleTestimonialImageChange(index, null)}
+                          className="h-8 text-sm text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="w-4 h-4 mr-2" />
+                          Verwijder Foto
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-          
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addTestimonial}
-            className="w-full"
-            disabled={testimonials.length >= 6}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nog een Beoordeling Toevoegen
-          </Button>
-          
-          <p className="text-sm text-gray-500 text-center">
-            Je kunt maximaal 6 beoordelingen toevoegen. Klantenfoto's helpen vertrouwen te bouwen en beoordelingen persoonlijker te maken.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Navigation */}
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
-          Terug
-        </Button>
-        <Button onClick={handleSubmit}>
-          Doorgaan naar Footer Instellingen
-        </Button>
+            ))}
+            
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addTestimonial}
+              className="w-full"
+              disabled={testimonials.length >= 6}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nog een Beoordeling Toevoegen
+            </Button>
+            
+            <p className="text-sm text-gray-500 text-center">
+              Je kunt maximaal 6 beoordelingen toevoegen. Klantenfoto's helpen vertrouwen te bouwen en beoordelingen persoonlijker te maken.
+            </p>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </OnboardingLayout>
   );
 };

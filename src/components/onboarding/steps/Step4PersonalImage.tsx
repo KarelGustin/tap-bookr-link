@@ -1,37 +1,66 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { OnboardingLayout } from '../OnboardingLayout';
-import { Upload, User, X } from 'lucide-react';
+import { Upload, User } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Step4PersonalImageProps {
   onNext: (data: { 
     avatarFile?: File;
+    aboutTitle?: string;
+    aboutDescription?: string;
   }) => void;
   onBack: () => void;
   handle?: string;
   existingData?: {
-    avatar_url?: string;
     avatarFile?: File;
+    aboutTitle?: string;
+    aboutDescription?: string;
+    avatar_url?: string;
   };
 }
 
 export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Step4PersonalImageProps) => {
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(existingData?.avatar_url || null);
+  const { t } = useLanguage();
+  const [avatarFile, setAvatarFile] = useState<File | null>(existingData?.avatarFile || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [aboutTitle, setAboutTitle] = useState(existingData?.aboutTitle || '');
+  const [aboutDescription, setAboutDescription] = useState(existingData?.aboutDescription || '');
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Update preview when existing data changes
   useEffect(() => {
-    if (existingData?.avatar_url) {
-      setAvatarPreview(existingData.avatar_url);
+    console.log('🔧 Step4PersonalImage - existingData:', existingData);
+    
+    if (existingData?.aboutTitle) {
+      setAboutTitle(existingData.aboutTitle);
     }
-  }, [existingData?.avatar_url]);
+    if (existingData?.aboutDescription) {
+      setAboutDescription(existingData.aboutDescription);
+    }
+    
+    // Load existing avatar from database if available
+    if (existingData?.avatar_url) {
+      console.log('🔧 Loading existing avatar from database:', existingData.avatar_url);
+      setAvatarPreview(existingData.avatar_url);
+    } else if (existingData?.avatarFile) {
+      console.log('🔧 Loading existing avatar file:', existingData.avatarFile);
+      // If we have a file object, create a preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(existingData.avatarFile);
+    }
+  }, [existingData]);
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
+      console.log('🔧 New avatar file selected:', file.name);
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -43,94 +72,149 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Ste
 
   const handleSubmit = () => {
     onNext({
-      avatarFile: avatarFile || undefined
+      avatarFile: avatarFile || undefined,
+      aboutTitle: aboutTitle.trim() || undefined,
+      aboutDescription: aboutDescription.trim() || undefined,
     });
   };
 
-  const canContinue = true; // This step is optional
+  const canGoNext = avatarFile || avatarPreview;
+
+  // Debug info
+  console.log('🔧 Step4PersonalImage render state:', {
+    avatarFile: avatarFile?.name,
+    avatarPreview,
+    existingData: existingData,
+    canGoNext
+  });
 
   return (
     <OnboardingLayout
       currentStep={4}
       totalSteps={7}
-      title="Persoonlijke Afbeelding"
-      subtitle="Voeg een foto toe om jezelf aan je klanten voor te stellen."
+      title="Persoonlijke afbeelding"
+      subtitle="Voeg een foto van jezelf toe om je profiel persoonlijker te maken"
       onBack={onBack}
       handle={handle}
     >
-      <div className="space-y-6">
-        {/* Personal Image Upload */}
+      <div className="max-w-2xl mx-auto space-y-8">
+    
+        {/* Persoonlijke afbeelding */}
         <div className="space-y-4">
-          <div className="text-center space-y-2">
-            <Label className="text-base font-medium">Persoonlijke Introductiefoto</Label>
-            <p className="text-sm text-muted-foreground">
-              Deze afbeelding wordt prominent op je pagina getoond. <u><b>Dit wekt meer vertrouwen bij onbekende bezoekers.</b></u>
-            </p>
-          </div>
-          
-          <div className="flex flex-col items-center gap-6">
-            {/* Image Preview */}
-            <div className="w-32 h-32 rounded-xl bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden shadow-lg">
+          <div className="space-y-2">
+            <Label htmlFor="avatar" className="text-base font-medium">
+              Persoonlijke afbeelding
+            </Label>
+            <div className="flex items-center space-x-4">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="Persoonlijke foto voorvertoning" className="w-full h-full object-cover" />
+                <div className="relative">
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="w-24 h-24 object-cover border-2 border-gray-200 rounded-lg"
+                    onError={(e) => {
+                      console.error('🔧 Error loading avatar image:', e);
+                      setAvatarPreview(null);
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="absolute -top-2 -right-2 rounded-lg w-8 h-8 p-0"
+                    onClick={() => {
+                      console.log('🔧 Removing avatar');
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                    }}
+                  >
+                    ×
+                  </Button>
+                </div>
               ) : (
-                <User className="w-12 h-12 text-muted-foreground" />
+                <div className="w-24 h-24 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <User className="w-8 h-8 text-gray-400" />
+                </div>
               )}
-            </div>
-            
-            {/* Upload Controls */}
-            <div className="flex flex-col gap-3 items-center">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => avatarInputRef.current?.click()}
-                className="h-11 px-6"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {avatarPreview ? 'Wijzig Foto' : 'Upload Foto'}
-              </Button>
-              
-              {avatarPreview && (
+              <div className="space-y-2">
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setAvatarPreview(null);
-                    setAvatarFile(null);
-                  }}
-                  className="h-8 text-sm text-muted-foreground hover:text-destructive"
+                  variant="outline"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="rounded-lg"
                 >
-                  <X className="w-4 h-4 mr-1" />
-                  Verwijder
+                  <Upload className="w-4 h-4 mr-2" />
+                  {avatarPreview ? 'Wijzig foto' : 'Foto kiezen'}
                 </Button>
-              )}
+                <p className="text-sm text-muted-foreground">
+                  {avatarPreview ? 'Klik om je foto te wijzigen' : 'Upload een professionele foto van jezelf'}
+                </p>
+                {avatarPreview && !avatarFile && existingData?.avatar_url && (
+                  <p className="text-xs text-green-600">
+                    ✓ Bestaande foto geladen uit database
+                  </p>
+                )}
+              </div>
             </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
         </div>
 
-        {/* Hidden file input */}
-        <input
-          ref={avatarInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleAvatarChange}
-        />
+        {/* Over jou sectie */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="aboutTitle" className="text-base font-medium">
+              Over jou titel
+            </Label>
+            <Input
+              id="aboutTitle"
+              placeholder="Maak kennis met [jouw naam]"
+              value={aboutTitle}
+              onChange={(e) => setAboutTitle(e.target.value)}
+              className="rounded-lg h-12"
+              maxLength={60}
+            />
+            <p className="text-sm text-muted-foreground">
+              Een persoonlijke titel die klanten laat weten wie je bent
+            </p>
+          </div>
 
-        {/* Continue button */}
-        <Button 
-          onClick={handleSubmit}
-          disabled={!canContinue}
-          className="w-full h-12 text-base rounded-lg"
-          size="lg"
-        >
-          Volgende
-        </Button>
-        
-        <p className="text-center text-sm text-muted-foreground">
-          Mocht je geen persoonlijke foto hebben, gebruik dan een afbeelding van je bedrijf.
-        </p>
+          <div className="space-y-2">
+            <Label htmlFor="aboutDescription" className="text-base font-medium">
+              Over jou beschrijving
+            </Label>
+            <Textarea
+              id="aboutDescription"
+              placeholder="Vertel kort iets over jezelf, je passie en waarom je doet wat je doet..."
+              value={aboutDescription}
+              onChange={(e) => setAboutDescription(e.target.value)}
+              className="rounded-lg min-h-[100px]"
+              maxLength={200}
+            />
+            <p className="text-sm text-muted-foreground">
+              {aboutDescription.length}/200 karakters
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between pt-6">
+          <Button variant="outline" onClick={onBack} className="rounded-lg">
+            Terug
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            disabled={!canGoNext}
+            className="rounded-lg"
+          >
+            Volgende
+          </Button>
+        </div>
       </div>
     </OnboardingLayout>
   );

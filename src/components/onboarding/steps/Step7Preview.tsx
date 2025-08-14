@@ -1,59 +1,56 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Star, MapPin, Clock, Phone, Mail, Building2 } from 'lucide-react';
 import { OnboardingLayout } from '../OnboardingLayout';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Clock, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
 
 interface Step7PreviewProps {
-  onPublish: () => void;
-  onSaveDraft: () => void;
+  onPublish: () => Promise<void>;
+  onSaveDraft: () => Promise<void>;
   onBack: () => void;
-  handle?: string;
+  onStartLivePreview: () => Promise<void>;
+  handle: string;
+  canPublish: boolean;
+  isPublishing: boolean;
+  isPreviewActive?: boolean; // Add this prop
   profileData: {
     handle: string;
     name?: string;
     slogan?: string;
     category?: string;
     avatar_url?: string;
-    banner: {
-      type?: 'image';
+    banner?: {
+      type?: string;
       imageUrl?: string;
       heading?: string;
       subheading?: string;
       textColor?: string;
-    } | undefined;
+    };
     aboutTitle?: string;
     aboutDescription?: string;
     aboutAlignment?: 'center' | 'left';
-    socials: Record<string, string>;
-    socialLinks: Array<{
+    socials?: Record<string, string>;
+    socialLinks?: Array<{
       id: string;
       title: string;
       platform?: string;
       url: string;
     }>;
-    mediaFiles: File[];
-    testimonials: Array<{
+    mediaFiles?: File[];
+    testimonials?: Array<{
       customer_name: string;
       review_title: string;
       review_text: string;
       image_url?: string;
     }>;
-    footer: {
+    bookingUrl?: string;
+    bookingMode?: string;
+    footer?: {
       businessName?: string;
       address?: string;
       email?: string;
       phone?: string;
-      hours?: {
-        monday: { open: string; close: string; closed: boolean };
-        tuesday: { open: string; close: string; closed: boolean };
-        wednesday: { open: string; close: string; closed: boolean };
-        thursday: { open: string; close: string; closed: boolean };
-        friday: { open: string; close: string; closed: boolean };
-        saturday: { open: string; close: string; closed: boolean };
-        sunday: { open: string; close: string; closed: boolean };
-      };
+      hours?: Record<string, { open: string; close: string; closed: boolean }>;
       nextAvailable?: string;
       cancellationPolicy?: string;
       privacyPolicy?: string;
@@ -61,309 +58,312 @@ interface Step7PreviewProps {
       showMaps?: boolean;
       showAttribution?: boolean;
     };
-    bookingUrl: string;
-    bookingMode: 'embed' | 'new_tab';
   };
-  canPublish: boolean;
-  isPublishing: boolean;
 }
-
-// Preview Countdown Component
-const PreviewCountdown = () => {
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
-
-  if (timeLeft === 0) {
-    return <span className="text-red-600">Voorvertoning verlopen</span>;
-  }
-
-  return (
-    <span>
-      {minutes}:{seconds.toString().padStart(2, '0')} resterend
-    </span>
-  );
-};
 
 export const Step7Preview = ({ 
   onPublish, 
   onSaveDraft, 
   onBack, 
-  profileData,
-  canPublish,
+  onStartLivePreview, 
+  handle, 
+  canPublish, 
   isPublishing,
-  handle 
+  isPreviewActive, // Destructure the new prop
+  profileData 
 }: Step7PreviewProps) => {
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [activeTab, setActiveTab] = useState<'preview' | 'summary'>('preview');
+  const { t } = useLanguage();
+  const [isLivePreviewActive, setIsLivePreviewActive] = useState(false);
+  const [livePreviewTimeLeft, setLivePreviewTimeLeft] = useState(15 * 60); // 15 minutes in seconds
   const [previewKey, setPreviewKey] = useState(0);
 
-  // Set initial state based on existing data
+  // Initialize local state based on the prop
   useEffect(() => {
-    // Reset preview when profile data changes
-    setPreviewKey(prev => prev + 1);
-  }, [profileData]);
+    if (isPreviewActive !== undefined) {
+      setIsLivePreviewActive(isPreviewActive);
+      // If preview is active, reset time left to 15 minutes
+      if (isPreviewActive) {
+        setLivePreviewTimeLeft(15 * 60);
+      }
+    }
+  }, [isPreviewActive]);
 
-  const renderPreview = () => (
-    <div className="space-y-6">
-      {/* Live Iframe Preview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-center">Live Voorvertoning van Je Pagina</CardTitle>
-          <CardDescription className="text-center">
-            Dit is precies hoe je klanten je pagina zullen zien op tapbookr.com/{profileData.handle}
-          </CardDescription>
-          {/* <p className="text-xs text-center text-green-600 mt-2">
-            🟢 Live iframe - je pagina is tijdelijk gepubliceerd voor testen!
-          </p> */}
-          
-          {/* Preview Mode Countdown */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-blue-900">Voorvertoningsmodus Actief</span>
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              </div>
-              <p className="text-xs text-blue-700 mb-2">
-                Je pagina is live voor testen! De iframe hieronder toont je echte, gepubliceerde pagina.
-              </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 rounded-full">
-                <Clock className="w-3 h-3 text-blue-600" />
-                <span className="text-xs font-medium text-blue-800">
-                  <PreviewCountdown />
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative w-full max-w-md mx-auto">
-            {/* iPhone Mockup */}
-            <div className="relative mx-auto w-[320px] h-[640px] bg-black rounded-[3rem] p-2 shadow-2xl">
-              <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
-                {/* Status Bar */}
-                <div className="h-6 bg-black rounded-t-[2.5rem] flex items-center justify-between px-6 text-white text-xs">
-                  <span>9:41</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-1 h-3 bg-white rounded-full"></div>
-                    <div className="w-1 h-3 bg-white rounded-full"></div>
-                    <div className="w-1 h-3 bg-white rounded-full"></div>
-                  </div>
-                </div>
-                
-                {/* Iframe Content */}
-                <div className="relative w-full h-[calc(100%-24px)]">
-                  <iframe
-                    src={`https://tapbookr.com/${profileData.handle}`}
-                    className="w-full h-full border-0"
-                    title="Pagina Voorvertoning"
-                    sandbox="allow-scripts allow-same-origin allow-forms"
-                    style={{
-                      transform: "scale(1)",
-                      transformOrigin: "top left",
-                      width: "100%",
-                      height: "100%"
-                    }}
-                  />
-                  
-                  {/* Overlay to prevent clicks but allow scrolling */}
-                  <div 
-                    className="absolute inset-0 pointer-events-none z-10"
-                    style={{ pointerEvents: "none" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Preview Label */}
-            {/* <div className="text-center mt-4 space-y-2">
-              <p className="text-sm text-gray-600">
-                Voorvertoning: {profileData.handle}
-              </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-green-700 font-medium">Live Pagina</span>
-              </div>
-              <p className="text-xs text-green-600">
-                Deze iframe toont je echte, gepubliceerde pagina die klanten kunnen bezoeken
-              </p>
-            </div> */}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  // Check if profile is already in preview mode
+  useEffect(() => {
+    // This would typically come from the database status
+    // For now, we'll check if the profile has a recent preview timestamp
+    const checkPreviewStatus = async () => {
+      try {
+        // You could make an API call here to check the current preview status
+        // For now, we'll just use the local state
+        console.log('🔧 Checking preview status...');
+      } catch (error) {
+        console.error('🔧 Error checking preview status:', error);
+      }
+    };
+    
+    checkPreviewStatus();
+  }, []);
 
-  const renderSummary = () => (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Pagina Samenvatting</CardTitle>
-          <CardDescription>Dit is wat je pagina zal bevatten:</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4">
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-900">Banner Sectie</p>
-                <p className="text-sm text-green-700">
-                  Aangepaste banner afbeelding
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-900">Bedrijfsinformatie</p>
-                <p className="text-sm text-green-700">
-                  {profileData.name || profileData.banner?.heading || 'Bedrijfsnaam'} • {profileData.category || 'Categorie'}
-                </p>
-              </div>
-            </div>
-            
-            {profileData.aboutTitle || profileData.aboutDescription ? (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Over Sectie</p>
-                  <p className="text-sm text-green-700">
-                    {profileData.aboutTitle ? 'Aangepaste titel' : 'Geen titel'} • {profileData.aboutDescription ? 'Aangepaste beschrijving' : 'Geen beschrijving'}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            
-            {profileData.testimonials && profileData.testimonials.length > 0 ? (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Aanbevelingen</p>
-                  <p className="text-sm text-green-700">
-                    {profileData.testimonials.length} klantbeoordelingen
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            
-            {profileData.socialLinks && profileData.socialLinks.length > 0 ? (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Sociale Links</p>
-                  <p className="text-sm text-green-700">
-                    {profileData.socialLinks.length} sociale media platforms
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            
-            {profileData.footer?.businessName || profileData.footer?.address ? (
-              <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Footer Informatie</p>
-                  <p className="text-sm text-green-700">
-                    Bedrijfsdetails, beleid en contactinformatie
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="font-medium text-green-900">Boekingsintegratie</p>
-                <p className="text-sm text-green-700">
-                  {profileData.bookingMode === 'embed' ? 'Ingebed boekingsformulier' : 'Nieuwe tab boeking'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  // Start live preview countdown
+  useEffect(() => {
+    if (isLivePreviewActive && livePreviewTimeLeft > 0) {
+      const timer = setInterval(() => {
+        setLivePreviewTimeLeft(prev => {
+          if (prev <= 1) {
+            setIsLivePreviewActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isLivePreviewActive, livePreviewTimeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const startLivePreview = async () => {
+    try {
+      console.log('🔧 Starting live preview from Step7Preview...');
+      
+      // Call the parent component's startLivePreview function
+      await onStartLivePreview();
+      
+      // If successful, update local state
+      setIsLivePreviewActive(true);
+      setLivePreviewTimeLeft(15 * 60);
+      
+      // Refresh the preview iframe
+      setPreviewKey(prev => prev + 1);
+      
+      console.log('🔧 Live preview started successfully');
+      
+    } catch (error) {
+      console.error('🔧 Failed to start live preview:', error);
+      // Don't update local state if the API call failed
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      // This will redirect to Stripe checkout
+      // You'll need to implement the Stripe integration
+      console.log('Starting subscription flow...');
+      
+      // For now, just show a message
+      alert('Stripe integratie wordt geïmplementeerd');
+    } catch (error) {
+      console.error('Failed to start subscription:', error);
+    }
+  };
 
   return (
     <OnboardingLayout
-      currentStep={7}
-      totalSteps={7}
-      onNext={onPublish}
+      currentStep={8}
+      totalSteps={8}
+      title="Voorvertoning & Publicatie"
+      subtitle="Bekijk je pagina en kies hoe je verder wilt gaan"
       onBack={onBack}
-      canGoNext={canPublish}
-      isLastStep={true}
-      handle={profileData.handle}
+      handle={handle}
     >
-      <div className="max-w-6xl mx-auto p-6 space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900">Voorvertoning van Je Pagina</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Dit is hoe je klanten je pagina zullen zien. Bekijk alles en zorg ervoor dat het er perfect uitziet!
-          </p>
-        </div>
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* Live Preview Status */}
+        {isLivePreviewActive && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-green-600" />
+              <div className="flex-1">
+                <h3 className="font-medium text-green-900">
+                  Live Preview Actief - {formatTime(livePreviewTimeLeft)} resterend
+                </h3>
+                <p className="text-sm text-green-700">
+                  Je pagina is nu live en zichtbaar voor bezoekers
+                </p>
+              </div>
+              <div className="text-sm text-green-600 font-mono">
+                {formatTime(livePreviewTimeLeft)}
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Tab Navigation */}
-        <div className="flex justify-center">
-          <div className="flex border border-gray-200 rounded-lg p-1 bg-gray-50">
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'preview'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Pagina Voorvertoning
-            </button>
-            <button
-              onClick={() => setActiveTab('summary')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'summary'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Pagina Samenvatting
-            </button>
+        {/* Live Preview Expired */}
+        {!isLivePreviewActive && livePreviewTimeLeft === 0 && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <div>
+                <h3 className="font-medium text-amber-900">
+                  Live preview is verlopen
+                </h3>
+                <p className="text-sm text-amber-700">
+                  Je pagina is terug in conceptmodus. Start een nieuwe preview of publiceer permanent.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Preview Tabs */}
+        <div className="space-y-8">
+          {/* Page Preview */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Pagina Voorvertoning</h3>
+            <div className="border rounded-lg overflow-hidden">
+              {isLivePreviewActive ? (
+                <iframe
+                  key={previewKey}
+                  src={`https://tapbookr.com/${handle}`}
+                  className="w-full h-96 border-0"
+                  title="Live Page Preview"
+                />
+              ) : (
+                <div className="w-full h-96 bg-gray-100 flex items-center justify-center">
+                  <div className="text-center">
+                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">
+                      Start Live Preview
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Klik op "Start 15 min. Live Preview" om je pagina live te zetten
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <Button
+                onClick={startLivePreview}
+                disabled={isLivePreviewActive}
+                className="flex-1"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Start 15 min. Live Preview
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
+                disabled={!isLivePreviewActive}
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Open in nieuw tabblad
+              </Button>
+            </div>
+          </div>
+
+          {/* Page Summary */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Pagina Samenvatting</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-3">Basis Informatie</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p><span className="font-medium">Handle:</span> @{handle}</p>
+                  <p><span className="font-medium">Naam:</span> {profileData.name || 'Niet ingevuld'}</p>
+                  <p><span className="font-medium">Slogan:</span> {profileData.slogan || 'Niet ingevuld'}</p>
+                  <p><span className="font-medium">Categorie:</span> {profileData.category || 'Niet ingevuld'}</p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-3">Boeking</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <span className="font-medium">Status:</span> {profileData.bookingUrl ? 'Gekoppeld aan boekingssysteem' : 'Geen boeking ingesteld'}
+                  </p>
+                  {profileData.bookingUrl && (
+                    <p><span className="font-medium">URL:</span> {profileData.bookingUrl}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-3">Content</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <span className="font-medium">Over jou:</span> {profileData.aboutTitle ? 'Ingevuld' : 'Niet ingevuld'}
+                  </p>
+                  <p><span className="font-medium">Media items:</span> {profileData.mediaFiles?.length || 0}</p>
+                  <p><span className="font-medium">Testimonials:</span> {profileData.testimonials?.length || 0}</p>
+                  {profileData.socialLinks && profileData.socialLinks.length > 0 && (
+                    <p><span className="font-medium">Sociale links:</span> {profileData.socialLinks.length}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-3">Footer</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  <p>
+                    <span className="font-medium">Bedrijfsinfo:</span> {profileData.footer?.businessName ? 'Ingevuld' : 'Niet ingevuld'}
+                  </p>
+                  {profileData.footer?.email && (
+                    <p><span className="font-medium">Email:</span> {profileData.footer.email}</p>
+                  )}
+                  {profileData.footer?.phone && (
+                    <p><span className="font-medium">Telefoon:</span> {profileData.footer.phone}</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Content */}
-        {activeTab === 'preview' ? renderPreview() : renderSummary()}
-        
-        {/* Edit Info */}
-        <div className="text-center">
-          <p className="text-sm text-gray-500">
-            Je kunt de pagina op elk moment bewerken
-          </p>
-        </div>
-
-        {/* Save Draft Option */}
-        <div className="text-center">
-          <Button variant="ghost" onClick={onSaveDraft}>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+          <Button
+            variant="outline"
+            onClick={onSaveDraft}
+            className="flex-1"
+          >
             Opslaan als Concept
           </Button>
-          {/* <p className="text-sm text-gray-500 mt-2">
-            Je kunt altijd terugkomen en later afmaken
-          </p> */}
+
+          {isLivePreviewActive ? (
+            <Button
+              onClick={handleSubscribe}
+              className="flex-1"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Blijf 7 dagen gratis live!
+            </Button>
+          ) : (
+            <Button
+              onClick={onPublish}
+              disabled={!canPublish || isPublishing}
+              className="flex-1"
+            >
+              {isPublishing ? 'Publiceren...' : 'Publiceren & Link Kopiëren'}
+            </Button>
+          )}
+        </div>
+
+        {/* Subscription Info */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-blue-900 mb-2">
+                7 dagen gratis trial, daarna €9/maand
+              </h4>
+              <p className="text-sm text-blue-700 mb-3">
+                Je pagina blijft live en je kunt alle functies gebruiken. Annuleer op elk moment.
+              </p>
+              <div className="flex flex-wrap gap-2 text-xs text-blue-600">
+                <span>✓ Creditcard</span>
+                <span>✓ iDEAL</span>
+                <span>✓ PayPal</span>
+                <span>✓ Automatische verlenging</span>
+                <span>✓ 7 dagen gratis trial</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </OnboardingLayout>
