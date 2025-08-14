@@ -1345,7 +1345,7 @@ export default function Onboarding() {
       if (verifyError) {
         console.error('❌ Error verifying saved testimonials:', verifyError);
       } else {
-        const verifiedData = verifyData as any;
+        const verifiedData = verifyData as unknown as Record<string, unknown>;
         console.log('✅ Verified saved data:', verifiedData);
         console.log('✅ Raw about data from DB:', verifiedData?.about);
         console.log('✅ Raw testimonials data from DB:', verifiedData?.testimonials);

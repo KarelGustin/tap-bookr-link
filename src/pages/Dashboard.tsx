@@ -23,7 +23,13 @@ import {
   Share2,
   Menu,
   Lock,
-  ExternalLink
+  ExternalLink,
+  LogOut,
+  CheckCircle,
+  Calendar,
+  CreditCard,
+  Download,
+  X
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1130,9 +1136,39 @@ export default function Dashboard() {
                   <Palette className="w-4 h-4 mr-3" />
                   Design
                 </button>
+                <button
+                  onClick={() => {
+                    setActiveSection('subscription');
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                    activeSection === 'subscription' 
+                      ? 'bg-gray-200 text-gray-900' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4 mr-3" />
+                  Abonnement
+                </button>
               </div>
             </div>
           </nav>
+          
+          {/* User Actions */}
+          <div className="mt-auto pt-6 border-t border-gray-200">
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  signOut();
+                  navigate('/');
+                }}
+                className="w-full flex items-center px-3 py-2 text-sm rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Uitloggen
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1941,6 +1977,188 @@ export default function Dashboard() {
 
                 <div className="flex justify-end">
                   <Button onClick={saveDesign} disabled={designLoading}>{designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Subscription Section */}
+            {activeSection === 'subscription' && (
+              <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Abonnement Beheer</h3>
+                </div>
+
+                {/* Current Plan */}
+                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Huidig Abonnement</h4>
+                      <p className="text-sm text-gray-600">Beheer je abonnement en facturering</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-purple-600">€9</div>
+                      <div className="text-sm text-gray-500">per maand</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <div className="flex items-center mb-2">
+                        <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                        <span className="font-medium text-gray-900">Status</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Actief</p>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <div className="flex items-center mb-2">
+                        <Calendar className="w-5 h-5 text-blue-500 mr-2" />
+                        <span className="font-medium text-gray-900">Volgende Factuur</span>
+                      </div>
+                      <p className="text-sm text-gray-600">15 januari 2025</p>
+                    </div>
+                    
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <div className="flex items-center mb-2">
+                        <CreditCard className="w-5 h-5 text-purple-500 mr-2" />
+                        <span className="font-medium text-gray-900">Betaalmethode</span>
+                      </div>
+                      <p className="text-sm text-gray-600">•••• •••• •••• 4242</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Plan Features */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900">Wat je krijgt</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-gray-900">Onbeperkte bewerkingen</span>
+                        <p className="text-sm text-gray-600">Wijzig je pagina wanneer je wilt</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-gray-900">
+                          Live pagina -{' '}
+                          <span className="text-purple-600 break-all">
+                            TapBookr.com/{profile?.handle}
+                          </span>
+                        </span>
+                        <p className="text-sm text-gray-600">Je pagina is altijd online beschikbaar</p>
+                      </div>
+                    </div>
+                    
+                    {/* <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-gray-900">Analytics</span>
+                        <p className="text-sm text-gray-600">Bekijk bezoekers en interacties</p>
+                      </div>
+                    </div> */}
+                    
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="font-medium text-gray-900">Klantondersteuning</span>
+                        <p className="text-sm text-gray-600">24/7 hulp wanneer je het nodig hebt</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col gap-3 pt-6 border-t border-gray-200">
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      // TODO: Implement payment method update
+                      toast({
+                        title: "Betaalmethode bijwerken",
+                        description: "Deze functie wordt binnenkort toegevoegd.",
+                      });
+                    }}
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Betaalmethode wijzigen
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      // TODO: Implement invoice download
+                      toast({
+                        title: "Facturen downloaden",
+                        description: "Deze functie wordt binnenkort toegevoegd.",
+                      });
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Facturen downloaden
+                  </Button>
+                  
+                  <Button 
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      // TODO: Implement subscription cancellation
+                      toast({
+                        title: "Abonnement opzeggen",
+                        description: "Neem contact op met onze klantenservice om je abonnement op te zeggen.",
+                        variant: "destructive",
+                      });
+                    }}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Abonnement opzeggen
+                  </Button>
+                </div>
+
+                {/* Billing History */}
+                <div className="space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-900">Factuurgeschiedenis</h4>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div>
+                          <p className="font-medium text-gray-900">December 2024</p>
+                          <p className="text-sm text-gray-500">€9,00</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div>
+                          <p className="font-medium text-gray-900">November 2024</p>
+                          <p className="text-sm text-gray-500">€9,00</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                        <div>
+                          <p className="font-medium text-gray-900">Oktober 2024</p>
+                          <p className="text-sm text-gray-500">€9,00</p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          <Download className="w-4 h-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
