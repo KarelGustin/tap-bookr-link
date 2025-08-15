@@ -38,7 +38,7 @@ export const Hero = () => {
     return () => clearTimeout(t);
   }, [handle]);
 
-  const previewUrl = `https://tapbookr.com/check1`;
+  const previewUrl = `https://tapbookr.com/test`;
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-secondary py-4">
