@@ -28,7 +28,7 @@ export const WhyBookr = () => {
         {/* Section header */}
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Je €1.000 website—klaar in minuten
+            Je "€1.000" website—klaar in minuten
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Stop met het verliezen van boekingen door trage sites en kleine links. Eén pagina die converteert.
