@@ -317,13 +317,13 @@ export const Step7Preview = ({
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 pt-6">
-          <Button
+          {/* <Button
             variant="outline"
             onClick={onSaveDraft}
             className="flex-1"
           >
             Opslaan als Concept
-          </Button>
+          </Button> */}
 
           {isLivePreviewActive ? (
             <Button
@@ -331,7 +331,7 @@ export const Step7Preview = ({
               className="flex-1"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Blijf 7 dagen gratis live!
+              Ga live met jouw eigen website!
             </Button>
           ) : (
             <Button
@@ -350,7 +350,7 @@ export const Step7Preview = ({
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
               <h4 className="font-medium text-blue-900 mb-2">
-                7 dagen gratis trial, daarna €9/maand
+                Blijf live met jouw eigen website voor €9 per maand!
               </h4>
               <p className="text-sm text-blue-700 mb-3">
                 Je pagina blijft live en je kunt alle functies gebruiken. Annuleer op elk moment.
@@ -358,9 +358,7 @@ export const Step7Preview = ({
               <div className="flex flex-wrap gap-2 text-xs text-blue-600">
                 <span>✓ Creditcard</span>
                 <span>✓ iDEAL</span>
-                <span>✓ PayPal</span>
                 <span>✓ Automatische verlenging</span>
-                <span>✓ 7 dagen gratis trial</span>
               </div>
             </div>
           </div>
