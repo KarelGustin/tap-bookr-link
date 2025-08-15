@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { OnboardingLayout } from '../OnboardingLayout';
 import { Upload } from 'lucide-react';
 
@@ -32,15 +32,7 @@ interface Step3BrandingProps {
   };
 }
 
-const categories = [
-  'Salon',
-  'Dierenverzorging', 
-  'Consultant/Coach',
-  'Nagels',
-  'Wenkbrauwen/Wimpers',
-  'Fitness',
-  'Anders'
-];
+
 
 export const Step3Branding = ({ onNext, onBack, requiresName, existingData, handle }: Step3BrandingProps) => {
   const [businessName, setBusinessName] = useState(existingData?.name || '');
@@ -158,20 +150,16 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
           <Label htmlFor="category" className="text-base font-medium">
             Bedrijfscategorie
           </Label>
-          <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="rounded-lg h-12">
-              <SelectValue placeholder="Selecteer je bedrijfstype" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="category"
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Bijv. Salon, Praktijk, Studio, etc."
+            className="rounded-lg h-12"
+          />
           <p className="text-sm text-muted-foreground">
-            Helpt klanten je bedrijf te vinden en te begrijpen
+            Helpt klanten je bedrijf te vinden en te begrijpen. Dit veld kan leeg blijven.
           </p>
         </div>
 
@@ -239,15 +227,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
           </p>
         </div>
 
-        {/* Continue button */}
-        <Button 
-          onClick={handleSubmit}
-          disabled={!canContinue}
-          className="w-full h-12 text-base rounded-lg"
-          size="lg"
-        >
-          Volgende
-        </Button>
+
       </div>
     </OnboardingLayout>
   );

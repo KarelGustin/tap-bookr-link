@@ -63,9 +63,36 @@ export default function Edit() {
 
   useEffect(() => {
     if (user) {
-      loadProfile();
+      checkOnboardingStatus();
     }
   }, [user]);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error checking onboarding status:', error);
+        navigate('/onboarding');
+        return;
+      }
+
+      if (profile && !(profile as any).onboarding_completed) {
+        navigate('/onboarding');
+        return;
+      }
+
+      // If onboarding is completed, load the profile
+      loadProfile();
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+      navigate('/onboarding');
+    }
+  };
 
   const loadProfile = async () => {
     try {

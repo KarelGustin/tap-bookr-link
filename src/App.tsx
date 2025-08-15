@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
@@ -28,19 +29,19 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={
-                <PrivateRoute>
+                <ProtectedRoute requireOnboarding={false}>
                   <Onboarding />
-                </PrivateRoute>
+                </ProtectedRoute>
               } />
               <Route path="/edit" element={
-                <PrivateRoute>
+                <ProtectedRoute requireOnboarding={true}>
                   <Edit />
-                </PrivateRoute>
+                </ProtectedRoute>
               } />
               <Route path="/dashboard" element={
-                <PrivateRoute>
+                <ProtectedRoute requireOnboarding={true}>
                   <Dashboard />
-                </PrivateRoute>
+                </ProtectedRoute>
               } />
               <Route path="/:handle" element={<PublicProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

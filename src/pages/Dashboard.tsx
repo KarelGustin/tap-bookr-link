@@ -68,6 +68,7 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bookingUrl, setBookingUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const { user, signOut, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -198,6 +199,40 @@ export default function Dashboard() {
   const [galleryNewPreviews, setGalleryNewPreviews] = useState<string[]>([]);
   const [testimonialPreviews, setTestimonialPreviews] = useState<Record<number, string>>({});
   const [previewKey, setPreviewKey] = useState(0);
+
+  // Check onboarding completion status
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!user) return;
+
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error checking onboarding status:', error);
+          return;
+        }
+
+        if (profile) {
+          const onboardingCompleted = (profile as any).onboarding_completed || false;
+          setOnboardingCompleted(onboardingCompleted);
+          
+          // If onboarding not completed, redirect to onboarding
+          if (!onboardingCompleted) {
+            navigate('/onboarding');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user, navigate]);
 
   // initialize defaults for socials and testimonials if empty
   useEffect(() => {

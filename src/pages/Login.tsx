@@ -47,9 +47,31 @@ export default function Login() {
         });
       } else {
         if (isLogin) {
-          // For login, redirect directly to dashboard
-          // The Dashboard page will handle checking if profile exists and show appropriate content
-          navigate('/dashboard');
+          // Check onboarding status after login
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('onboarding_completed')
+                .eq('user_id', user.id)
+                .single();
+
+              if (profileError) {
+                console.error('Error checking profile:', profileError);
+                navigate('/onboarding');
+              } else if (profile && (profile as any).onboarding_completed) {
+                navigate('/dashboard');
+              } else {
+                navigate('/onboarding');
+              }
+            } else {
+              navigate('/onboarding');
+            }
+          } catch (error) {
+            console.error('Error checking onboarding status:', error);
+            navigate('/onboarding');
+          }
         } else {
           // For signup, redirect to onboarding
           toast({

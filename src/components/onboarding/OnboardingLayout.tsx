@@ -33,6 +33,16 @@ export const OnboardingLayout = ({
   subtitle,
   handle
 }: OnboardingLayoutProps) => {
+  // Debug logging
+  console.log('🔧 OnboardingLayout props:', {
+    currentStep,
+    totalSteps,
+    onNext: !!onNext,
+    onBack: !!onBack,
+    canGoNext,
+    canGoBack,
+    isLastStep
+  });
   return (
     <div className="min-h-screen bg-background">
       {/* Header met taalselector */}
@@ -71,35 +81,37 @@ export const OnboardingLayout = ({
           {children}
           
           {/* Navigation buttons */}
-          {(onNext || onBack) && (
-            <div className="flex justify-between mt-8 pt-6 border-t">
-              <div>
-                {onBack && canGoBack && (
-                  <Button
-                    variant="outline"
-                    onClick={onBack}
-                    disabled={isLoading}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Terug
-                  </Button>
-                )}
-              </div>
-              
-              <div>
-                {onNext && canGoNext && (
-                  <Button
-                    onClick={onNext}
-                    disabled={isLoading}
-                    className="flex items-center gap-2"
-                  >
-                    {isLastStep ? 'Live Preview Inschakelen (15 min)' : 'Volgende'}
-                  </Button>
-                )}
-              </div>
+          <div className="flex justify-between mt-8 pt-6 border-t">
+            <div>
+              {onBack && canGoBack && (
+                <Button
+                  variant="outline"
+                  onClick={onBack}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Terug
+                </Button>
+              )}
             </div>
-          )}
+            
+            <div>
+              {onNext && (
+                <Button
+                  onClick={canGoNext ? onNext : undefined}
+                  disabled={isLoading || !canGoNext}
+                  className={`flex items-center gap-2 transition-all duration-200 ${
+                    canGoNext 
+                      ? 'opacity-100 cursor-pointer' 
+                      : 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500 hover:bg-gray-300'
+                  }`}
+                >
+                  {isLastStep ? 'Live Preview Inschakelen (15 min)' : 'Volgende'}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -343,8 +343,23 @@ export default function Onboarding() {
     testDatabaseConnection();
   }, [user]);
 
-  const updateStep = (step: number) => {
+  const updateStep = async (step: number) => {
     setCurrentStep(step);
+    
+    // Update database with new step
+    if (user && onboardingData.profileId) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({
+            onboarding_step: step,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', onboardingData.profileId);
+      } catch (error) {
+        console.error('Error updating step:', error);
+      }
+    }
     
     // Refresh existing data when navigating to ensure placeholders are up-to-date
     if (user && (step === 3 || step === 4 || step === 5)) {
@@ -1275,19 +1290,90 @@ export default function Onboarding() {
     console.log('🔧 Processed testimonials count:', processedTestimonials.length);
     
     // Ensure we have a profile ID before saving
-    if (!onboardingData.profileId) {
-      console.error('❌ No profile ID found, cannot save testimonials');
+    let profileId = onboardingData.profileId;
+    
+    if (!profileId) {
+      console.log('🔧 No profile ID found, attempting to create or find existing profile...');
+      
+      try {
+        // First try to find an existing profile for this user
+        const { data: existingProfile, error: findError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user?.id)
+          .single();
+        
+        if (findError && findError.code !== 'PGRST116') {
+          console.error('❌ Error finding existing profile:', findError);
+        } else if (existingProfile) {
+          profileId = existingProfile.id;
+          console.log('✅ Found existing profile with ID:', profileId);
+          
+          // Update local state with the found profile ID
+          setOnboardingData(prev => ({
+            ...prev,
+            profileId: profileId
+          }));
+        }
+        
+        // If still no profile ID, create a new one
+        if (!profileId) {
+          console.log('🔧 Creating new profile for user...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: user?.id,
+              handle: onboardingData.handle || '',
+              status: 'draft',
+              onboarding_step: 6,
+              onboarding_completed: false
+            })
+            .select('id')
+            .single();
+          
+          if (createError) {
+            console.error('❌ Error creating new profile:', createError);
+            toast({
+              title: "Profile Creation Error",
+              description: "Failed to create profile. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          profileId = newProfile.id;
+          console.log('✅ Created new profile with ID:', profileId);
+          
+          // Update local state with the new profile ID
+          setOnboardingData(prev => ({
+            ...prev,
+            profileId: profileId
+          }));
+        }
+      } catch (error) {
+        console.error('❌ Error in profile ID fallback logic:', error);
+        toast({
+          title: "Profile Error",
+          description: "Failed to create or find profile. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
+    if (!profileId) {
+      console.error('❌ Still no profile ID available, cannot save testimonials');
       toast({
         title: "Save Error",
-        description: "No profile ID found. Please try again.",
+        description: "No profile ID available. Please try again.",
         variant: "destructive",
       });
       return;
     }
     
-    // Save testimonials data to database in multiple locations for better accessibility
-    try {
-      console.log('🔧 Saving testimonials data to database with profile ID:', onboardingData.profileId);
+          // Save testimonials data to database in multiple locations for better accessibility
+      try {
+        console.log('🔧 Saving testimonials data to database with profile ID:', profileId);
       
       // 1. Save testimonials directly to the testimonials column (NEW APPROACH)
       const testimonialsData = processedTestimonials.map(testimonial => ({
@@ -1307,7 +1393,7 @@ export default function Onboarding() {
           testimonials: testimonialsData,
           updated_at: new Date().toISOString()
         })
-        .eq('id', onboardingData.profileId);
+        .eq('id', profileId);
       
       if (testimonialsError) {
         console.error('❌ Error saving testimonials to testimonials column:', testimonialsError);
@@ -1339,7 +1425,7 @@ export default function Onboarding() {
       const { data: verifyData, error: verifyError } = await supabase
         .from('profiles')
         .select('about, testimonials')
-        .eq('id', onboardingData.profileId)
+        .eq('id', profileId)
         .single();
       
       if (verifyError) {
@@ -1756,9 +1842,24 @@ export default function Onboarding() {
       const profileId = await saveProfileData(profileData, 'published');
       if (profileId) {
         console.log('Profile published successfully with ID:', profileId);
+        
+        // Update onboarding completion status
+        try {
+          await supabase
+            .from('profiles')
+            .update({
+              onboarding_completed: true,
+              onboarding_step: 8,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', profileId);
+        } catch (error) {
+          console.error('Error updating onboarding completion status:', error);
+        }
+        
         toast({
           title: "Profile Published! 🎉",
-          description: "Your Bookr page is now live with a 7-day free trial!",
+          description: "Your Bookr page is now live! Complete your subscription to keep it published.",
         });
         // Redirect to dashboard after successful publishing
         navigate('/dashboard');
@@ -1786,6 +1887,19 @@ export default function Onboarding() {
     try {
       const profileId = await saveProfileData(onboardingData, 'draft');
       if (profileId) {
+        // Update onboarding step but don't mark as completed
+        try {
+          await supabase
+            .from('profiles')
+            .update({
+              onboarding_step: currentStep,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', profileId);
+        } catch (error) {
+          console.error('Error updating onboarding step:', error);
+        }
+        
         toast({
           title: "Draft Saved",
           description: "Your progress has been saved. You can finish later.",
