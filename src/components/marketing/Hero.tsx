@@ -50,19 +50,19 @@ export const Hero = () => {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <a href="#why-bookr" className="text-gray-600 text-sm">Why Bookr</a>
-              <a href="#how-it-works" className="text-gray-600 text-sm">How it works</a>
-              <a href="#testimonials" className="text-gray-600 text-sm">Testimonials</a>
-              <a href="#faq" className="text-gray-600 text-sm">FAQ</a>
+              <a href="#why-bookr" className="text-gray-600 text-sm">Waarom Bookr</a>
+              <a href="#how-it-works" className="text-gray-600 text-sm">Hoe het werkt</a>
+              <a href="#testimonials" className="text-gray-600 text-sm">Klantenverhalen</a>
+              <a href="#faq" className="text-gray-600 text-sm">Veelgestelde vragen</a>
             </div>
             
             {/* Mobile + Desktop Actions */}
             <div className="flex items-center gap-2">
               <Button asChild variant="ghost" className="text-gray-600 text-sm px-3 py-2">
-                <Link to="/login">Log in</Link>
+                <Link to="/login">Inloggen</Link>
               </Button>
               <Button asChild className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
-                <Link to="/login">Sign up free</Link>
+                <Link to="/login">Gratis aanmelden</Link>
               </Button>
               {/* Mobile Hamburger */}
               <Button 
@@ -80,10 +80,10 @@ export const Hero = () => {
           {showMenu && (
             <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
               <div className="flex flex-col gap-2">
-                <a href="#why-bookr" className="text-gray-600 text-sm py-2">Why Bookr</a>
-                <a href="#how-it-works" className="text-gray-600 text-sm py-2">How it works</a>
-                <a href="#testimonials" className="text-gray-600 text-sm py-2">Testimonials</a>
-                <a href="#faq" className="text-gray-600 text-sm py-2">FAQ</a>
+                <a href="#why-bookr" className="text-gray-600 text-sm py-2">Waarom Bookr</a>
+                <a href="#how-it-works" className="text-gray-600 text-sm py-2">Hoe het werkt</a>
+                <a href="#testimonials" className="text-gray-600 text-sm py-2">Klantenverhalen</a>
+                <a href="#faq" className="text-gray-600 text-sm py-2">Veelgestelde vragen</a>
               </div>
             </div>
           )}
@@ -94,22 +94,22 @@ export const Hero = () => {
           {/* Left Content */}
           <div className="flex-1 space-y-4 sm:space-y-6 text-left max-w-2xl px-2">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
-              Your $1000 Website,<br></br> in 10 Minutes for €10 a month.
+              Je €1000 Website,<br></br> in 10 Minuten voor €9 per maand.
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Launch a bookable page your clients love—today. Claim your handle, connect WhatsApp or your booking provider, and start taking bookings in minutes.
+              Lanceer vandaag nog een boekbare pagina waar je klanten dol op zijn. Claim je handle, koppel WhatsApp of je boekingssysteem, en begin binnen minuten met het ontvangen van boekingen.
             </p>
             
             {/* Social Proof */}
             <div className="flex items-center gap-4 text-sm text-white/80">
               <div className="flex items-center gap-2">
                 <span className="text-yellow-400">★★★★★</span>
-                <span>Trusted by 2,000+ businesses</span>
+                <span>Vertrouwd door 2.000+ bedrijven</span>
               </div>
               <div className="hidden sm:flex items-center gap-2">
                 <span>•</span>
-                <span>No credit card required</span>
+                <span>Geen creditcard vereist</span>
               </div>
             </div>
             
@@ -123,7 +123,7 @@ export const Hero = () => {
                     type="text" 
                     value={userInput}
                     onChange={handleInputChange}
-                    placeholder="yourname" 
+                    placeholder="jouw-handle" 
                     className="flex-1 px-2 py-2 sm:py-3 bg-transparent text-gray-900 placeholder-gray-400 text-base sm:text-lg font-medium focus:outline-none"
                   />
                 </div>
@@ -131,9 +131,9 @@ export const Hero = () => {
                 {userInput && (
                   <div className="px-3 py-1 text-xs">
                     {handleAvailable ? (
-                      <span className="text-green-600 font-medium">✓ Available</span>
+                      <span className="text-green-600 font-medium">✓ Beschikbaar</span>
                     ) : (
-                      <span className="text-red-600 font-medium">✗ Not available</span>
+                      <span className="text-red-600 font-medium">✗ Niet beschikbaar</span>
                     )}
                   </div>
                 )}
@@ -149,7 +149,7 @@ export const Hero = () => {
                 disabled={!handleAvailable || !userInput}
               >
                 <Link to="/login">
-                  Claim your Bookr Link
+                  Claim je Bookr Link
                 </Link>
               </Button>
 

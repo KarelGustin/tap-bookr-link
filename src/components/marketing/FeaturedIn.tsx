@@ -21,18 +21,18 @@ export const FeaturedIn = () => {
             style={{ backgroundColor: 'hsl(var(--primary))' }}
           >
             <Link to="/login">
-              Explore all plans
+              Bekijk alle abonnementen
             </Link>
           </Button>
           
           <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-16">
-            Built for service providers
+            Gebouwd voor dienstverleners
           </h3>
           
           {/* Trust indicators */}
           <div className="mb-12">
             <p className="text-lg text-gray-600 font-semibold mb-4">
-              Securely hosted • GDPR-compliant • No-tech setup
+              Veilig gehost • AVG-compliant • Geen-tech setup
             </p>
           </div>
           

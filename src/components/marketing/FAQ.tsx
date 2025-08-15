@@ -3,28 +3,28 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export const FAQ = () => {
   const faqs = [
     {
-      question: "Can I use Salonized/Treatwell/Calendly?",
-      answer: "Yes—paste your link and Bookr embeds it or opens it in a new tab if embed is blocked."
+      question: "Kan ik Salonized/Treatwell/Calendly gebruiken?",
+      answer: "Ja—plak je link en Bookr integreert het of opent het in een nieuw tabblad als integratie wordt geblokkeerd."
     },
     {
-      question: "Do I need a website?", 
-      answer: "No—Bookr is your website. It creates a professional landing page that wraps around your booking system."
+      question: "Heb ik een website nodig?", 
+      answer: "Nee—Bookr is je website. Het creëert een professionele landingspagina die om je boekingssysteem heen wordt gebouwd."
     },
     {
-      question: "How fast can I go live?",
-      answer: "Under 5 minutes. Simply claim your handle, add your details, and publish your page."
+      question: "Hoe snel kan ik live gaan?",
+      answer: "Binnen 5 minuten. Claim gewoon je handle, voeg je gegevens toe en publiceer je pagina."
     },
     {
-      question: "What booking systems do you support?",
-      answer: "We support all major booking platforms including Salonized, Treatwell, Calendly, and any system with a public booking link."
+      question: "Welke boekingssystemen ondersteunen jullie?",
+      answer: "We ondersteunen alle grote boekingsplatforms inclusief Salonized, Treatwell, Calendly en elk systeem met een openbare boekingslink."
     },
     {
-      question: "Can I customize the design?",
-      answer: "Yes! Choose from different color schemes, upload your logo, add your photos, and customize your content to match your brand."
+      question: "Kan ik het ontwerp aanpassen?",
+      answer: "Ja! Kies uit verschillende kleurenschema's, upload je logo, voeg je foto's toe en pas je content aan om bij je merk te passen."
     },
     {
-      question: "Is there a mobile app?",
-      answer: "Bookr works perfectly in any web browser and is optimized for mobile. Your customers can book directly from their phones."
+      question: "Is er een mobiele app?",
+      answer: "Bookr werkt perfect in elke webbrowser en is geoptimaliseerd voor mobiel. Je klanten kunnen direct vanaf hun telefoon boeken."
     }
   ];
 
@@ -33,10 +33,10 @@ export const FAQ = () => {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Got questions?
+            Heb je vragen?
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Everything you need to know about Bookr.
+            Alles wat je moet weten over Bookr.
           </p>
         </div>
         

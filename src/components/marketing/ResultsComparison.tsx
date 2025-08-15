@@ -6,25 +6,25 @@ import { Link } from "react-router-dom";
 export const ResultsComparison = () => {
   const alternatives = [
     {
-      name: "DIY Website Builder",
-      pros: ["Full control", "Custom design"],
-      cons: ["Takes weeks", "Requires skills", "Expensive hosting", "Mobile issues"],
-      time: "2-4 weeks",
+      name: "DIY Website Bouwer",
+      pros: ["Volledige controle", "Aangepast ontwerp"],
+      cons: ["Duurt weken", "Vereist vaardigheden", "Dure hosting", "Mobiele problemen"],
+      time: "2-4 weken",
       cost: "€200-500"
     },
     {
-      name: "Booking Link-in-Bio",
-      pros: ["Quick setup", "Free"],
-      cons: ["Limited customization", "No booking integration", "Looks unprofessional", "Hard to track", "No context, only prices"],
-      time: "5 minutes",
+      name: "Boekingslink in Bio",
+      pros: ["Snelle setup", "Gratis"],
+      cons: ["Beperkte aanpassing", "Geen boekingsintegratie", "Ziet onprofessioneel uit", "Moeilijk te volgen", "Geen context, alleen prijzen"],
+      time: "5 minuten",
       cost: "€0"
     },
     {
       name: "TapBookr",
-      pros: ["Live in minutes", "Mobile-optimized", "Booking integration", "Professional look", "WhatsApp-first"],
-      cons: ["Limited to one page"],
-      time: "5 minutes",
-      cost: "€10/mo"
+      pros: ["Live in minuten", "Mobiel geoptimaliseerd", "Boekingsintegratie", "Professionele uitstraling", "WhatsApp-eerst"],
+      cons: ["Beperkt tot één pagina"],
+      time: "5 minuten",
+      cost: "€9/maand"
     }
   ];
 
@@ -33,10 +33,10 @@ export const ResultsComparison = () => {
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Compare & choose
+            Vergelijk & kies
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            See how TapBookr stacks up against alternatives. Spoiler: we're faster and cheaper.
+            Zie hoe TapBookr zich verhoudt tot alternatieven. Spoiler: we zijn sneller en goedkoper.
           </p>
         </div>
 
@@ -55,8 +55,8 @@ export const ResultsComparison = () => {
                     {alt.name}
                   </h3>
                   <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                    <span>Time: <strong>{alt.time}</strong></span>
-                    <span>Cost: <strong>{alt.cost}</strong></span>
+                    <span>Tijd: <strong>{alt.time}</strong></span>
+                    <span>Kosten: <strong>{alt.cost}</strong></span>
                   </div>
                 </div>
 
@@ -64,7 +64,7 @@ export const ResultsComparison = () => {
                   <div>
                     <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2">
                       <Check className="w-4 h-4" />
-                      Pros
+                      Voordelen
                     </h4>
                     <ul className="space-y-1">
                       {alt.pros.map((pro, i) => (
@@ -79,7 +79,7 @@ export const ResultsComparison = () => {
                   <div>
                     <h4 className="font-semibold text-red-700 mb-2 flex items-center gap-2">
                       <X className="w-4 h-4" />
-                      Cons
+                      Nadelen
                     </h4>
                     <ul className="space-y-1">
                       {alt.cons.map((con, i) => (
@@ -95,7 +95,7 @@ export const ResultsComparison = () => {
                 {alt.name === "TapBookr" && (
                   <div className="mt-6 text-center">
                     <Button asChild className="w-full bg-primary text-gray-900 font-semibold">
-                      <Link to="/onboarding">Start free now</Link>
+                      <Link to="/onboarding">Start gratis nu</Link>
                     </Button>
                   </div>
                 )}

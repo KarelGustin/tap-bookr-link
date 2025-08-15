@@ -3,22 +3,22 @@ import { Card, CardContent } from "@/components/ui/card";
 export const WhyBookr = () => {
   const features = [
     {
-      title: "Instantly look professional",
-      description: "Drop your name, logo and a few photos. TapBookr turns your plain booking link into a clean, website clients trust—no web skills needed.",
+      title: "Direct professioneel eruitzien",
+      description: "Voeg je naam, logo en een paar foto's toe. TapBookr verandert je simpele boekingslink in een strakke website waar klanten op vertrouwen—geen webkennis nodig.",
       icon: "🎨",
-      stat: "+40% trust"
+      stat: "+40% vertrouwen"
     },
     {
-      title: "Works with what you already use",
-      description: "Paste your Salonized, Treatwell or Calendly link. We embed it beautifully inside your page—no code, no setup, just paste and publish.",
+      title: "Werkt met wat je al gebruikt",
+      description: "Plak je Salonized, Treatwell of Calendly link. We integreren het mooi in je pagina—geen code, geen setup, gewoon plakken en publiceren.",
       icon: "🔗",
-      stat: "0 setup time"
+      stat: "0 setup tijd"
     },
     {
-      title: "More bookings, less back-and-forth",
-      description: "Clear services, social links and a one-tap \"Book now.\" Fewer DMs, fewer no-shows, more clients on your calendar.",
+      title: "Meer boekingen, minder heen en weer",
+      description: "Duidelijke diensten, sociale links en een één-klik \"Boek nu.\" Minder DM's, minder no-shows, meer klanten in je agenda.",
       icon: "📈",
-      stat: "+21% bookings"
+      stat: "+21% boekingen"
     }
   ];
 
@@ -28,10 +28,10 @@ export const WhyBookr = () => {
         {/* Section header */}
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Your $1,000 website—done in minutes
+            Je €1.000 website—klaar in minuten
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Stop losing bookings to slow sites and tiny links. One page that converts.
+            Stop met het verliezen van boekingen door trage sites en kleine links. Eén pagina die converteert.
           </p>
         </div>
 
@@ -49,7 +49,7 @@ export const WhyBookr = () => {
                       {feature.icon}
                     </div>
                     <div 
-                      className="px-3 py-1 rounded-full text-sm font-bold text-white"
+                      className="px-3 py-1 rounded-full text-sm font-bold text-black"
                       style={{ backgroundColor: "hsl(var(--accent))" }}
                     >
                       {feature.stat}

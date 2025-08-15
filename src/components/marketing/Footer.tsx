@@ -5,43 +5,43 @@ export const Footer = () => {
     {
       title: "Product",
       links: [
-        { name: "Features", href: "#features" },
-        { name: "Pricing", href: "#pricing" },
-        { name: "How it Works", href: "#how-it-works" },
-        { name: "Examples", href: "#examples" },
-        { name: "Integrations", href: "#integrations" },
-        { name: "Mobile App", href: "#mobile" }
+        { name: "Functies", href: "#features" },
+        { name: "Prijzen", href: "#pricing" },
+        { name: "Hoe het werkt", href: "#how-it-works" },
+        { name: "Voorbeelden", href: "#examples" },
+        { name: "Integraties", href: "#integrations" },
+        { name: "Mobiele App", href: "#mobile" }
       ]
     },
     {
-      title: "Business", 
+      title: "Bedrijven", 
       links: [
         { name: "Beauty & Wellness", href: "#beauty" },
-        { name: "Fitness & Health", href: "#fitness" },
-        { name: "Professional Services", href: "#services" },
-        { name: "Restaurants & Food", href: "#food" },
-        { name: "Retail & Shopping", href: "#retail" },
-        { name: "Events & Entertainment", href: "#events" }
+        { name: "Fitness & Gezondheid", href: "#fitness" },
+        { name: "Professionele Diensten", href: "#services" },
+        { name: "Restaurants & Voeding", href: "#food" },
+        { name: "Retail & Winkelen", href: "#retail" },
+        { name: "Evenementen & Entertainment", href: "#events" }
       ]
     },
     {
-      title: "Support",
+      title: "Ondersteuning",
       links: [
-        { name: "Help Center", href: "#help" },
-        { name: "Getting Started", href: "/onboarding" },
-        { name: "FAQs", href: "#faq" },
-        { name: "Contact Support", href: "#contact" },
-        { name: "Video Tutorials", href: "#tutorials" },
-        { name: "API Documentation", href: "#api" }
+        { name: "Helpcentrum", href: "#help" },
+        { name: "Aan de slag", href: "/onboarding" },
+        { name: "Veelgestelde vragen", href: "#faq" },
+        { name: "Contact ondersteuning", href: "#contact" },
+        { name: "Video tutorials", href: "#tutorials" },
+        { name: "API documentatie", href: "#api" }
       ]
     },
     {
-      title: "Company",
+      title: "Bedrijf",
       links: [
-        { name: "About TapBookr", href: "#about" },
+        { name: "Over TapBookr", href: "#about" },
         { name: "Blog", href: "#blog" },
-        { name: "Press", href: "#press" },
-        { name: "Careers", href: "#careers" },
+        { name: "Pers", href: "#press" },
+        { name: "Vacatures", href: "#careers" },
         { name: "Partners", href: "#partners" },
         { name: "Contact", href: "#contact" }
       ]
@@ -79,17 +79,17 @@ export const Footer = () => {
         {/* CTA Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-8 mb-12 text-center">
           <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Ready to boost your bookings?
+            Klaar om je boekingen te stimuleren?
           </h3>
           <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Join thousands of businesses who've already transformed their booking experience with TapBookr.
+            Sluit je aan bij duizenden bedrijven die hun boekingservaring al hebben getransformeerd met TapBookr.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/onboarding"
               className="bg-primary text-gray-900 font-semibold px-8 py-3 rounded-xl text-lg"
             >
-              Start building now
+              Begin nu met bouwen
             </Link>
             <Link
               to="https://tapbookr.com/check1"
@@ -97,7 +97,7 @@ export const Footer = () => {
               rel="noreferrer"
               className="border-2 border-gray-300 text-gray-700 font-semibold px-8 py-3 rounded-xl text-lg"
             >
-              See live demo
+              Bekijk live demo
             </Link>
           </div>
         </div>
@@ -105,23 +105,23 @@ export const Footer = () => {
         {/* Bottom section */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-gray-600">
           <div className="flex items-center gap-3">
-            <div 
+            {/* <div 
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ backgroundColor: 'hsl(var(--primary))' }}
             >
-              <span className="font-bold text-lg text-white">T</span>
-            </div>
+              <span className="font-bold text-lg text-black">T</span>
+            </div> */}
             <span className="font-bold text-xl text-gray-900">TapBookr</span>
           </div>
           
           <div className="flex items-center gap-6 text-sm">
-            <Link to="/terms" className="hover:text-gray-900">Terms</Link>
+            <Link to="/terms" className="hover:text-gray-900">Voorwaarden</Link>
             <Link to="/privacy" className="hover:text-gray-900">Privacy</Link>
             <Link to="/cookies" className="hover:text-gray-900">Cookies</Link>
           </div>
           
           <p className="text-gray-500 text-sm">
-            © 2024 TapBookr. All rights reserved.
+            © 2024 TapBookr. Alle rechten voorbehouden.
           </p>
         </div>
       </div>

@@ -6,61 +6,61 @@ import { Link } from "react-router-dom";
 export const Pricing = () => {
   const plans = [
     {
-      name: "Free",
+      name: "Gratis",
       price: "€0",
-      period: "forever",
-      description: "Perfect to get started",
+      period: "voor altijd",
+      description: "Perfect om te beginnen",
       features: [
-        "1 page",
-        "1 booking link", 
+        "1 pagina",
+        "1 boekingslink", 
         "Bookr badge"
       ],
-      cta: "Start free",
+      cta: "Start gratis",
       popular: false,
       color: "from-muted to-muted/50"
     },
     {
       name: "Starter",
       price: "€3",
-      period: "/mo",
-      description: "For growing businesses",
+      period: "/maand",
+      description: "Voor groeiende bedrijven",
       features: [
-        "Remove badge",
+        "Badge verwijderen",
         "3 media items",
-        "Basic colors",
-        "All Free features"
+        "Basis kleuren",
+        "Alle gratis functies"
       ],
-      cta: "Start free",
+      cta: "Start gratis",
       popular: true,
       color: "from-primary to-secondary"
     },
     {
       name: "Pro",
       price: "€6", 
-      period: "/mo",
-      description: "For serious professionals",
+      period: "/maand",
+      description: "Voor serieuze professionals",
       features: [
         "6 media items",
-        "Custom accent colors",
-        "Analytics (views & clicks)",
-        "All Starter features"
+        "Aangepaste accentkleuren",
+        "Analytics (weergaven & klikken)",
+        "Alle Starter functies"
       ],
-      cta: "Start free",
+      cta: "Start gratis",
       popular: false,
       color: "from-secondary to-accent"
     },
     {
       name: "Premium",
       price: "€9",
-      period: "/mo", 
-      description: "For power users",
+      period: "/maand", 
+      description: "Voor power users",
       features: [
-        "Social feed (last 3 IG posts)",
-        "Custom domain",
-        "Priority support",
-        "All Pro features"
+        "Sociale feed (laatste 3 IG posts)",
+        "Aangepast domein",
+        "Prioriteit ondersteuning",
+        "Alle Pro functies"
       ],
-      cta: "Start free",
+      cta: "Start gratis",
       popular: false,
       color: "from-accent to-primary"
     }
@@ -71,10 +71,10 @@ export const Pricing = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-20">
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 mb-6 leading-tight">
-            Simple pricing
+            Eenvoudige prijzen
           </h2>
           <p className="text-xl md:text-2xl text-gray-600 font-semibold max-w-3xl mx-auto">
-            Start free, upgrade when you need more. No long-term contracts.
+            Start gratis, upgrade wanneer je meer nodig hebt. Geen langdurige contracten.
           </p>
         </div>
         
@@ -87,7 +87,7 @@ export const Pricing = () => {
                     className="px-6 py-2 rounded-full text-sm font-black text-gray-900"
                     style={{ backgroundColor: 'hsl(var(--accent))' }}
                   >
-                    Most Popular
+                    Meest Populair
                   </span>
                 </div>
               )}
