@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
@@ -113,6 +113,7 @@ interface OnboardingData {
 }
 
 export default function Onboarding() {
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     handle: '',
@@ -133,6 +134,14 @@ export default function Onboarding() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Helper function to clean testimonials data by removing _file property
+  const cleanTestimonialsData = (testimonials: OnboardingData['testimonials']) => {
+    return testimonials.map(testimonial => {
+      const { _file, ...cleanTestimonial } = testimonial;
+      return cleanTestimonial;
+    });
+  };
+
   // Manual refresh function for testimonials data
   const refreshTestimonialsData = async () => {
     if (!onboardingData.profileId) {
@@ -145,7 +154,7 @@ export default function Onboarding() {
       
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('about')
+        .select('about, testimonials')
         .eq('id', onboardingData.profileId)
         .single();
 
@@ -154,18 +163,42 @@ export default function Onboarding() {
         return;
       }
 
-      if (profileData?.about && typeof profileData.about === 'object') {
-        const aboutData = profileData.about as Record<string, unknown>;
-        console.log('🔄 Refreshed about data:', aboutData);
+      if (profileData) {
+        console.log('🔄 Refreshed profile data:', profileData);
+        
+        // Load testimonials from both sources
+        let testimonialsFromAbout: OnboardingData['testimonials'] = [];
+        let testimonialsFromColumn: OnboardingData['testimonials'] = [];
+        
+        // Load from about section (backward compatibility)
+        if (profileData.about && typeof profileData.about === 'object' && 'testimonials' in profileData.about) {
+          testimonialsFromAbout = (profileData.about as Record<string, unknown>).testimonials as OnboardingData['testimonials'];
+        }
+        
+        // Load from testimonials column (new approach)
+        if (profileData.testimonials && Array.isArray(profileData.testimonials)) {
+          testimonialsFromColumn = profileData.testimonials as unknown as OnboardingData['testimonials'];
+        }
+        
+        // Merge testimonials, prioritizing the column data if available
+        const finalTestimonials = testimonialsFromColumn.length > 0 ? testimonialsFromColumn : testimonialsFromAbout;
+        
+        // Clean testimonials data before updating state
+        const cleanTestimonials = cleanTestimonialsData(finalTestimonials);
         
         // Update local state with refreshed data
         setOnboardingData(prev => ({
           ...prev,
-          socialLinks: (aboutData.socialLinks as OnboardingData['socialLinks']) || prev.socialLinks,
-          testimonials: (aboutData.testimonials as OnboardingData['testimonials']) || prev.testimonials,
+          socialLinks: profileData.about && typeof profileData.about === 'object' && 'socialLinks' in profileData.about 
+            ? (profileData.about as Record<string, unknown>).socialLinks as OnboardingData['socialLinks']
+            : prev.socialLinks,
+          testimonials: cleanTestimonials,
         }));
 
         console.log('✅ Testimonials data refreshed successfully');
+        console.log('🔧 Testimonials from about section:', testimonialsFromAbout);
+        console.log('🔧 Testimonials from column:', testimonialsFromColumn);
+        console.log('🔧 Final merged testimonials:', finalTestimonials);
       }
     } catch (error) {
       console.error('❌ Error refreshing testimonials data:', error);
@@ -208,22 +241,53 @@ export default function Onboarding() {
         }));
         
         setOnboardingData(prev => {
+          // Load testimonials from both sources: about section and testimonials column
+          let testimonialsFromAbout: OnboardingData['testimonials'] = [];
+          let testimonialsFromColumn: OnboardingData['testimonials'] = [];
+          
+          // Load from about section (backward compatibility)
+          if (existingProfile.about && typeof existingProfile.about === 'object' && 'testimonials' in existingProfile.about) {
+            testimonialsFromAbout = (existingProfile.about as Record<string, unknown>).testimonials as OnboardingData['testimonials'];
+          }
+          
+          // Load from testimonials column (new approach)
+          if (existingProfile.testimonials && Array.isArray(existingProfile.testimonials)) {
+            testimonialsFromColumn = existingProfile.testimonials as unknown as OnboardingData['testimonials'];
+          }
+          
+          // Merge testimonials, prioritizing the column data if available
+          const finalTestimonials = testimonialsFromColumn.length > 0 ? testimonialsFromColumn : testimonialsFromAbout;
+          
+          // Clean testimonials data by removing _file property
+          const cleanTestimonials = cleanTestimonialsData(finalTestimonials);
+          
           const newData = {
             ...prev,
+            handle: existingProfile.handle || prev.handle,
+            name: existingProfile.name || prev.name,
+            slogan: existingProfile.slogan || prev.slogan,
+            category: existingProfile.category || prev.category,
             avatar_url: existingProfile.avatar_url || prev.avatar_url,
             banner: existingProfile.banner as OnboardingData['banner'] || prev.banner,
+            bookingUrl: existingProfile.booking_url || prev.bookingUrl,
+            bookingMode: (existingProfile.booking_mode as 'embed' | 'new_tab') || prev.bookingMode,
+            useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
+            whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
             aboutTitle: existingProfile.about && typeof existingProfile.about === 'object' && 'title' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).title as string : prev.aboutTitle,
             aboutDescription: existingProfile.about && typeof existingProfile.about === 'object' && 'description' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).description as string : prev.aboutDescription,
             aboutAlignment: existingProfile.about && typeof existingProfile.about === 'object' && 'alignment' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).alignment as 'center' | 'left' : prev.aboutAlignment,
             media: existingProfile.media as OnboardingData['media'] || prev.media,
             socials: existingProfile.socials as OnboardingData['socials'] || prev.socials,
             socialLinks: existingProfile.about && typeof existingProfile.about === 'object' && 'socialLinks' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).socialLinks as OnboardingData['socialLinks'] : prev.socialLinks,
-            testimonials: existingProfile.about && typeof existingProfile.about === 'object' && 'testimonials' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).testimonials as OnboardingData['testimonials'] : prev.testimonials,
+            testimonials: cleanTestimonials,
           };
           
           console.log('🔧 Updated onboarding data after refresh:', newData);
           console.log('🔧 Testimonials loaded:', newData.testimonials);
           console.log('🔧 About section from DB:', existingProfile.about);
+          console.log('🔧 Testimonials from about section:', testimonialsFromAbout);
+          console.log('🔧 Testimonials from column:', testimonialsFromColumn);
+          console.log('🔧 Final merged testimonials:', finalTestimonials);
           
           // Additional logging for testimonials
           if (existingProfile.about && typeof existingProfile.about === 'object') {
@@ -275,6 +339,18 @@ export default function Onboarding() {
   useEffect(() => {
     loadExistingProfile();
   }, [user]);
+
+  // Set current step from URL parameter
+  useEffect(() => {
+    const stepParam = searchParams.get('step');
+    if (stepParam) {
+      const step = parseInt(stepParam, 10);
+      if (step >= 1 && step <= 7) {
+        setCurrentStep(step);
+        console.log('🔧 Setting current step from URL parameter:', step);
+      }
+    }
+  }, [searchParams]);
 
   // Redirect if no user
   useEffect(() => {
@@ -602,7 +678,7 @@ export default function Onboarding() {
         media: {
           items: mediaUrls.map(url => ({ url, kind: 'image' })),
         },
-        testimonials: data.testimonials || [],
+        testimonials: data.testimonials ? cleanTestimonialsData(data.testimonials) : [],
         footer: {
           businessName: data.footerBusinessName,
           address: data.footerAddress,
@@ -1406,7 +1482,7 @@ export default function Onboarding() {
       const aboutData = {
         ...existingAbout,
         socialLinks: data.socialLinks,
-        testimonials: processedTestimonials
+        testimonials: cleanTestimonialsData(processedTestimonials)
       };
       
       console.log('🔧 Saving about data with testimonials (backward compatibility):', aboutData);

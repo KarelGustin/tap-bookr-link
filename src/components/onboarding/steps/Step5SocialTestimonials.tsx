@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Plus, X, Star, MessageCircle, Share2, Upload, User } from 'lucide-react';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { supabase } from '../../../integrations/supabase/client';
+import { useToast } from '../../../hooks/use-toast';
 
 interface Step5SocialTestimonialsProps {
   onNext: (data: {
@@ -44,6 +45,7 @@ interface Step5SocialTestimonialsProps {
 }
 
 export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }: Step5SocialTestimonialsProps) => {
+  const { toast } = useToast();
   const [socialLinks, setSocialLinks] = useState(existingData.socialLinks.length > 0 ? existingData.socialLinks : [
     { id: '1', title: 'Instagram', platform: 'instagram', url: '' },
     { id: '2', title: 'Facebook', platform: 'facebook', url: '' },
@@ -64,6 +66,157 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       image_url: '',
     },
   ]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Auto-save function for testimonials
+  const autoSaveTestimonials = useCallback(async (updatedTestimonials: typeof testimonials) => {
+    if (!handle) {
+      console.log('🔧 No handle available for auto-save');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('🔧 Auto-saving testimonials:', updatedTestimonials);
+      
+      // Find the profile by handle
+      const { data: profile, error: findError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('handle', handle)
+        .single();
+
+      if (findError) {
+        console.error('❌ Error finding profile for auto-save:', findError);
+        return;
+      }
+
+      if (profile) {
+        // Clean testimonials data by removing _file property
+        const cleanTestimonials = updatedTestimonials.map(testimonial => {
+          const { _file, ...cleanTestimonial } = testimonial;
+          return cleanTestimonial;
+        });
+
+        // Save to testimonials column
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            testimonials: cleanTestimonials,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', profile.id);
+
+        if (updateError) {
+          console.error('❌ Error auto-saving testimonials:', updateError);
+        } else {
+          console.log('✅ Testimonials auto-saved successfully');
+        }
+
+        // Also save to about section for backward compatibility
+        const { data: existingProfile, error: getError } = await supabase
+          .from('profiles')
+          .select('about')
+          .eq('id', profile.id)
+          .single();
+
+        if (getError) {
+          console.error('❌ Error getting existing about data for testimonials:', getError);
+          return;
+        }
+
+        // Merge existing about data with new testimonials
+        const existingAbout = existingProfile?.about || {};
+        const updatedAbout = {
+          ...(typeof existingAbout === 'object' ? existingAbout : {}),
+          testimonials: cleanTestimonials
+        };
+
+        const { error: aboutUpdateError } = await supabase
+          .from('profiles')
+          .update({
+            about: updatedAbout,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', profile.id);
+
+        if (aboutUpdateError) {
+          console.error('❌ Error auto-saving testimonials to about section:', aboutUpdateError);
+        } else {
+          console.log('✅ Testimonials auto-saved to about section successfully');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in auto-save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [handle]);
+
+  // Auto-save function for social links
+  const autoSaveSocialLinks = useCallback(async (updatedSocialLinks: typeof socialLinks) => {
+    if (!handle) {
+      console.log('🔧 No handle available for auto-save');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('🔧 Auto-saving social links:', updatedSocialLinks);
+      
+      // Find the profile by handle
+      const { data: profile, error: findError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('handle', handle)
+        .single();
+
+      if (findError) {
+        console.error('❌ Error finding profile for auto-save:', findError);
+        return;
+      }
+
+      if (profile) {
+        // Get existing about data to preserve other fields
+        const { data: existingProfile, error: getError } = await supabase
+          .from('profiles')
+          .select('about')
+          .eq('id', profile.id)
+          .single();
+
+        if (getError) {
+          console.error('❌ Error getting existing about data:', getError);
+          return;
+        }
+
+        // Merge existing about data with new social links
+        const existingAbout = existingProfile?.about || {};
+        const updatedAbout = {
+          ...(typeof existingAbout === 'object' ? existingAbout : {}),
+          socialLinks: updatedSocialLinks
+        };
+
+        // Save social links to about section
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            about: updatedAbout,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', profile.id);
+
+        if (updateError) {
+          console.error('❌ Error auto-saving social links:', updateError);
+        } else {
+          console.log('✅ Social links auto-saved successfully');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in auto-save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [handle]);
 
   // Set initial state based on existing data
   useEffect(() => {
@@ -95,17 +248,29 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
 
   const addSocialLink = () => {
     const newId = (socialLinks.length + 1).toString();
-    setSocialLinks([...socialLinks, { id: newId, title: '', platform: '', url: '' }]);
+    const updatedSocialLinks = [...socialLinks, { id: newId, title: '', platform: '', url: '' }];
+    setSocialLinks(updatedSocialLinks);
+    
+    // Auto-save social links
+    autoSaveSocialLinks(updatedSocialLinks);
   };
 
   const removeSocialLink = (id: string) => {
-    setSocialLinks(socialLinks.filter(link => link.id !== id));
+    const updatedSocialLinks = socialLinks.filter(link => link.id !== id);
+    setSocialLinks(updatedSocialLinks);
+    
+    // Auto-save after removing social link
+    autoSaveSocialLinks(updatedSocialLinks);
   };
 
   const updateSocialLink = (id: string, field: 'title' | 'platform' | 'url', value: string) => {
-    setSocialLinks(socialLinks.map(link => 
+    const updatedSocialLinks = socialLinks.map(link => 
       link.id === id ? { ...link, [field]: value } : link
-    ));
+    );
+    setSocialLinks(updatedSocialLinks);
+    
+    // Auto-save after updating social link
+    autoSaveSocialLinks(updatedSocialLinks);
   };
 
   const addTestimonial = () => {
@@ -115,17 +280,28 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       review_text: '',
       image_url: '',
     };
-    setTestimonials([...testimonials, newTestimonial]);
+    const updatedTestimonials = [...testimonials, newTestimonial];
+    setTestimonials(updatedTestimonials);
+    
+    // Auto-save after adding testimonial
+    autoSaveTestimonials(updatedTestimonials);
   };
 
   const removeTestimonial = (index: number) => {
-    setTestimonials(testimonials.filter((_, i) => i !== index));
+    const updatedTestimonials = testimonials.filter((_, i) => i !== index);
+    setTestimonials(updatedTestimonials);
+    
+    // Auto-save after removing testimonial
+    autoSaveTestimonials(updatedTestimonials);
   };
 
   const updateTestimonial = (index: number, field: 'customer_name' | 'review_title' | 'review_text', value: string) => {
     const updated = [...testimonials];
     updated[index] = { ...updated[index], [field]: value };
     setTestimonials(updated);
+    
+    // Auto-save after updating testimonial
+    autoSaveTestimonials(updated);
   };
 
   const handleTestimonialImageChange = (index: number, file: File | null) => {
@@ -136,6 +312,9 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       updated[index] = { ...updated[index], _file: undefined };
     }
     setTestimonials(updated);
+    
+    // Auto-save after changing image
+    autoSaveTestimonials(updated);
   };
 
   const handleSubmit = () => {
@@ -199,6 +378,12 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Voeg je sociale media links en klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
           </p>
+          {isSaving && (
+            <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Opslaan...</span>
+            </div>
+          )}
         </div>
 
         {/* Social Links Section */}

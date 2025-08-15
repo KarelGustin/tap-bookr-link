@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Clock, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
+import StripeService from '@/services/stripeService';
+import { useToast } from '@/hooks/use-toast';
 
 interface Step7PreviewProps {
   onPublish: () => Promise<void>;
@@ -73,9 +75,11 @@ export const Step7Preview = ({
   profileData 
 }: Step7PreviewProps) => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isLivePreviewActive, setIsLivePreviewActive] = useState(false);
   const [livePreviewTimeLeft, setLivePreviewTimeLeft] = useState(15 * 60); // 15 minutes in seconds
   const [previewKey, setPreviewKey] = useState(0);
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Initialize local state based on the prop
   useEffect(() => {
@@ -151,15 +155,39 @@ export const Step7Preview = ({
   };
 
   const handleSubscribe = async () => {
+    if (!profileData.handle) {
+      toast({
+        title: "Fout",
+        description: "Geen handle gevonden. Publiceer eerst je profiel.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubscribing(true);
     try {
-      // This will redirect to Stripe checkout
-      // You'll need to implement the Stripe integration
-      console.log('Starting subscription flow...');
+      // Get profile ID from the database using the handle
+      const { data: profile, error } = await fetch(`/api/profiles/by-handle/${profileData.handle}`).then(res => res.json());
       
-      // For now, just show a message
-      alert('Stripe integratie wordt geïmplementeerd');
+      if (error || !profile?.id) {
+        throw new Error('Profile niet gevonden');
+      }
+
+      // Redirect to Stripe checkout
+      await StripeService.redirectToCheckout({
+        profileId: profile.id,
+        successUrl: `${window.location.origin}/dashboard?success=true`,
+        cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
+      });
     } catch (error) {
-      console.error('Failed to start subscription:', error);
+      console.error('Error starting subscription:', error);
+      toast({
+        title: "Fout",
+        description: "Er is een fout opgetreden bij het starten van je abonnement. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -328,10 +356,11 @@ export const Step7Preview = ({
           {isLivePreviewActive ? (
             <Button
               onClick={handleSubscribe}
+              disabled={isSubscribing}
               className="flex-1"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Ga live met jouw eigen website!
+              {isSubscribing ? 'Bezig...' : 'Ga live met jouw eigen website!'}
             </Button>
           ) : (
             <Button

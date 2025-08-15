@@ -13,43 +13,40 @@ serve(async (req) => {
   }
 
   try {
-    // Get the request body
-    const { profileId, successUrl, cancelUrl } = await req.json()
+    const { profileId } = await req.json()
 
     if (!profileId) {
       throw new Error('Profile ID is required')
     }
 
-    // Initialize Stripe
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Get subscription details
+    const { data: subscription, error } = await supabase
+      .from('subscriptions')
+      .select('stripe_customer_id')
+      .eq('profile_id', profileId)
+      .single()
+
+    if (error || !subscription) {
+      throw new Error('No active subscription found')
+    }
+
+    // Create customer portal session
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'ideal'],
-      line_items: [
-        {
-          price: Deno.env.get('STRIPE_PRICE_ID'), // €9/month subscription price ID
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      subscription_data: {
-        metadata: {
-          profile_id: profileId,
-        },
-      },
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
-      customer_email: req.headers.get('x-user-email'),
-      metadata: {
-        profile_id: profileId,
-      },
+    const session = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripe_customer_id,
+      return_url: `${req.headers.get('origin')}/dashboard`,
     })
 
     return new Response(
-      JSON.stringify({ sessionId: session.id, url: session.url }),
+      JSON.stringify({ url: session.url }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -57,7 +54,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error creating checkout session:', error)
+    console.error('Error creating customer portal session:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -70,7 +67,7 @@ serve(async (req) => {
 
 // Stripe type definitions
 interface Stripe {
-  checkout: {
+  billingPortal: {
     sessions: {
       create: (params: any) => Promise<any>
     }
@@ -81,24 +78,18 @@ const Stripe = (secretKey: string, config: any): Stripe => {
   // This is a simplified Stripe client for Deno
   // In production, you'd use the official Stripe Deno library
   return {
-    checkout: {
+    billingPortal: {
       sessions: {
         create: async (params: any) => {
-          const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+          const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${secretKey}`,
               'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: new URLSearchParams({
-              'payment_method_types[]': params.payment_method_types.join(','),
-              'line_items[0][price]': params.line_items[0].price,
-              'line_items[0][quantity]': params.line_items[0].quantity.toString(),
-              'mode': params.mode,
-              'success_url': params.success_url,
-              'cancel_url': params.cancel_url,
-              'metadata[profile_id]': params.metadata.profile_id,
-              ...(params.customer_email && { 'customer_email': params.customer_email }),
+              'customer': params.customer,
+              'return_url': params.return_url,
             }),
           })
 

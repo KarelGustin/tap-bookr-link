@@ -38,6 +38,26 @@ export type Database = {
           use_whatsapp: boolean | null
           whatsapp_number: string | null
           footer: Json
+          preview_expires_at: string | null
+          preview_started_at: string | null
+          footer_business_name: string | null
+          footer_address: string | null
+          footer_email: string | null
+          footer_phone: string | null
+          footer_hours: Json | null
+          footer_next_available: string | null
+          footer_cancellation_policy: string | null
+          footer_privacy_policy: string | null
+          footer_terms_of_service: string | null
+          footer_show_maps: boolean | null
+          footer_show_attribution: boolean | null
+          testimonials: Json | null
+          subscription_id: string | null
+          trial_start_date: string | null
+          trial_end_date: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          subscription_status: string | null
         }
         Insert: {
           about?: Json
@@ -62,6 +82,26 @@ export type Database = {
           use_whatsapp?: boolean | null
           whatsapp_number?: string | null
           footer?: Json
+          preview_expires_at?: string | null
+          preview_started_at?: string | null
+          footer_business_name?: string | null
+          footer_address?: string | null
+          footer_email?: string | null
+          footer_phone?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_cancellation_policy?: string | null
+          footer_privacy_policy?: string | null
+          footer_terms_of_service?: string | null
+          footer_show_maps?: boolean | null
+          footer_show_attribution?: boolean | null
+          testimonials?: Json | null
+          subscription_id?: string | null
+          trial_start_date?: string | null
+          trial_end_date?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          subscription_status?: string | null
         }
         Update: {
           about?: Json
@@ -86,6 +126,143 @@ export type Database = {
           use_whatsapp?: boolean | null
           whatsapp_number?: string | null
           footer?: Json
+          preview_expires_at?: string | null
+          preview_started_at?: string | null
+          footer_business_name?: string | null
+          footer_address?: string | null
+          footer_email?: string | null
+          footer_phone?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_cancellation_policy?: string | null
+          footer_privacy_policy?: string | null
+          footer_terms_of_service?: string | null
+          footer_show_maps?: boolean | null
+          footer_show_attribution?: boolean | null
+          testimonials?: Json | null
+          subscription_id?: string | null
+          trial_start_date?: string | null
+          trial_end_date?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          subscription_status?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          profile_id: string
+          stripe_subscription_id: string | null
+          stripe_customer_id: string | null
+          status: string | null
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          status?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          status?: string | null
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          profile_id: string | null
+          stripe_payment_method_id: string | null
+          type: string | null
+          last4: string | null
+          brand: string | null
+          exp_month: number | null
+          exp_year: number | null
+          country: string | null
+          is_default: boolean | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          profile_id?: string | null
+          stripe_payment_method_id?: string | null
+          type?: string | null
+          last4?: string | null
+          brand?: string | null
+          exp_month?: number | null
+          exp_year?: number | null
+          country?: string | null
+          is_default?: boolean | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          profile_id?: string | null
+          stripe_payment_method_id?: string | null
+          type?: string | null
+          last4?: string | null
+          brand?: string | null
+          exp_year?: number | null
+          exp_month?: number | null
+          country?: string | null
+          is_default?: boolean | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          id: string
+          profile_id: string
+          stripe_invoice_id: string | null
+          amount: number | null
+          currency: string | null
+          status: string | null
+          due_date: string | null
+          paid_at: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          stripe_invoice_id?: string | null
+          amount?: number | null
+          currency?: string | null
+          status?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          profile_id?: string
+          stripe_invoice_id?: string | null
+          amount?: number | null
+          currency?: string | null
+          status?: string | null
+          due_date?: string | null
+          paid_at?: string | null
+          created_at?: string | null
         }
         Relationships: []
       }

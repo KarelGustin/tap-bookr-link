@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Database, Json } from '@/integrations/supabase/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import StripeService from '@/services/stripeService';
 import { 
   ChevronDown,
   Settings,
@@ -199,6 +200,11 @@ export default function Dashboard() {
   const [galleryNewPreviews, setGalleryNewPreviews] = useState<string[]>([]);
   const [testimonialPreviews, setTestimonialPreviews] = useState<Record<number, string>>({});
   const [previewKey, setPreviewKey] = useState(0);
+  
+  // Subscription state
+  const [subscription, setSubscription] = useState<any>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [invoices, setInvoices] = useState<any[]>([]);
 
   // Check onboarding completion status
   useEffect(() => {
@@ -233,6 +239,48 @@ export default function Dashboard() {
 
     checkOnboardingStatus();
   }, [user, navigate]);
+
+  // Load subscription data
+  const loadSubscriptionData = useCallback(async () => {
+    if (!profile?.id) return;
+    
+    setSubscriptionLoading(true);
+    try {
+      // Load subscription
+      const { data: subscriptionData, error: subError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .single();
+
+      if (subError && subError.code !== 'PGRST116') {
+        console.error('Error loading subscription:', subError);
+      } else {
+        setSubscription(subscriptionData);
+      }
+
+      // Load invoices
+      const { data: invoicesData, error: invError } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('profile_id', profile.id)
+        .order('created_at', { ascending: false });
+
+      if (invError) {
+        console.error('Error loading invoices:', invError);
+      } else {
+        setInvoices(invoicesData || []);
+      }
+    } catch (error) {
+      console.error('Error loading subscription data:', error);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    loadSubscriptionData();
+  }, [loadSubscriptionData]);
 
   // initialize defaults for socials and testimonials if empty
   useEffect(() => {
@@ -2036,31 +2084,58 @@ export default function Dashboard() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
-                      <div className="flex items-center mb-2">
-                        <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                        <span className="font-medium text-gray-900">Status</span>
-                      </div>
-                      <p className="text-sm text-gray-600">Actief</p>
+                  {subscriptionLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                     </div>
-                    
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
-                      <div className="flex items-center mb-2">
-                        <Calendar className="w-5 h-5 text-blue-500 mr-2" />
-                        <span className="font-medium text-gray-900">Volgende Factuur</span>
+                  ) : subscription ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="bg-white rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center mb-2">
+                          <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                          <span className="font-medium text-gray-900">Status</span>
+                        </div>
+                        <p className="text-sm text-gray-600 capitalize">{subscription.status || 'Inactief'}</p>
                       </div>
-                      <p className="text-sm text-gray-600">15 januari 2025</p>
-                    </div>
-                    
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
-                      <div className="flex items-center mb-2">
-                        <CreditCard className="w-5 h-5 text-purple-500 mr-2" />
-                        <span className="font-medium text-gray-900">Betaalmethode</span>
+                      
+                      <div className="bg-white rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center mb-2">
+                          <Calendar className="w-5 h-5 text-blue-500 mr-2" />
+                          <span className="font-medium text-gray-900">Volgende Factuur</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {subscription.current_period_end 
+                            ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })
+                            : 'Niet beschikbaar'
+                          }
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-600">•••• •••• •••• 4242</p>
+                      
+                      <div className="bg-white rounded-lg p-4 border border-purple-200">
+                        <div className="flex items-center mb-2">
+                          <CreditCard className="w-5 h-5 text-purple-500 mr-2" />
+                          <span className="font-medium text-gray-900">Betaalmethode</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {subscription.stripe_customer_id ? '•••• •••• •••• ••••' : 'Niet ingesteld'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600 mb-4">Je hebt nog geen actief abonnement</p>
+                      <Button 
+                        onClick={() => StripeService.redirectToCheckout({ profileId: profile?.id || '' })}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        Start Abonnement
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Plan Features */}
@@ -2108,91 +2183,79 @@ export default function Dashboard() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 pt-6 border-t border-gray-200">
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      // TODO: Implement payment method update
-                      toast({
-                        title: "Betaalmethode bijwerken",
-                        description: "Deze functie wordt binnenkort toegevoegd.",
-                      });
-                    }}
-                  >
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Betaalmethode wijzigen
-                  </Button>
-                  
-                  <Button 
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      // TODO: Implement invoice download
-                      toast({
-                        title: "Facturen downloaden",
-                        description: "Deze functie wordt binnenkort toegevoegd.",
-                      });
-                    }}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Facturen downloaden
-                  </Button>
-                  
-                  <Button 
-                    variant="destructive"
-                    className="w-full"
-                    onClick={() => {
-                      // TODO: Implement subscription cancellation
-                      toast({
-                        title: "Abonnement opzeggen",
-                        description: "Neem contact op met onze klantenservice om je abonnement op te zeggen.",
-                        variant: "destructive",
-                      });
-                    }}
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Abonnement opzeggen
-                  </Button>
+                  {subscription ? (
+                    <>
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => StripeService.redirectToCustomerPortal({ profileId: profile?.id || '' })}
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Beheer Abonnement
+                      </Button>
+                      
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          toast({
+                            title: "Facturen downloaden",
+                            description: "Deze functie wordt binnenkort toegevoegd.",
+                          });
+                        }}
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        Facturen downloaden
+                      </Button>
+                    </>
+                  ) : (
+                    <Button 
+                      onClick={() => StripeService.redirectToCheckout({ profileId: profile?.id || '' })}
+                      className="w-full bg-purple-600 hover:bg-purple-700"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Start Abonnement
+                    </Button>
+                  )}
                 </div>
 
                 {/* Billing History */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-900">Factuurgeschiedenis</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                        <div>
-                          <p className="font-medium text-gray-900">December 2024</p>
-                          <p className="text-sm text-gray-500">€9,00</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
+                    {invoices.length > 0 ? (
+                      <div className="space-y-3">
+                        {invoices.map((invoice) => (
+                          <div key={invoice.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {invoice.created_at 
+                                  ? new Date(invoice.created_at).toLocaleDateString('nl-NL', {
+                                      month: 'long',
+                                      year: 'numeric'
+                                    })
+                                  : 'Onbekende datum'
+                                }
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                €{(invoice.amount || 0) / 100},00
+                              </p>
+                              <p className="text-xs text-gray-400 capitalize">
+                                {invoice.status || 'onbekend'}
+                              </p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                        <div>
-                          <p className="font-medium text-gray-900">November 2024</p>
-                          <p className="text-sm text-gray-500">€9,00</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">Nog geen facturen beschikbaar</p>
                       </div>
-                      
-                      <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                        <div>
-                          <p className="font-medium text-gray-900">Oktober 2024</p>
-                          <p className="text-sm text-gray-500">€9,00</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
