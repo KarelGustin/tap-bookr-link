@@ -98,7 +98,7 @@ export const Hero = () => {
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Lanceer vandaag nog een boekbare pagina waar je klanten dol op zijn. Claim je handle, koppel WhatsApp of je boekingssysteem, en begin binnen minuten met het ontvangen van boekingen.
+              Lanceer vandaag nog een website om ook onbekende klanten te bereiken. Claim je handle, koppel WhatsApp of je boekingssysteem, en begin binnen minuten met het ontvangen van boekingen.
             </p>
             
             {/* Social Proof */}
