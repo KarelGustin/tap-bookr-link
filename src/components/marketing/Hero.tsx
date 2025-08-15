@@ -107,10 +107,10 @@ export const Hero = () => {
                 <span className="text-yellow-400">★★★★★</span>
                 <span>Vertrouwd door 2.000+ bedrijven</span>
               </div>
-              <div className="hidden sm:flex items-center gap-2">
+              {/* <div className="hidden sm:flex items-center gap-2">
                 <span>•</span>
                 <span>Geen creditcard vereist</span>
-              </div>
+              </div> */}
             </div>
             
             <div className="space-y-3 max-w-lg pt-4">
