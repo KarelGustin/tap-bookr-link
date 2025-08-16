@@ -307,7 +307,7 @@ export const Step7Preview = ({
                     <span className="font-medium">Status:</span> {profileData.bookingUrl ? 'Gekoppeld aan boekingssysteem' : 'Geen boeking ingesteld'}
                   </p>
                   {profileData.bookingUrl && (
-                    <p><span className="font-medium">URL:</span> {profileData.bookingUrl}</p>
+                    <p><span className="font-medium break-all">URL:</span> {profileData.bookingUrl}</p>
                   )}
                 </div>
               </div>
