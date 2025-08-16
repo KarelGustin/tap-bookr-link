@@ -408,8 +408,12 @@ export default function PublicProfile() {
   
   return (
     <div className="min-h-screen bg-background">
-      {/* Preview Banner - Show when profile is in preview mode */}
-      {profile?.about && typeof profile.about === 'object' && 'preview_info' in profile.about && profile.about.preview_info && (
+      {/* Preview Banner - Show when profile is in preview mode AND no active subscription */}
+      {profile?.about && 
+        typeof profile.about === 'object' && 
+        'preview_info' in profile.about && 
+        profile.about.preview_info && 
+        profile.subscription_status !== 'active' && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 text-center">
           <div className="flex items-center justify-center gap-2">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
@@ -423,7 +427,11 @@ export default function PublicProfile() {
       )}
 
       {/* Main Content */}
-      <div className={profile?.about && typeof profile.about === 'object' && 'preview_info' in profile.about && profile.about.preview_info ? 'pt-20' : ''}>
+      <div className={profile?.about && 
+        typeof profile.about === 'object' && 
+        'preview_info' in profile.about && 
+        profile.about.preview_info && 
+        profile.subscription_status !== 'active' ? 'pt-20' : ''}>
         {loading ? (
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">

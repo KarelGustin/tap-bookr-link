@@ -1341,7 +1341,7 @@ export default function Dashboard() {
         <main className="flex-1 p-4 lg:p-6">
           <div className="max-w-6xl">
             {/* Welcome Section */}
-            {!profile && (
+            {/* {!profile && (
               <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-6 lg:p-8 mb-8 text-white">
                 <div className="max-w-2xl">
                   <h2 className="text-2xl lg:text-3xl font-bold mb-4">Welcome to Bookr! 🎉</h2>
@@ -1368,13 +1368,13 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Design Section */}
             {activeSection === 'design' && (
               <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Ontwerp je publieke pagina</h3>
+                  <h3 className="text-lg font-semibold">Hier is jouw publieke pagina</h3>
                   <Button onClick={saveDesign} disabled={designLoading}>
                     {designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}
                   </Button>
@@ -1416,7 +1416,7 @@ export default function Dashboard() {
                           <div className="bg-white rounded-[2rem] overflow-hidden" style={{ width: '320px', height: '692px' }}>
                             <iframe
                               key={previewKey}
-                              src={`https://tapbookr.com/${profile?.handle}?preview=${previewKey}`}
+                              src={`https://tapbookr.com/${profile?.handle}`}
                               className="w-full h-full"
                               title="iPhone Preview"
                               style={{ 
