@@ -198,6 +198,14 @@ export default function Onboarding() {
     }
   };
 
+  const handleSaveDraft = async () => {
+    await saveOnboardingData(onboardingData);
+    toast({
+      title: "Draft Saved",
+      description: "Your profile has been saved as a draft.",
+    });
+  };
+
   const handlePublish = async () => {
     setIsPublishing(true);
     
@@ -235,6 +243,13 @@ export default function Onboarding() {
       setIsPublishing(false);
     }
   };
+
+  // Check if profile can be published (has required fields)
+  const canPublish = Boolean(
+    onboardingData.handle && 
+    onboardingData.name && 
+    onboardingData.bookingUrl
+  );
 
   const handleSubscribe = async () => {
     if (!profileId && !onboardingData.profileId) {
