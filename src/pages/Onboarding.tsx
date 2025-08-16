@@ -2028,7 +2028,7 @@ export default function Onboarding() {
       // Redirect to Stripe checkout
       await StripeService.redirectToCheckout({
         profileId: profile.id,
-        successUrl: `${window.location.origin}/dashboard?success=true`,
+        successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
         cancelUrl: `${window.location.origin}/onboarding?step=7`,
       });
       

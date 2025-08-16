@@ -23,6 +23,9 @@ interface StripeCheckoutParams {
   customer_email?: string
   metadata: Record<string, string>
   payment_method_configuration?: string
+  discounts?: Array<{
+    promotion_code: string
+  }>
 }
 
 // Stripe response interface
@@ -63,6 +66,10 @@ serve(async (req) => {
       throw new Error('STRIPE_PAYMENT_METHOD_CONFIG_ID is not configured')
     }
 
+    // Get Discount ID from environment
+    const discountId = Deno.env.get('STRIPE_DISCOUNT_ID')
+    console.log('🔧 Discount ID:', discountId)
+
     // @ts-expect-error - Deno environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     console.log('🔧 Stripe Secret Key exists:', !!stripeSecretKey)
@@ -97,6 +104,14 @@ serve(async (req) => {
         profile_id: profileId,
       },
       payment_method_configuration: paymentMethodConfigurationId,
+      // Voeg automatische discount toe als deze is geconfigureerd
+      ...(discountId && {
+        discounts: [
+          {
+            promotion_code: discountId
+          }
+        ]
+      }),
     })
 
     console.log('🔧 Checkout session created successfully:', session.id)
@@ -141,22 +156,26 @@ const Stripe = (secretKey: string, _config: Record<string, unknown>): Stripe => 
         create: async (params: StripeCheckoutParams): Promise<StripeCheckoutResponse> => {
           const form = new URLSearchParams()
           
-          // Add payment method configuration if provided
-          if (params.payment_method_configuration) {
-            form.append('payment_method_configuration', params.payment_method_configuration)
-          }
-          form.append('line_items[0][price]', params.line_items[0].price)
-          form.append('line_items[0][quantity]', String(params.line_items[0].quantity))
-          form.append('mode', params.mode)
-          form.append('success_url', params.success_url)
-          form.append('cancel_url', params.cancel_url)
-          // Put metadata at session level only
-          if (params.metadata?.profile_id) {
-            form.append('metadata[profile_id]', params.metadata.profile_id)
-          }
-          if (params.customer_email) {
-            form.append('customer_email', params.customer_email)
-          }
+                     // Add payment method configuration if provided
+           if (params.payment_method_configuration) {
+             form.append('payment_method_configuration', params.payment_method_configuration)
+           }
+           form.append('line_items[0][price]', params.line_items[0].price)
+           form.append('line_items[0][quantity]', String(params.line_items[0].quantity))
+           form.append('mode', params.mode)
+           form.append('success_url', params.success_url)
+           form.append('cancel_url', params.cancel_url)
+           // Put metadata at session level only
+           if (params.metadata?.profile_id) {
+             form.append('metadata[profile_id]', params.metadata.profile_id)
+           }
+           if (params.customer_email) {
+             form.append('customer_email', params.customer_email)
+           }
+           // Add discount if provided
+           if (params.discounts && params.discounts.length > 0) {
+             form.append('discounts[0][promotion_code]', params.discounts[0].promotion_code)
+           }
 
           const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
             method: 'POST',

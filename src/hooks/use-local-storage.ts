@@ -29,7 +29,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
 export const useOnboardingDraft = () => {
   const [draft, setDraft] = useLocalStorage(STORAGE_KEY, null);
 
-  const saveDraft = (data: any) => {
+  const saveDraft = (data: Record<string, unknown>) => {
     setDraft({
       ...data,
       lastSaved: new Date().toISOString(),
@@ -40,7 +40,7 @@ export const useOnboardingDraft = () => {
     setDraft(null);
   };
 
-  const hasUnsavedChanges = (currentData: any) => {
+  const hasUnsavedChanges = (currentData: Record<string, unknown>) => {
     if (!draft) return false;
     
     // Compare current data with draft (excluding metadata fields)

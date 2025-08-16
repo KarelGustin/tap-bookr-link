@@ -105,7 +105,7 @@ export const useFileUpload = () => {
       img.onerror = () => reject(new Error('Failed to load image'));
       img.src = URL.createObjectURL(file);
     });
-  };
+  }, []);
 
   const uploadFile = useCallback(async (
     file: File,

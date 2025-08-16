@@ -180,7 +180,7 @@ export const Step7Preview = ({
       // Redirect to Stripe checkout
       await StripeService.redirectToCheckout({
         profileId: profile.id,
-        successUrl: `${window.location.origin}/dashboard?success=true`,
+        successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
         cancelUrl: `${window.location.origin}/onboarding?step=7`,
       });
     } catch (error) {
@@ -360,7 +360,7 @@ export const Step7Preview = ({
             className="flex-1"
           >
             <CreditCard className="w-4 h-4 mr-2" />
-            {isSubscribing ? 'Bezig...' : 'Ga live met jouw eigen website!'}
+            {isSubscribing ? 'Bezig...' : 'Ga live met je eigen website voor maar €1'}
           </Button>
         </div>
 
@@ -370,7 +370,7 @@ export const Step7Preview = ({
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
               <h4 className="font-medium text-blue-900 mb-2">
-                Blijf live met jouw eigen website voor €9 per maand!
+                De eerste maand €1, blijf daarna live met jouw eigen website voor €9 per maand!
               </h4>
               <p className="text-sm text-blue-700 mb-3">
                 Je pagina blijft live en je kunt alle functies gebruiken. Annuleer op elk moment.

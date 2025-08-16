@@ -41,6 +41,17 @@ export const ProtectedRoute = ({
 				return;
 			}
 		}
+
+		// Auto-redirect to dashboard if user has active subscription and is not on dashboard
+		if (!subscriptionLoading && !onboardingLoading && onboardingCompleted && allowed) {
+			const currentPath = window.location.pathname;
+			// Redirect from onboarding, login, or root to dashboard
+			if (currentPath === '/onboarding' || currentPath === '/login' || currentPath === '/') {
+				console.log('🔧 Auto-redirecting to dashboard - user has active subscription');
+				navigate('/dashboard', { replace: true });
+				return;
+			}
+		}
 	}, [user, onboardingLoading, onboardingCompleted, requireOnboarding, subscriptionLoading, requireActiveSubscription, allowed, navigate]);
 
 	// Toon loading state

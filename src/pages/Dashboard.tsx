@@ -76,6 +76,27 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // Success message handling
+  const success = searchParams.get('success');
+  const subscriptionStatus = searchParams.get('subscription');
+
+  // Show success message when coming from successful subscription
+  useEffect(() => {
+    if (success === 'true' && subscriptionStatus === 'active') {
+      toast({
+        title: "🎉 Betaling Succesvol!",
+        description: "Je abonnement is actief en je website is nu live op tapbookr.com!",
+        variant: "default",
+      });
+      
+      // Clear the URL parameters after showing the message
+      const url = new URL(window.location.href);
+      url.searchParams.delete('success');
+      url.searchParams.delete('subscription');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [success, subscriptionStatus, toast]);
+
   // Sample social links data
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
     {
@@ -203,9 +224,22 @@ export default function Dashboard() {
   const [previewKey, setPreviewKey] = useState(0);
   
   // Subscription state
-  const [subscription, setSubscription] = useState<any>(null);
+  const [subscription, setSubscription] = useState<{
+    id: string;
+    status: string;
+    stripe_subscription_id: string;
+    stripe_customer_id: string;
+    current_period_start: string;
+    current_period_end: string;
+    cancel_at_period_end: boolean;
+  } | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<{
+    id: string;
+    amount: number;
+    status: string;
+    created_at: string;
+  }[]>([]);
 
   // Check onboarding completion status
   useEffect(() => {
@@ -225,7 +259,7 @@ export default function Dashboard() {
         }
 
         if (profile) {
-          const onboardingCompleted = (profile as any).onboarding_completed || false;
+          const onboardingCompleted = (profile as { onboarding_completed: boolean }).onboarding_completed || false;
           setOnboardingCompleted(onboardingCompleted);
           
           // If onboarding not completed, redirect to onboarding

@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('🔧 Auth state change:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -45,6 +46,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Set up real-time database updates for profile changes
+  useEffect(() => {
+    if (!user?.id) return;
+
+    console.log('🔧 Setting up real-time profile updates for user:', user.id);
+
+    // Subscribe to profile changes
+    const profileSubscription = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('🔧 Profile updated in real-time:', payload);
+          // This will trigger a re-render and the ProtectedRoute will check the new status
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔧 Cleaning up profile subscription');
+      profileSubscription.unsubscribe();
+    };
+  }, [user?.id]);
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({

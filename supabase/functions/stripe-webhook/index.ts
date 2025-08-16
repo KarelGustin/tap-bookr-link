@@ -93,8 +93,10 @@ async function handleSubscriptionCreated(subscription: any, supabase: any) {
     return
   }
 
+  console.log(`🔧 Processing subscription created for profile ${profileId}`)
+
   // Create subscription record
-  const { error } = await supabase
+  const { error: subError } = await supabase
     .from('subscriptions')
     .insert({
       profile_id: profileId,
@@ -106,22 +108,28 @@ async function handleSubscriptionCreated(subscription: any, supabase: any) {
       cancel_at_period_end: subscription.cancel_at_period_end,
     })
 
-  if (error) {
-    console.error('Error creating subscription record:', error)
+  if (subError) {
+    console.error('Error creating subscription record:', subError)
     return
   }
 
-  // Update profile status
-  await supabase
+  // Update profile status to published and active
+  const { error: profileError } = await supabase
     .from('profiles')
     .update({
-      subscription_status: subscription.status,
+      subscription_status: 'active',
       subscription_id: subscription.id,
       status: 'published', // Set profile to published
+      updated_at: new Date().toISOString(),
     })
     .eq('id', profileId)
 
-  console.log(`Subscription created for profile ${profileId}`)
+  if (profileError) {
+    console.error('Error updating profile status:', profileError)
+    return
+  }
+
+  console.log(`✅ Profile ${profileId} is now published with active subscription`)
 }
 
 async function handleSubscriptionUpdated(subscription: any, supabase: any) {

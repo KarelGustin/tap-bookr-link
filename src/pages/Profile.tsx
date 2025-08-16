@@ -121,7 +121,7 @@ export default function Profile() {
         return;
       }
 
-      if (profile && !(profile as any).onboarding_completed) {
+      if (profile && !(profile as { onboarding_completed: boolean }).onboarding_completed) {
         navigate('/onboarding');
         return;
       }
