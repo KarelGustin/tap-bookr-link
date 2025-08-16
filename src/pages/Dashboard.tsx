@@ -79,6 +79,8 @@ export default function Dashboard() {
   // Success message handling
   const success = searchParams.get('success');
   const subscriptionStatus = searchParams.get('subscription');
+  const cancellation = searchParams.get('cancellation');
+  const billing = searchParams.get('billing');
 
   // Show success message when coming from successful subscription
   useEffect(() => {
@@ -96,6 +98,35 @@ export default function Dashboard() {
       window.history.replaceState({}, '', url.toString());
     }
   }, [success, subscriptionStatus, toast]);
+
+  // Handle return from customer portal
+  useEffect(() => {
+    if (cancellation === 'initiated') {
+      toast({
+        title: "📝 Abonnement Opzegging",
+        description: "Je hebt je abonnement opgezegd. Je website blijft actief tot het einde van je betaalde periode.",
+        variant: "default",
+      });
+      
+      // Clear the URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete('cancellation');
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    if (billing === 'viewed') {
+      toast({
+        title: "📊 Facturen Bekeken",
+        description: "Je hebt je factuurgeschiedenis bekeken in het Stripe dashboard.",
+        variant: "default",
+      });
+      
+      // Clear the URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete('billing');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [cancellation, billing, toast]);
 
   // Sample social links data
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
@@ -283,6 +314,7 @@ export default function Dashboard() {
   // Load subscription data from Stripe via Edge Function
   const loadSubscriptionData = useCallback(async () => {
     if (!profile?.id || !profile?.subscription_id) {
+      console.log('No profile ID or subscription ID available');
       setSubscription(null);
       setInvoices([]);
       setSubscriptionLoading(false);
@@ -291,10 +323,14 @@ export default function Dashboard() {
     
     setSubscriptionLoading(true);
     try {
+      console.log('Calling Edge Function with profile ID:', profile.id);
+      
       // Call Edge Function to get Stripe subscription data
       const { data: subscriptionData, error } = await supabase.functions.invoke('get-stripe-subscription', {
         body: { profileId: profile.id }
       });
+
+      console.log('Edge Function response:', { data: subscriptionData, error });
 
       if (error) {
         console.log('Error fetching Stripe subscription:', error);
@@ -303,20 +339,34 @@ export default function Dashboard() {
           id: profile.id,
           status: profile.subscription_status,
           stripe_subscription_id: profile.subscription_id,
-          stripe_customer_id: profile.subscription_id,
-          current_period_start: profile.created_at || new Date().toISOString(),
-          current_period_end: profile.updated_at || new Date().toISOString(),
+          stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
+          current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
+          current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
+          cancel_at_period_end: false,
+        };
+        console.log('Using fallback data:', fallbackData);
+        setSubscription(fallbackData);
+      } else if (subscriptionData) {
+        console.log('Successfully loaded Stripe data:', subscriptionData);
+        setSubscription(subscriptionData);
+      } else {
+        console.log('No subscription data returned from Edge Function');
+        // Use fallback
+        const fallbackData = {
+          id: profile.id,
+          status: profile.subscription_status,
+          stripe_subscription_id: profile.subscription_id,
+          stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
+          current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
+          current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
           cancel_at_period_end: false,
         };
         setSubscription(fallbackData);
-      } else {
-        setSubscription(subscriptionData);
       }
 
       // Since we don't have access to invoices table, create empty array
       setInvoices([]);
       
-      console.log('Subscription data loaded from Stripe:', subscriptionData);
     } catch (error) {
       console.log('Error loading subscription data:', error);
       // Fallback to profile data
@@ -324,17 +374,18 @@ export default function Dashboard() {
         id: profile.id,
         status: profile.subscription_status,
         stripe_subscription_id: profile.subscription_id,
-        stripe_customer_id: profile.subscription_id,
-        current_period_start: profile.created_at || new Date().toISOString(),
-        current_period_end: profile.updated_at || new Date().toISOString(),
+        stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
+        current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
+        current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
         cancel_at_period_end: false,
       };
+      console.log('Using fallback data due to error:', fallbackData);
       setSubscription(fallbackData);
       setInvoices([]);
     } finally {
       setSubscriptionLoading(false);
     }
-  }, [profile?.id, profile?.subscription_id, profile?.subscription_status, profile?.created_at, profile?.updated_at]);
+  }, [profile?.id, profile?.subscription_id, profile?.subscription_status, profile?.stripe_customer_id, profile?.trial_start_date, profile?.trial_end_date, profile?.created_at, profile?.updated_at]);
 
   useEffect(() => {
     loadSubscriptionData();
@@ -2447,14 +2498,30 @@ export default function Dashboard() {
                           <span className="font-semibold text-gray-900">Volgende Factuur</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {subscription?.current_period_end 
-                            ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL', {
+                          {(() => {
+                            // Try to get date from subscription first, then fallback to profile
+                            if (subscription?.current_period_end) {
+                              return new Date(subscription.current_period_end).toLocaleDateString('nl-NL', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
-                              })
-                            : 'Niet beschikbaar'
-                          }
+                              });
+                            }
+                            
+                            // Fallback: calculate next billing date from profile created_at
+                            if (profile?.created_at) {
+                              const createdDate = new Date(profile.created_at);
+                              const nextBilling = new Date(createdDate);
+                              nextBilling.setMonth(nextBilling.getMonth() + 1);
+                              return nextBilling.toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              });
+                            }
+                            
+                            return 'Niet beschikbaar';
+                          })()}
                         </p>
                       </div>
                       
@@ -2465,14 +2532,27 @@ export default function Dashboard() {
                           <span className="font-semibold text-gray-900">Gestart Op</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {subscription?.current_period_start 
-                            ? new Date(subscription.current_period_start).toLocaleDateString('nl-NL', {
+                          {(() => {
+                            // Try to get date from subscription first, then fallback to profile
+                            if (subscription?.current_period_start) {
+                              return new Date(subscription.current_period_start).toLocaleDateString('nl-NL', {
                                 day: 'numeric',
                                 month: 'long',
                                 year: 'numeric'
-                              })
-                            : 'Niet beschikbaar'
-                          }
+                              });
+                            }
+                            
+                            // Fallback: use profile created_at as subscription start
+                            if (profile?.created_at) {
+                              return new Date(profile.created_at).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              });
+                            }
+                            
+                            return 'Niet beschikbaar';
+                          })()}
                         </p>
                       </div>
                     </div>
@@ -2548,7 +2628,8 @@ export default function Dashboard() {
                         className="w-full border-green-200 text-green-700 hover:bg-green-50"
                         onClick={() => StripeService.redirectToCustomerPortal({
                           profileId: profile?.id || '',
-                          returnUrl: `${window.location.origin}/dashboard`
+                          returnUrl: `${window.location.origin}/dashboard`,
+                          section: 'manage'
                         })}
                       >
                         <Settings className="w-4 h-4 mr-2" />
@@ -2562,7 +2643,8 @@ export default function Dashboard() {
                           if (confirm('Weet je zeker dat je je abonnement wilt opzeggen? Je website gaat offline zodra je abonnement stopt.')) {
                             StripeService.redirectToCustomerPortal({
                               profileId: profile?.id || '',
-                              returnUrl: `${window.location.origin}/dashboard`
+                              returnUrl: `${window.location.origin}/dashboard`,
+                              section: 'cancel'
                             });
                           }
                         }}
@@ -2591,7 +2673,8 @@ export default function Dashboard() {
                           className="mt-3 border-green-200 text-green-700 hover:bg-green-50"
                           onClick={() => StripeService.redirectToCustomerPortal({
                             profileId: profile?.id || '',
-                            returnUrl: `${window.location.origin}/dashboard`
+                            returnUrl: `${window.location.origin}/dashboard`,
+                            section: 'billing'
                           })}
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />

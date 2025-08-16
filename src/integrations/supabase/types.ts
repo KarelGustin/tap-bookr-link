@@ -53,6 +53,7 @@ export type Database = {
           footer_show_attribution: boolean | null
           testimonials: Json | null
           subscription_id: string | null
+          stripe_customer_id: string | null
           trial_start_date: string | null
           trial_end_date: string | null
           grace_period_ends_at: string | null
@@ -98,6 +99,7 @@ export type Database = {
           footer_show_attribution?: boolean | null
           testimonials?: Json | null
           subscription_id?: string | null
+          stripe_customer_id?: string | null
           trial_start_date?: string | null
           trial_end_date?: string | null
           onboarding_completed?: boolean | null

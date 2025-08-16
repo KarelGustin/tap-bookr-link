@@ -1,6 +1,6 @@
-// @ts-ignore
+// @ts-expect-error - Deno runtime imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-ignore  
+// @ts-expect-error - Deno runtime imports
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -86,7 +86,7 @@ class Stripe {
     this.secretKey = secretKey
   }
 
-  async subscriptions = {
+  subscriptions = {
     retrieve: async (subscriptionId: string) => {
       const response = await fetch(`${this.baseURL}/subscriptions/${subscriptionId}`, {
         method: 'GET',

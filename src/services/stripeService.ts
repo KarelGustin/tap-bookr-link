@@ -9,6 +9,7 @@ export interface StripeCheckoutParams {
 export interface StripeCustomerPortalParams {
   profileId: string
   returnUrl?: string
+  section?: 'manage' | 'cancel' | 'billing'
 }
 
 export class StripeService {

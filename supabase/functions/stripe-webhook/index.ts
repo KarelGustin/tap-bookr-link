@@ -119,6 +119,10 @@ async function handleSubscriptionCreated(subscription: any, supabase: any) {
     .update({
       subscription_status: 'active',
       subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer, // Add stripe_customer_id
+      // Store subscription dates for better frontend display
+      trial_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
+      trial_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
       status: 'published', // Set profile to published
       updated_at: new Date().toISOString(),
     })
@@ -169,6 +173,7 @@ async function handleSubscriptionUpdated(subscription: any, supabase: any) {
     .from('profiles')
     .update({
       subscription_status: subscription.status,
+      stripe_customer_id: subscription.customer, // Keep stripe_customer_id updated
       status: profileStatus,
     })
     .eq('id', profileId)

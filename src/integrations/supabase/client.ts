@@ -19,11 +19,13 @@ if (import.meta.env.DEV) {
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: typeof window !== 'undefined' ? localStorage : undefined,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'supabase-auth-token',
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
+    debug: import.meta.env.DEV,
   },
   global: {
     headers: {
