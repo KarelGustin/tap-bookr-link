@@ -266,7 +266,7 @@ export const Step7Preview = ({
                 </div>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
               <Button
                 onClick={startLivePreview}
                 disabled={isLivePreviewActive}
@@ -293,10 +293,10 @@ export const Step7Preview = ({
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium mb-3">Basis Informatie</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p><span className="font-medium">Handle:</span> @{handle}</p>
-                  <p><span className="font-medium">Naam:</span> {profileData.name || 'Niet ingevuld'}</p>
-                  <p><span className="font-medium">Slogan:</span> {profileData.slogan || 'Niet ingevuld'}</p>
-                  <p><span className="font-medium">Categorie:</span> {profileData.category || 'Niet ingevuld'}</p>
+                  <p><span className="font-medium">Handle:</span> <span className="break-all">@{handle}</span></p>
+                  <p><span className="font-medium">Naam:</span> <span className="break-words">{profileData.name || 'Niet ingevuld'}</span></p>
+                  <p><span className="font-medium">Slogan:</span> <span className="break-words">{profileData.slogan || 'Niet ingevuld'}</span></p>
+                  <p><span className="font-medium">Categorie:</span> <span className="break-words">{profileData.category || 'Niet ingevuld'}</span></p>
                 </div>
               </div>
 
@@ -307,7 +307,19 @@ export const Step7Preview = ({
                     <span className="font-medium">Status:</span> {profileData.bookingUrl ? 'Gekoppeld aan boekingssysteem' : 'Geen boeking ingesteld'}
                   </p>
                   {profileData.bookingUrl && (
-                    <p><span className="font-medium break-all">URL:</span> {profileData.bookingUrl}</p>
+                    <p>
+                      <span className="font-medium">URL:</span>
+                      <span 
+                        className="ml-1 text-blue-600 hover:text-blue-800 cursor-pointer break-all"
+                        title={profileData.bookingUrl}
+                        onClick={() => window.open(profileData.bookingUrl, '_blank')}
+                      >
+                        {profileData.bookingUrl.length > 50 
+                          ? `${profileData.bookingUrl.substring(0, 50)}...` 
+                          : profileData.bookingUrl
+                        }
+                      </span>
+                    </p>
                   )}
                 </div>
               </div>
@@ -333,10 +345,10 @@ export const Step7Preview = ({
                     <span className="font-medium">Bedrijfsinfo:</span> {profileData.footer?.businessName ? 'Ingevuld' : 'Niet ingevuld'}
                   </p>
                   {profileData.footer?.email && (
-                    <p><span className="font-medium">Email:</span> {profileData.footer.email}</p>
+                    <p><span className="font-medium">Email:</span> <span className="break-all">{profileData.footer.email}</span></p>
                   )}
                   {profileData.footer?.phone && (
-                    <p><span className="font-medium">Telefoon:</span> {profileData.footer.phone}</p>
+                    <p><span className="font-medium">Telefoon:</span> <span className="break-words">{profileData.footer.phone}</span></p>
                   )}
                 </div>
               </div>
@@ -360,7 +372,7 @@ export const Step7Preview = ({
             className="flex-1"
           >
             <CreditCard className="w-4 h-4 mr-2" />
-            {isSubscribing ? 'Bezig...' : 'Ga live met je eigen website voor maar €1'}
+            {isSubscribing ? 'Bezig...' : 'Ga live voor €1 eerste maand!'}
           </Button>
         </div>
 
@@ -370,7 +382,7 @@ export const Step7Preview = ({
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
               <h4 className="font-medium text-blue-900 mb-2">
-                De eerste maand €1, blijf daarna live met jouw eigen website voor €9 per maand!
+                Eerste maand €1, daarna €9 per maand!
               </h4>
               <p className="text-sm text-blue-700 mb-3">
                 Je pagina blijft live en je kunt alle functies gebruiken. Annuleer op elk moment.
