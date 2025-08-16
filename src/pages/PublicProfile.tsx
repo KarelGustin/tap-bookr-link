@@ -97,109 +97,88 @@ export default function PublicProfile() {
     try {
       console.log('🔍 Loading profile for handle:', handle);
       
-      // First try to find a published profile
-      const { data: publishedData, error: publishedError } = await supabase
+      if (!handle) {
+        console.error('❌ No handle provided');
+        setNotFound(true);
+        return;
+      }
+      
+      // Fetch profile data
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('handle', handle)
-        .eq('status', 'published')
         .maybeSingle();
 
-      let data = publishedData;
-
-      // If published profile found, check if it's actually a preview
-      if (data && !publishedError) {
-        console.log('✅ Found published profile:', data.id);
-        // Check if this is a preview by looking at preview_info in about section
-        const aboutData = data.about as Record<string, unknown>;
-        if (aboutData?.preview_info && typeof aboutData.preview_info === 'object' && aboutData.preview_info !== null) {
-          const previewInfo = aboutData.preview_info as Record<string, unknown>;
-          if (previewInfo.is_preview && previewInfo.expires_at && typeof previewInfo.expires_at === 'string') {
-            const expiryTime = new Date(previewInfo.expires_at);
-            const now = new Date();
-            
-            if (now < expiryTime) {
-              // Keep the data, it's a valid preview
-              console.log('✅ Valid preview profile found');
-            } else {
-              // Preview has expired, don't show it
-              console.log('❌ Preview has expired');
-              data = null;
-            }
-          } else {
-            // Keep the data, it's a regular published profile
-            console.log('✅ Regular published profile found');
-          }
-        } else {
-          // Keep the data, it's a regular published profile
-          console.log('✅ Regular published profile found (no preview info)');
-        }
-      } else {
-        console.log('❌ No published profile found, checking for draft profile...');
-        
-        // If no published profile found, try to find a draft profile
-        const { data: draftData, error: draftError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('handle', handle)
-          .eq('status', 'draft')
-          .maybeSingle();
-        
-        if (draftData && !draftError) {
-          console.log('✅ Found draft profile:', draftData.id);
-          data = draftData;
-        } else {
-          console.log('❌ No draft profile found either');
-        }
+      if (error) {
+        console.error('❌ Database error:', error);
+        setNotFound(true);
+        return;
       }
 
-      if (publishedError && !data) {
-        console.error('Error loading published profile:', publishedError);
-      }
-
-      if (!data) {
+      if (!profileData) {
         console.log('❌ No profile found for handle:', handle);
         setNotFound(true);
         return;
       }
 
-      console.log('✅ Final profile data loaded:', {
-        id: data.id,
-        status: data.status,
-        name: data.name,
-        about: data.about
+      console.log('✅ Found profile:', profileData.id);
+
+      // Check subscription status FIRST - this is the priority
+      const hasActiveSubscription = profileData.subscription_status === 'active';
+      const isPublished = profileData.status === 'published';
+
+      console.log('🔍 Profile access check:', {
+        handle: profileData.handle,
+        status: profileData.status,
+        subscription_status: profileData.subscription_status,
+        isPublished,
+        hasActiveSubscription
       });
 
-      // Log testimonials data specifically
-      if (data.about && typeof data.about === 'object') {
-        const aboutData = data.about as Record<string, unknown>;
-        console.log('🔍 About section data:', {
-          keys: Object.keys(aboutData),
-          testimonials: aboutData.testimonials,
-          socialLinks: aboutData.socialLinks
-        });
-        
-        if (aboutData.testimonials && Array.isArray(aboutData.testimonials)) {
-          console.log('✅ Testimonials found in about section:', aboutData.testimonials.length);
-          aboutData.testimonials.forEach((testimonial, index) => {
-            if (typeof testimonial === 'object' && testimonial !== null) {
-              const t = testimonial as Record<string, unknown>;
-              console.log(`  Testimonial ${index}:`, {
-                customer_name: t.customer_name,
-                review_title: t.review_title,
-                review_text: t.review_text,
-                image_url: t.image_url
-              });
-            }
-          });
-        } else {
-          console.log('❌ No testimonials found in about section');
-        }
+      // PRIORITY 1: If user has active subscription, ALWAYS allow access
+      if (hasActiveSubscription) {
+        console.log('✅ User has active subscription - page always accessible regardless of preview status');
+        setProfile(profileData);
+        setNotFound(false);
+        return;
       }
 
-      setProfile(data);
+      // PRIORITY 2: If profile is published, allow access
+      if (isPublished) {
+        console.log('✅ Profile is published - page accessible');
+        setProfile(profileData);
+        setNotFound(false);
+        return;
+      }
+
+      // PRIORITY 3: For non-subscription users, check preview expiry
+      const about = (profileData.about ?? {}) as { [key: string]: unknown };
+      const previewInfo = about.preview_info;
+
+      if (previewInfo && typeof previewInfo === 'object' && 'started_at' in previewInfo) {
+        const startedAt = new Date(previewInfo.started_at as string);
+        const now = new Date();
+        const diffInMinutes = (now.getTime() - startedAt.getTime()) / (1000 * 60);
+        
+        if (diffInMinutes > 15) {
+          console.log('❌ Preview has expired for non-subscription user');
+          setNotFound(true);
+          return;
+        }
+        
+        console.log('✅ Preview is still active');
+        setProfile(profileData);
+        setNotFound(false);
+        return;
+      }
+
+      // If we get here, profile is not accessible
+      console.log('❌ Profile is not accessible - no subscription, not published, and no valid preview');
+      setNotFound(true);
+
     } catch (error) {
-      console.error('Error in loadProfile:', error);
+      console.error('❌ Error loading profile:', error);
       setNotFound(true);
     } finally {
       setLoading(false);

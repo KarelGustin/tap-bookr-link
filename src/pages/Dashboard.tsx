@@ -275,26 +275,28 @@ export default function Dashboard() {
     checkOnboardingStatus();
   }, [user, navigate]);
 
-  // Load subscription data
+  // Load subscription data separately (only if user has access)
   const loadSubscriptionData = useCallback(async () => {
     if (!profile?.id) return;
     
     setSubscriptionLoading(true);
     try {
-      // Load subscription
+      // Probeer subscription data te laden
       const { data: subscriptionData, error: subError } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('profile_id', profile.id)
-        .single();
+        .maybeSingle();
 
-      if (subError && subError.code !== 'PGRST116') {
-        console.error('Error loading subscription:', subError);
+      if (subError) {
+        console.log('Subscription data not accessible:', subError.message);
+        // Geen error, gewoon geen toegang
+        setSubscription(null);
       } else {
         setSubscription(subscriptionData);
       }
 
-      // Load invoices
+      // Probeer invoices te laden
       const { data: invoicesData, error: invError } = await supabase
         .from('invoices')
         .select('*')
@@ -302,12 +304,15 @@ export default function Dashboard() {
         .order('created_at', { ascending: false });
 
       if (invError) {
-        console.error('Error loading invoices:', invError);
+        console.log('Invoice data not accessible:', invError.message);
+        setInvoices([]);
       } else {
         setInvoices(invoicesData || []);
       }
     } catch (error) {
-      console.error('Error loading subscription data:', error);
+      console.log('Error loading subscription data:', error);
+      setSubscription(null);
+      setInvoices([]);
     } finally {
       setSubscriptionLoading(false);
     }
@@ -1033,9 +1038,10 @@ export default function Dashboard() {
       
       console.log('Loading profile for user:', user.id);
       
+      // Alleen profile data laden zonder subscriptions (geen permissies)
       const { data, error } = await supabase
         .from('profiles')
-        .select('*, subscriptions(*)')
+        .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -1043,18 +1049,34 @@ export default function Dashboard() {
 
       if (error) {
         console.error('Supabase error:', error);
-        // Don't redirect on error, just show dashboard without profile
         setProfile(null);
         return;
       }
 
       if (data) {
-        console.log('Profile loaded successfully:', data.handle);
+        // Log de handle specifiek om te zien of deze wordt geladen
+        console.log('Profile loaded successfully:', {
+          id: data.id,
+          handle: data.handle,
+          name: data.name,
+          status: data.status,
+          user_id: data.user_id
+        });
+        
+        // Controleer of handle aanwezig is
+        if (!data.handle) {
+          console.error('❌ Profile loaded but handle is missing:', data);
+        } else {
+          console.log('✅ Handle found:', data.handle);
+        }
+        
         setProfile(data);
+        
         // Load booking URL if it exists
         if (data.booking_url) {
           setBookingUrl(data.booking_url);
         }
+        
         // Load social links if they exist
         if (data.socials && typeof data.socials === 'object') {
           const currentSocials = data.socials as Record<string, string>;
@@ -1369,6 +1391,27 @@ export default function Dashboard() {
                 </div>
               </div>
             )} */}
+
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-2">Jouw publieke pagina</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center bg-gray-100 rounded-md px-3 py-2">
+                  <span className="text-gray-600 mr-2">Handle:</span>
+                  <span className="font-mono text-purple-700">@{profile?.handle || '...'}</span>
+                </div>
+                <div className="flex items-center bg-gray-100 rounded-md px-3 py-2">
+                  <span className="text-gray-600 mr-2">URL:</span>
+                  <a
+                    href={profile?.handle ? `https://tapbookr.com/${profile.handle}` : '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline break-all"
+                  >
+                    {profile?.handle ? `https://tapbookr.com/${profile.handle}` : '...'}
+                  </a>
+                </div>
+              </div>
+            </div>
 
             {/* Design Section */}
             {activeSection === 'design' && (
