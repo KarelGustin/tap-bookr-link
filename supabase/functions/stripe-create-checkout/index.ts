@@ -24,7 +24,7 @@ interface StripeCheckoutParams {
   metadata: Record<string, string>
   payment_method_configuration?: string
   discounts?: Array<{
-    promotion_code: string
+    coupon: string  // ✅ 'coupon' in plaats van 'promotion_code'
   }>
 }
 
@@ -108,7 +108,7 @@ serve(async (req) => {
       ...(discountId && {
         discounts: [
           {
-            promotion_code: discountId
+            coupon: discountId  // ✅ Gebruik 'coupon' in plaats van 'promotion_code'
           }
         ]
       }),
@@ -174,7 +174,7 @@ const Stripe = (secretKey: string, _config: Record<string, unknown>): Stripe => 
            }
            // Add discount if provided
            if (params.discounts && params.discounts.length > 0) {
-             form.append('discounts[0][promotion_code]', params.discounts[0].promotion_code)
+             form.append('discounts[0][coupon]', params.discounts[0].coupon)  // ✅ 'coupon' in plaats van 'promotion_code'
            }
 
           const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
