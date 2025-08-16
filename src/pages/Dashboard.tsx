@@ -280,48 +280,61 @@ export default function Dashboard() {
     checkOnboardingStatus();
   }, [user, navigate]);
 
-  // Load subscription data separately (only if user has access)
+  // Load subscription data from Stripe via Edge Function
   const loadSubscriptionData = useCallback(async () => {
-    if (!profile?.id) return;
+    if (!profile?.id || !profile?.subscription_id) {
+      setSubscription(null);
+      setInvoices([]);
+      setSubscriptionLoading(false);
+      return;
+    }
     
     setSubscriptionLoading(true);
     try {
-      // Probeer subscription data te laden
-      const { data: subscriptionData, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('profile_id', profile.id)
-        .maybeSingle();
+      // Call Edge Function to get Stripe subscription data
+      const { data: subscriptionData, error } = await supabase.functions.invoke('get-stripe-subscription', {
+        body: { profileId: profile.id }
+      });
 
-      if (subError) {
-        console.log('Subscription data not accessible:', subError.message);
-        // Geen error, gewoon geen toegang
-        setSubscription(null);
+      if (error) {
+        console.log('Error fetching Stripe subscription:', error);
+        // Fallback to profile data if Edge Function fails
+        const fallbackData = {
+          id: profile.id,
+          status: profile.subscription_status,
+          stripe_subscription_id: profile.subscription_id,
+          stripe_customer_id: profile.subscription_id,
+          current_period_start: profile.created_at || new Date().toISOString(),
+          current_period_end: profile.updated_at || new Date().toISOString(),
+          cancel_at_period_end: false,
+        };
+        setSubscription(fallbackData);
       } else {
         setSubscription(subscriptionData);
       }
 
-      // Probeer invoices te laden
-      const { data: invoicesData, error: invError } = await supabase
-        .from('invoices')
-        .select('*')
-        .eq('profile_id', profile.id)
-        .order('created_at', { ascending: false });
-
-      if (invError) {
-        console.log('Invoice data not accessible:', invError.message);
-        setInvoices([]);
-      } else {
-        setInvoices(invoicesData || []);
-      }
+      // Since we don't have access to invoices table, create empty array
+      setInvoices([]);
+      
+      console.log('Subscription data loaded from Stripe:', subscriptionData);
     } catch (error) {
       console.log('Error loading subscription data:', error);
-      setSubscription(null);
+      // Fallback to profile data
+      const fallbackData = {
+        id: profile.id,
+        status: profile.subscription_status,
+        stripe_subscription_id: profile.subscription_id,
+        stripe_customer_id: profile.subscription_id,
+        current_period_start: profile.created_at || new Date().toISOString(),
+        current_period_end: profile.updated_at || new Date().toISOString(),
+        cancel_at_period_end: false,
+      };
+      setSubscription(fallbackData);
       setInvoices([]);
     } finally {
       setSubscriptionLoading(false);
     }
-  }, [profile?.id]);
+  }, [profile?.id, profile?.subscription_id, profile?.subscription_status, profile?.created_at, profile?.updated_at]);
 
   useEffect(() => {
     loadSubscriptionData();
@@ -1227,7 +1240,7 @@ export default function Dashboard() {
       const data = await response.json();
       
       if (data.predictions) {
-        const suggestions = data.predictions.map((pred: any) => pred.description);
+        const suggestions = data.predictions.map((pred: { description: string }) => pred.description);
         setAddressSuggestions(suggestions);
         setShowAddressSuggestions(true);
       }
@@ -2219,8 +2232,8 @@ export default function Dashboard() {
                                   setDesign((d) => ({ ...d, footerAddress: value }));
                                   
                                   // Debounce voor API calls
-                                  clearTimeout((window as any).addressTimeout);
-                                  (window as any).addressTimeout = setTimeout(() => {
+                                  clearTimeout((window as unknown as { addressTimeout: NodeJS.Timeout }).addressTimeout);
+                                  (window as unknown as { addressTimeout: NodeJS.Timeout }).addressTimeout = setTimeout(() => {
                                     getAddressSuggestions(value);
                                   }, 300);
                                 }}
@@ -2367,44 +2380,74 @@ export default function Dashboard() {
             {/* Subscription Section */}
             {activeSection === 'subscription' && (
               <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
+                {/* Header */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Abonnement Beheer</h3>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Abonnement Beheer</h3>
+                    <p className="text-gray-600 mt-1">Beheer je abonnement en bekijk je facturering</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${profile?.subscription_status === 'active' ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+                    <span className={`text-sm font-medium ${profile?.subscription_status === 'active' ? 'text-green-600' : 'text-gray-500'}`}>
+                      {profile?.subscription_status === 'active' ? 'Live' : 'Offline'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Current Plan */}
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-200">
-                  <div className="flex items-center justify-between mb-4">
+                {/* Current Plan Status */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">Huidig Abonnement</h4>
-                      <p className="text-sm text-gray-600">Beheer je abonnement en facturering</p>
+                      <h4 className="text-xl font-bold text-gray-900">Huidig Abonnement</h4>
+                      <p className="text-gray-600">Je abonnement status en volgende factuurdatum</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-purple-600">€9</div>
+                      <div className="text-3xl font-bold text-green-600">€9</div>
                       <div className="text-sm text-gray-500">per maand</div>
+                      <div className="text-xs text-green-600 font-medium">Eerste maand €1</div>
                     </div>
                   </div>
                   
                   {subscriptionLoading ? (
                     <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                      <p className="ml-3 text-gray-600">Laden...</p>
                     </div>
-                  ) : subscription ? (
+                  ) : profile?.subscription_status ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="bg-white rounded-lg p-4 border border-purple-200">
-                        <div className="flex items-center mb-2">
+                      {/* Status Card */}
+                      <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+                        <div className="flex items-center mb-3">
                           <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                          <span className="font-medium text-gray-900">Status</span>
+                          <span className="font-semibold text-gray-900">Status</span>
                         </div>
-                        <p className="text-sm text-gray-600 capitalize">{subscription.status || 'Inactief'}</p>
+                        <div className="flex items-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            profile.subscription_status === 'active' 
+                              ? 'bg-green-100 text-green-800' 
+                              : profile.subscription_status === 'past_due'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : profile.subscription_status === 'canceled'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {profile.subscription_status === 'active' ? 'Actief' : 
+                             profile.subscription_status === 'past_due' ? 'Vervallen' : 
+                             profile.subscription_status === 'canceled' ? 'Geannuleerd' : 
+                             profile.subscription_status === 'inactive' ? 'Inactief' :
+                             profile.subscription_status || 'Onbekend'}
+                          </span>
+                        </div>
                       </div>
                       
-                      <div className="bg-white rounded-lg p-4 border border-purple-200">
-                        <div className="flex items-center mb-2">
+                      {/* Next Billing Card */}
+                      <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+                        <div className="flex items-center mb-3">
                           <Calendar className="w-5 h-5 text-blue-500 mr-2" />
-                          <span className="font-medium text-gray-900">Volgende Factuur</span>
+                          <span className="font-semibold text-gray-900">Volgende Factuur</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {subscription.current_period_end 
+                          {subscription?.current_period_end 
                             ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL', {
                                 day: 'numeric',
                                 month: 'long',
@@ -2415,27 +2458,37 @@ export default function Dashboard() {
                         </p>
                       </div>
                       
-                      <div className="bg-white rounded-lg p-4 border border-purple-200">
-                        <div className="flex items-center mb-2">
-                          <CreditCard className="w-5 h-5 text-purple-500 mr-2" />
-                          <span className="font-medium text-gray-900">Betaalmethode</span>
+                      {/* Subscription Start Card */}
+                      <div className="bg-white rounded-lg p-4 border border-green-200 shadow-sm">
+                        <div className="flex items-center mb-3">
+                          <CreditCard className="w-5 h-5 text-green-500 mr-2" />
+                          <span className="font-semibold text-gray-900">Gestart Op</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {subscription.stripe_customer_id ? '•••• •••• •••• ••••' : 'Niet ingesteld'}
+                          {subscription?.current_period_start 
+                            ? new Date(subscription.current_period_start).toLocaleDateString('nl-NL', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric'
+                              })
+                            : 'Niet beschikbaar'
+                          }
                         </p>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-600 mb-4">Je hebt nog geen actief abonnement</p>
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CreditCard className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h5 className="text-lg font-semibold text-gray-900 mb-2">Geen actief abonnement</h5>
+                      <p className="text-gray-600 mb-6">Start je abonnement om je website live te krijgen</p>
                       <Button 
-                        onClick={() => StripeService.redirectToCheckout({
-                          profileId: profile?.id || '',
-                          successUrl: `${window.location.origin}/dashboard?success=true`,
-                          cancelUrl: `${window.location.origin}/dashboard?canceled=true`
-                        })}
-                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={() => navigate('/onboarding?step=7')}
+                        className="bg-green-600 hover:bg-green-700 text-white px-6 py-3"
+                        size="lg"
                       >
+                        <CreditCard className="w-4 h-4 mr-2" />
                         Start Abonnement
                       </Button>
                     </div>
@@ -2443,130 +2496,136 @@ export default function Dashboard() {
                 </div>
 
                 {/* Plan Features */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Wat je krijgt</h4>
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Wat je krijgt met je abonnement</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
                         <span className="font-medium text-gray-900">Onbeperkte bewerkingen</span>
                         <p className="text-sm text-gray-600">Wijzig je pagina wanneer je wilt</p>
                       </div>
                     </div>
                     
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                       <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <span className="font-medium text-gray-900">
                           Live pagina -{' '}
-                          <span className="text-purple-600 break-all">
-                            TapBookr.com/{profile?.handle}
+                          <span className="text-green-600 break-all">
+                            tapbookr.com/{profile?.handle}
                           </span>
                         </span>
                         <p className="text-sm text-gray-600">Je pagina is altijd online beschikbaar</p>
                       </div>
                     </div>
                     
-                    {/* <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                    <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <span className="font-medium text-gray-900">Analytics</span>
-                        <p className="text-sm text-gray-600">Bekijk bezoekers en interacties</p>
-                      </div>
-                    </div> */}
-                    
-                    <div className="flex items-start space-x-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
-                      <div>
-                        <span className="font-medium text-gray-900">Klantondersteuning</span>
+                        <span className="font-medium text-gray-900">Premium ondersteuning</span>
                         <p className="text-sm text-gray-600">24/7 hulp wanneer je het nodig hebt</p>
                       </div>
                     </div>
+                    
+                    {/* <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <span className="font-medium text-gray-900">Geen verborgen kosten</span>
+                        <p className="text-sm text-gray-600">Altijd €9 per maand, eerste maand €1</p>
+                      </div>
+                    </div> */}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col gap-3 pt-6 border-t border-gray-200">
-                  {subscription ? (
-                    <>
+                {profile?.subscription_status === 'active' && (
+                  <div className="bg-white rounded-lg p-6 border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Abonnement Beheren</h4>
+                    <div className="flex flex-col gap-3">
                       <Button 
                         variant="outline"
-                        className="w-full"
+                        className="w-full border-green-200 text-green-700 hover:bg-green-50"
                         onClick={() => StripeService.redirectToCustomerPortal({
                           profileId: profile?.id || '',
                           returnUrl: `${window.location.origin}/dashboard`
                         })}
                       >
-                        <CreditCard className="w-4 h-4 mr-2" />
-                        Beheer Abonnement
+                        <Settings className="w-4 h-4 mr-2" />
+                        Abonnement Beheren
                       </Button>
                       
                       <Button 
                         variant="outline"
-                        className="w-full"
+                        className="w-full border-red-200 text-red-700 hover:bg-red-50"
                         onClick={() => {
-                          toast({
-                            title: "Facturen downloaden",
-                            description: "Deze functie wordt binnenkort toegevoegd.",
-                          });
+                          if (confirm('Weet je zeker dat je je abonnement wilt opzeggen? Je website gaat offline zodra je abonnement stopt.')) {
+                            StripeService.redirectToCustomerPortal({
+                              profileId: profile?.id || '',
+                              returnUrl: `${window.location.origin}/dashboard`
+                            });
+                          }
                         }}
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Facturen downloaden
+                        <X className="w-4 h-4 mr-2" />
+                        Abonnement Opzeggen
                       </Button>
-                    </>
-                  ) : (
-                    <Button 
-                      onClick={() => StripeService.redirectToCheckout({
-                        profileId: profile?.id || '',
-                        successUrl: `${window.location.origin}/dashboard?success=true`,
-                        cancelUrl: `${window.location.origin}/dashboard?canceled=true`
-                      })}
-                      className="w-full bg-purple-700 hover:bg-purple-800"
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Start Abonnement
-                    </Button>
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Billing History */}
-                <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Factuurgeschiedenis</h4>
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Factuurgeschiedenis</h4>
                   <div className="bg-gray-50 rounded-lg p-4">
-                    {invoices.length > 0 ? (
-                      <div className="space-y-3">
-                        {invoices.map((invoice) => (
-                          <div key={invoice.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {invoice.created_at 
-                                  ? new Date(invoice.created_at).toLocaleDateString('nl-NL', {
-                                      month: 'long',
-                                      year: 'numeric'
-                                    })
-                                  : 'Onbekende datum'
-                                }
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                €{(invoice.amount || 0) / 100},00
-                              </p>
-                              <p className="text-xs text-gray-400 capitalize">
-                                {invoice.status || 'onbekend'}
-                              </p>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              <Download className="w-4 h-4 mr-2" />
-                              Download
-                            </Button>
-                          </div>
-                        ))}
+                    {profile?.subscription_status === 'active' ? (
+                      <div className="text-center py-8">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <CheckCircle className="w-6 h-6 text-green-500" />
+                        </div>
+                        <p className="text-gray-500">Je abonnement is actief</p>
+                        <p className="text-sm text-gray-400 mt-1">Facturen zijn beschikbaar via je Stripe dashboard</p>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="mt-3 border-green-200 text-green-700 hover:bg-green-50"
+                          onClick={() => StripeService.redirectToCustomerPortal({
+                            profileId: profile?.id || '',
+                            returnUrl: `${window.location.origin}/dashboard`
+                          })}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Bekijk Facturen
+                        </Button>
                       </div>
                     ) : (
                       <div className="text-center py-8">
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <CreditCard className="w-6 h-6 text-gray-400" />
+                        </div>
                         <p className="text-gray-500">Nog geen facturen beschikbaar</p>
+                        <p className="text-sm text-gray-400 mt-1">Facturen verschijnen hier na je eerste betaling</p>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Pricing Info */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+                  <div className="text-center">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Transparante prijzen</h4>
+                    <p className="text-gray-600 mb-4">Geen verrassingen, altijd duidelijke prijzen</p>
+                    <div className="flex items-center justify-center space-x-6">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">€1</div>
+                        <div className="text-sm text-gray-500">Eerste maand</div>
+                      </div>
+                      <div className="text-gray-400">→</div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">€9</div>
+                        <div className="text-sm text-gray-500">Daarna per maand</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
