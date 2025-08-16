@@ -1,9 +1,34 @@
+// @ts-expect-error - Deno import
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-expect-error - Deno import
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-email',
+}
+
+// Stripe checkout session parameters interface
+interface StripeCheckoutParams {
+  payment_method_types: string[]
+  line_items: Array<{
+    price: string
+    quantity: number
+  }>
+  mode: string
+  subscription_data: {
+    metadata: Record<string, string>
+  }
+  success_url: string
+  cancel_url: string
+  customer_email?: string
+  metadata: Record<string, string>
+}
+
+// Stripe response interface
+interface StripeCheckoutResponse {
+  id: string
+  url: string
 }
 
 serve(async (req) => {
@@ -20,12 +45,14 @@ serve(async (req) => {
       throw new Error('Profile ID is required')
     }
 
+    // @ts-expect-error - Deno environment
     const priceId = Deno.env.get('STRIPE_PRICE_ID')
     if (!priceId) {
       throw new Error('STRIPE_PRICE_ID is not configured')
     }
 
     // Initialize Stripe (shim)
+    // @ts-expect-error - Deno environment
     const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
@@ -77,17 +104,17 @@ serve(async (req) => {
 interface Stripe {
   checkout: {
     sessions: {
-      create: (params: any) => Promise<any>
+      create: (params: StripeCheckoutParams) => Promise<StripeCheckoutResponse>
     }
   }
 }
 
-const Stripe = (secretKey: string, _config: any): Stripe => {
+const Stripe = (secretKey: string, _config: Record<string, unknown>): Stripe => {
   // Simplified Stripe client for Deno using fetch
   return {
     checkout: {
       sessions: {
-        create: async (params: any) => {
+        create: async (params: StripeCheckoutParams): Promise<StripeCheckoutResponse> => {
           const form = new URLSearchParams()
           // Multiple payment methods must be appended individually
           ;(params.payment_method_types || []).forEach((pm: string) => {
