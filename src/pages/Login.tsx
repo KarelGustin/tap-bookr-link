@@ -53,17 +53,17 @@ export default function Login() {
             if (user) {
               const { data: profile, error: profileError } = await supabase
                 .from('profiles')
-                .select('onboarding_completed')
+                .select('onboarding_completed, onboarding_step')
                 .eq('user_id', user.id)
-                .single<{ onboarding_completed: boolean | null }>();
+                .single<{ onboarding_completed: boolean | null; onboarding_step: number | null }>();
 
               if (profileError) {
                 console.error('Error checking profile:', profileError);
-                navigate('/onboarding');
-              } else if (profile?.onboarding_completed) {  
-                navigate('/dashboard');
+                navigate('/onboarding?step=7', { replace: true });
               } else {
-                navigate('/onboarding');
+                // Always force onboarding step 7 unless the user has an active/grace subscription
+                // We do not have subscription status here, so always route to onboarding step 7
+                navigate(`/onboarding?step=7`, { replace: true });
               }
             } else {
               navigate('/onboarding');

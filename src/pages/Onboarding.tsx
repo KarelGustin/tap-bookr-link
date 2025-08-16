@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -221,7 +221,9 @@ export default function Onboarding() {
     }
   };
 
-  const loadExistingProfile = async () => {
+  const hasLoadedRef = useRef(false);
+
+  const loadExistingProfile = useCallback(async () => {
     // start initial loader
     setIsInitialLoading(true);
 
@@ -399,13 +401,16 @@ export default function Onboarding() {
       console.error('Error loading existing profile:', error);
     } finally {
       setIsInitialLoading(false);
+      hasLoadedRef.current = true;
     }
-  };
+  }, [user?.id]);
   
   // Load existing profile data when component mounts
   useEffect(() => {
-    loadExistingProfile();
-  }, [user]);
+    if (!hasLoadedRef.current) {
+      loadExistingProfile();
+    }
+  }, [loadExistingProfile]);
 
   // Set current step from URL parameter
   useEffect(() => {
@@ -418,6 +423,17 @@ export default function Onboarding() {
       }
     }
   }, [searchParams]);
+
+  // Auto-start live preview when reaching step 7
+  useEffect(() => {
+    if (currentStep === 7 && user && onboardingData.profileId && !isLivePreviewActive) {
+      console.log('🔧 Auto-starting live preview for step 7');
+      startLivePreview().catch(error => {
+        console.error('🔧 Auto-start live preview failed:', error);
+        // Don't show error toast for auto-start, just log it
+      });
+    }
+  }, [currentStep, user, onboardingData.profileId, isLivePreviewActive]);
 
   // Redirect if no user
   useEffect(() => {
@@ -1782,7 +1798,7 @@ export default function Onboarding() {
 
   const startLivePreview = async () => {
     try {
-      console.log('🔧 Starting 15-minute live preview for handle:', onboardingData.handle);
+      console.log('🔧 Starting live preview for handle:', onboardingData.handle);
       
       // Validate required fields before proceeding
       if (!onboardingData.handle || onboardingData.handle.trim().length === 0) {
@@ -1818,7 +1834,7 @@ export default function Onboarding() {
               title: onboardingData.aboutTitle || '',
               description: onboardingData.aboutDescription || '',
               alignment: onboardingData.aboutAlignment || 'center',
-              preview_info: { // Store preview info in about section
+              preview_info: {
                 is_preview: true,
                 expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
                 started_at: new Date().toISOString()
@@ -1927,7 +1943,7 @@ export default function Onboarding() {
         title: "Live Preview Gestart",
         description: "Je pagina is nu 15 minuten live zichtbaar voor bezoekers.",
       });
-      
+
       // Auto-expire after 15 minutes
       setTimeout(async () => {
         try {
@@ -2337,28 +2353,6 @@ export default function Onboarding() {
               );
             
             case 7:
-              return (
-                <Step6Footer 
-                  onNext={handleStep7} 
-                  onBack={goBack}
-                  handle={onboardingData.handle}
-                  existingData={{
-                    footerBusinessName: onboardingData.footerBusinessName,
-                    footerAddress: onboardingData.footerAddress,
-                    footerEmail: onboardingData.footerEmail,
-                    footerPhone: onboardingData.footerPhone,
-                    footerHours: onboardingData.footerHours,
-                    footerNextAvailable: onboardingData.footerNextAvailable,
-                    footerCancellationPolicy: onboardingData.footerCancellationPolicy,
-                    footerPrivacyPolicy: onboardingData.footerPrivacyPolicy,
-                    footerTermsOfService: onboardingData.footerTermsOfService,
-                    footerShowMaps: onboardingData.footerShowMaps,
-                    footerShowAttribution: onboardingData.footerShowAttribution,
-                  }}
-                />
-              );
-            
-            case 8:
               return (
                 <Step7Preview 
                   onPublish={handlePublish}

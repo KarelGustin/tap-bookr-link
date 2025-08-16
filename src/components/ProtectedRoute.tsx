@@ -26,26 +26,25 @@ export const ProtectedRoute = ({
 		// Onboarding guard
 		if (!onboardingLoading) {
 			if (requireOnboarding && !onboardingCompleted) {
-				navigate('/onboarding?step=7');
+				navigate('/onboarding?step=7', { replace: true });
 				return;
 			}
-			if (!requireOnboarding && onboardingCompleted) {
-				navigate('/dashboard');
-				return;
-			}
+			// Remove the aggressive auto-redirect to dashboard
+			// Let users stay where they are, especially on onboarding page
 		}
 
 		// Subscription guard (for dashboard-like pages)
 		if (requireActiveSubscription && !subscriptionLoading) {
 			if (!allowed) {
 				// Geen geldig abonnement of niet published: terug naar onboarding preview
-				navigate('/onboarding?step=7');
+				navigate('/onboarding?step=7', { replace: true });
 				return;
 			}
 		}
 	}, [user, onboardingLoading, onboardingCompleted, requireOnboarding, subscriptionLoading, requireActiveSubscription, allowed, navigate]);
 
 	// Toon loading state
+	
 	if (onboardingLoading || (requireActiveSubscription && subscriptionLoading)) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">

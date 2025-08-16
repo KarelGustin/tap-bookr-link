@@ -14,7 +14,7 @@ export interface StripeCustomerPortalParams {
 export class StripeService {
   private static async callEdgeFunction<T>(
     functionName: string,
-    params: any
+    params: Record<string, unknown>
   ): Promise<T> {
     const { data: auth } = await supabase.auth.getUser()
     const email = auth?.user?.email || undefined
@@ -25,7 +25,28 @@ export class StripeService {
     })
 
     if (error) {
-      throw new Error(error.message || 'Edge Function returned a non-2xx status code')
+      // Surface detailed error returned by the Edge Function
+      let detailedMessage = error.message || `Edge Function returned a non-2xx status code`
+      const ctx: { response?: Response } | undefined = (error as unknown as { context?: { response?: Response } }).context
+      const resp = ctx?.response
+      if (resp && typeof resp.text === 'function') {
+        try {
+          const text = await resp.text()
+          try {
+            const json = JSON.parse(text)
+            detailedMessage = json?.error || detailedMessage
+            console.error(`Edge Function '${functionName}' error:`, { status: resp.status, body: json })
+          } catch {
+            detailedMessage = text || detailedMessage
+            console.error(`Edge Function '${functionName}' error:`, { status: resp.status, body: text })
+          }
+        } catch {
+          // no-op
+        }
+      } else {
+        console.error(`Edge Function '${functionName}' error:`, error)
+      }
+      throw new Error(detailedMessage)
     }
 
     return data as T
@@ -38,7 +59,7 @@ export class StripeService {
     try {
       const result = await this.callEdgeFunction<{ sessionId: string; url: string }>(
         'stripe-create-checkout',
-        params
+        params as unknown as Record<string, unknown>
       )
       return result
     } catch (error) {
@@ -54,7 +75,7 @@ export class StripeService {
     try {
       const result = await this.callEdgeFunction<{ url: string }>(
         'stripe-customer-portal',
-        params
+        params as unknown as Record<string, unknown>
       )
       return result
     } catch (error) {

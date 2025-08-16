@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Clock, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
+import { ExternalLink, CheckCircle, CreditCard, Clock } from 'lucide-react';
 import StripeService from '@/services/stripeService';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -142,7 +142,6 @@ export const Step7Preview = ({
       
       // If successful, update local state
       setIsLivePreviewActive(true);
-      setLivePreviewTimeLeft(15 * 60);
       
       // Refresh the preview iframe
       setPreviewKey(prev => prev + 1);
@@ -210,7 +209,7 @@ export const Step7Preview = ({
         {isLivePreviewActive && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-green-600" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
               <div className="flex-1">
                 <h3 className="font-medium text-green-900">
                   Live Preview Actief - {formatTime(livePreviewTimeLeft)} resterend
@@ -218,9 +217,6 @@ export const Step7Preview = ({
                 <p className="text-sm text-green-700">
                   Je pagina is nu live en zichtbaar voor bezoekers
                 </p>
-              </div>
-              <div className="text-sm text-green-600 font-mono">
-                {formatTime(livePreviewTimeLeft)}
               </div>
             </div>
           </div>
@@ -230,7 +226,7 @@ export const Step7Preview = ({
         {!isLivePreviewActive && livePreviewTimeLeft === 0 && (
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-3">
-              <Clock className="w-5 h-5 text-amber-600" />
+              <CheckCircle className="w-5 h-5 text-amber-600" />
               <div>
                 <h3 className="font-medium text-amber-900">
                   Live preview is verlopen
@@ -252,7 +248,7 @@ export const Step7Preview = ({
               {isLivePreviewActive ? (
                 <iframe
                   key={previewKey}
-                  src={`https://tapbookr.com/${handle}`}
+                  src={`${window.location.origin}/${handle}`}
                   className="w-full h-96 border-0"
                   title="Live Page Preview"
                 />
@@ -281,7 +277,7 @@ export const Step7Preview = ({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/${handle}`, '_blank')}
                 disabled={!isLivePreviewActive}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -358,24 +354,14 @@ export const Step7Preview = ({
             Opslaan als Concept
           </Button> */}
 
-          {isLivePreviewActive ? (
-            <Button
-              onClick={handleSubscribe}
-              disabled={isSubscribing}
-              className="flex-1"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              {isSubscribing ? 'Bezig...' : 'Ga live met jouw eigen website!'}
-            </Button>
-          ) : (
-            <Button
-              onClick={onPublish}
-              disabled={!canPublish || isPublishing}
-              className="flex-1"
-            >
-              {isPublishing ? 'Publiceren...' : 'Publiceren & Link Kopiëren'}
-            </Button>
-          )}
+          <Button
+            onClick={handleSubscribe}
+            disabled={isSubscribing}
+            className="flex-1"
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            {isSubscribing ? 'Bezig...' : 'Ga live met jouw eigen website!'}
+          </Button>
         </div>
 
         {/* Subscription Info */}
