@@ -23,6 +23,7 @@ interface StripeCheckoutParams {
   cancel_url: string
   customer_email?: string
   metadata: Record<string, string>
+  payment_method_configuration?: string
 }
 
 // Stripe response interface
@@ -51,13 +52,19 @@ serve(async (req) => {
       throw new Error('STRIPE_PRICE_ID is not configured')
     }
 
+    // Get Payment Method Configuration ID from environment
+    const paymentMethodConfigurationId = Deno.env.get('STRIPE_PAYMENT_METHOD_CONFIG_ID')
+    if (!paymentMethodConfigurationId) {
+      throw new Error('STRIPE_PAYMENT_METHOD_CONFIG_ID is not configured')
+    }
+
     // Initialize Stripe (shim)
     // @ts-expect-error - Deno environment
     const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
-    // Create checkout session
+    // Create checkout session with Payment Method Configuration
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'ideal'],
       line_items: [
@@ -78,6 +85,8 @@ serve(async (req) => {
       metadata: {
         profile_id: profileId,
       },
+      // Add Payment Method Configuration
+      payment_method_configuration: paymentMethodConfigurationId,
     })
 
     return new Response(
@@ -116,6 +125,12 @@ const Stripe = (secretKey: string, _config: Record<string, unknown>): Stripe => 
       sessions: {
         create: async (params: StripeCheckoutParams): Promise<StripeCheckoutResponse> => {
           const form = new URLSearchParams()
+          
+          // Add payment method configuration if provided
+          if (params.payment_method_configuration) {
+            form.append('payment_method_configuration', params.payment_method_configuration)
+          }
+          
           // Multiple payment methods must be appended individually
           ;(params.payment_method_types || []).forEach((pm: string) => {
             form.append('payment_method_types[]', pm)
