@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Database, Json } from '@/integrations/supabase/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
@@ -63,6 +63,7 @@ interface SocialLink {
 }
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('design');
@@ -936,6 +937,31 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  // Handle URL parameters for Stripe checkout results
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+
+    if (success === 'true') {
+      toast({
+        title: "Betaling Succesvol! 🎉",
+        description: "Je abonnement is geactiveerd. Je profiel is nu live!",
+      });
+      // Refresh profile data to show updated subscription status
+      if (user) {
+        loadProfile();
+      }
+    }
+
+    if (canceled === 'true') {
+      toast({
+        title: "Betaling Geannuleerd",
+        description: "Je betaling is geannuleerd. Je kunt het later opnieuw proberen.",
+        variant: "destructive",
+      });
+    }
+  }, [searchParams, user, toast]);
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (profileLoading) {
@@ -975,7 +1001,7 @@ export default function Dashboard() {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, subscriptions(*)')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -2129,7 +2155,11 @@ export default function Dashboard() {
                     <div className="text-center py-8">
                       <p className="text-gray-600 mb-4">Je hebt nog geen actief abonnement</p>
                       <Button 
-                        onClick={() => StripeService.redirectToCheckout({ profileId: profile?.id || '' })}
+                        onClick={() => StripeService.redirectToCheckout({
+                          profileId: profile?.id || '',
+                          successUrl: `${window.location.origin}/dashboard?success=true`,
+                          cancelUrl: `${window.location.origin}/dashboard?canceled=true`
+                        })}
                         className="bg-purple-600 hover:bg-purple-700"
                       >
                         Start Abonnement
@@ -2188,7 +2218,10 @@ export default function Dashboard() {
                       <Button 
                         variant="outline"
                         className="w-full"
-                        onClick={() => StripeService.redirectToCustomerPortal({ profileId: profile?.id || '' })}
+                        onClick={() => StripeService.redirectToCustomerPortal({
+                          profileId: profile?.id || '',
+                          returnUrl: `${window.location.origin}/dashboard`
+                        })}
                       >
                         <CreditCard className="w-4 h-4 mr-2" />
                         Beheer Abonnement
@@ -2210,8 +2243,12 @@ export default function Dashboard() {
                     </>
                   ) : (
                     <Button 
-                      onClick={() => StripeService.redirectToCheckout({ profileId: profile?.id || '' })}
-                      className="w-full bg-purple-600 hover:bg-purple-700"
+                      onClick={() => StripeService.redirectToCheckout({
+                        profileId: profile?.id || '',
+                        successUrl: `${window.location.origin}/dashboard?success=true`,
+                        cancelUrl: `${window.location.origin}/dashboard?canceled=true`
+                      })}
+                      className="w-full bg-purple-700 hover:bg-purple-800"
                     >
                       <CreditCard className="w-4 h-4 mr-2" />
                       Start Abonnement

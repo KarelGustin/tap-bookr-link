@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Clock, ExternalLink, CheckCircle, CreditCard } from 'lucide-react';
 import StripeService from '@/services/stripeService';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Step7PreviewProps {
   onPublish: () => Promise<void>;
@@ -167,7 +168,11 @@ export const Step7Preview = ({
     setIsSubscribing(true);
     try {
       // Get profile ID from the database using the handle
-      const { data: profile, error } = await fetch(`/api/profiles/by-handle/${profileData.handle}`).then(res => res.json());
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('handle', profileData.handle)
+        .single();
       
       if (error || !profile?.id) {
         throw new Error('Profile niet gevonden');
@@ -177,7 +182,7 @@ export const Step7Preview = ({
       await StripeService.redirectToCheckout({
         profileId: profile.id,
         successUrl: `${window.location.origin}/dashboard?success=true`,
-        cancelUrl: `${window.location.origin}/dashboard?canceled=true`,
+        cancelUrl: `${window.location.origin}/onboarding?step=7`,
       });
     } catch (error) {
       console.error('Error starting subscription:', error);

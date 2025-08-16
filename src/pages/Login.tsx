@@ -55,12 +55,12 @@ export default function Login() {
                 .from('profiles')
                 .select('onboarding_completed')
                 .eq('user_id', user.id)
-                .single();
+                .single<{ onboarding_completed: boolean | null }>();
 
               if (profileError) {
                 console.error('Error checking profile:', profileError);
                 navigate('/onboarding');
-              } else if (profile && (profile as any).onboarding_completed) {
+              } else if (profile?.onboarding_completed) {  
                 navigate('/dashboard');
               } else {
                 navigate('/onboarding');

@@ -29,17 +29,33 @@ create index if not exists idx_profiles_status on public.profiles(status);
 alter table public.profiles enable row level security;
 
 -- Policies
-create policy if not exists "Public can view published profiles" on public.profiles
-for select using (status = 'published');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public can view published profiles' AND tablename = 'profiles') THEN
+    CREATE POLICY "Public can view published profiles" ON public.profiles
+    FOR SELECT USING (status = 'published');
+  END IF;
+END $$;
 
-create policy if not exists "Users can view their own profiles" on public.profiles
-for select using (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view their own profiles' AND tablename = 'profiles') THEN
+    CREATE POLICY "Users can view their own profiles" ON public.profiles
+    FOR SELECT USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
-create policy if not exists "Users can insert their own profiles" on public.profiles
-for insert with check (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can insert their own profiles' AND tablename = 'profiles') THEN
+    CREATE POLICY "Users can insert their own profiles" ON public.profiles
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;
 
-create policy if not exists "Users can update their own profiles" on public.profiles
-for update using (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update their own profiles' AND tablename = 'profiles') THEN
+    CREATE POLICY "Users can update their own profiles" ON public.profiles
+    FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
 
 -- Timestamp trigger function
 create or replace function public.update_updated_at_column()
@@ -51,9 +67,13 @@ end;
 $$ language plpgsql;
 
 -- Apply updated_at trigger
-create trigger if not exists trg_profiles_updated_at
-before update on public.profiles
-for each row execute function public.update_updated_at_column();
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_profiles_updated_at') THEN
+    CREATE TRIGGER trg_profiles_updated_at
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+  END IF;
+END $$;
 
 -- Enforce handle immutability after insert
 create or replace function public.prevent_handle_change()
@@ -66,9 +86,13 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger if not exists trg_profiles_handle_immutable
-before update on public.profiles
-for each row execute function public.prevent_handle_change();
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_profiles_handle_immutable') THEN
+    CREATE TRIGGER trg_profiles_handle_immutable
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.prevent_handle_change();
+  END IF;
+END $$;
 
 -- Validate publish rules (name + booking_url required when publishing)
 create or replace function public.validate_publish_rules()
@@ -86,9 +110,13 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger if not exists trg_profiles_validate_publish
-before insert or update on public.profiles
-for each row execute function public.validate_publish_rules();
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_profiles_validate_publish') THEN
+    CREATE TRIGGER trg_profiles_validate_publish
+    BEFORE INSERT OR UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.validate_publish_rules();
+  END IF;
+END $$;
 
 -- Storage buckets for avatars and media
 insert into storage.buckets (id, name, public)
@@ -100,39 +128,71 @@ values ('media','media', true)
 on conflict (id) do nothing;
 
 -- Storage policies for avatars
-create policy if not exists "Avatar images are publicly accessible" on storage.objects
-for select using (bucket_id = 'avatars');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Avatar images are publicly accessible' AND tablename = 'objects') THEN
+    CREATE POLICY "Avatar images are publicly accessible" ON storage.objects
+    FOR SELECT USING (bucket_id = 'avatars');
+  END IF;
+END $$;
 
-create policy if not exists "Users can upload their own avatar" on storage.objects
-for insert with check (
-  bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can upload their own avatar' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can upload their own avatar" ON storage.objects
+    FOR INSERT WITH CHECK (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;
 
-create policy if not exists "Users can update their own avatar" on storage.objects
-for update using (
-  bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update their own avatar' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can update their own avatar" ON storage.objects
+    FOR UPDATE USING (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;
 
-create policy if not exists "Users can delete their own avatar" on storage.objects
-for delete using (
-  bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete their own avatar' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can delete their own avatar" ON storage.objects
+    FOR DELETE USING (
+      bucket_id = 'avatars' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;
 
 -- Storage policies for media
-create policy if not exists "Media is publicly accessible" on storage.objects
-for select using (bucket_id = 'media');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Media is publicly accessible' AND tablename = 'objects') THEN
+    CREATE POLICY "Media is publicly accessible" ON storage.objects
+    FOR SELECT USING (bucket_id = 'media');
+  END IF;
+END $$;
 
-create policy if not exists "Users can upload their own media" on storage.objects
-for insert with check (
-  bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can upload their own media' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can upload their own media" ON storage.objects
+    FOR INSERT WITH CHECK (
+      bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;
 
-create policy if not exists "Users can update their own media" on storage.objects
-for update using (
-  bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can update their own media' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can update their own media" ON storage.objects
+    FOR UPDATE USING (
+      bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;
 
-create policy if not exists "Users can delete their own media" on storage.objects
-for delete using (
-  bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
-);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can delete their own media' AND tablename = 'objects') THEN
+    CREATE POLICY "Users can delete their own media" ON storage.objects
+    FOR DELETE USING (
+      bucket_id = 'media' and auth.uid()::text = (storage.foldername(name))[1]
+    );
+  END IF;
+END $$;

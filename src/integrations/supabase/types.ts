@@ -55,6 +55,7 @@ export type Database = {
           subscription_id: string | null
           trial_start_date: string | null
           trial_end_date: string | null
+          grace_period_ends_at: string | null
           onboarding_completed: boolean | null
           onboarding_step: number | null
           subscription_status: string | null

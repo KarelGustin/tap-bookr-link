@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-email',
 }
 
 serve(async (req) => {
@@ -20,8 +20,13 @@ serve(async (req) => {
       throw new Error('Profile ID is required')
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    const priceId = Deno.env.get('STRIPE_PRICE_ID')
+    if (!priceId) {
+      throw new Error('STRIPE_PRICE_ID is not configured')
+    }
+
+    // Initialize Stripe (shim)
+    const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
@@ -30,7 +35,7 @@ serve(async (req) => {
       payment_method_types: ['card', 'ideal'],
       line_items: [
         {
-          price: Deno.env.get('STRIPE_PRICE_ID'), // €9/month subscription price ID
+          price: priceId, // €9/month subscription price ID
           quantity: 1,
         },
       ],
@@ -42,7 +47,7 @@ serve(async (req) => {
       },
       success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
       cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
-      customer_email: req.headers.get('x-user-email'),
+      customer_email: req.headers.get('x-user-email') || undefined,
       metadata: {
         profile_id: profileId,
       },
@@ -59,7 +64,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error creating checkout session:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -77,33 +82,43 @@ interface Stripe {
   }
 }
 
-const Stripe = (secretKey: string, config: any): Stripe => {
-  // This is a simplified Stripe client for Deno
-  // In production, you'd use the official Stripe Deno library
+const Stripe = (secretKey: string, _config: any): Stripe => {
+  // Simplified Stripe client for Deno using fetch
   return {
     checkout: {
       sessions: {
         create: async (params: any) => {
+          const form = new URLSearchParams()
+          // Multiple payment methods must be appended individually
+          ;(params.payment_method_types || []).forEach((pm: string) => {
+            form.append('payment_method_types[]', pm)
+          })
+          form.append('line_items[0][price]', params.line_items[0].price)
+          form.append('line_items[0][quantity]', String(params.line_items[0].quantity))
+          form.append('mode', params.mode)
+          form.append('success_url', params.success_url)
+          form.append('cancel_url', params.cancel_url)
+          // Put metadata at both session and subscription level
+          if (params.metadata?.profile_id) {
+            form.append('metadata[profile_id]', params.metadata.profile_id)
+            form.append('subscription_data[metadata][profile_id]', params.metadata.profile_id)
+          }
+          if (params.customer_email) {
+            form.append('customer_email', params.customer_email)
+          }
+
           const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${secretKey}`,
               'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: new URLSearchParams({
-              'payment_method_types[]': params.payment_method_types.join(','),
-              'line_items[0][price]': params.line_items[0].price,
-              'line_items[0][quantity]': params.line_items[0].quantity.toString(),
-              'mode': params.mode,
-              'success_url': params.success_url,
-              'cancel_url': params.cancel_url,
-              'metadata[profile_id]': params.metadata.profile_id,
-              ...(params.customer_email && { 'customer_email': params.customer_email }),
-            }),
+            body: form,
           })
 
           if (!response.ok) {
-            throw new Error(`Stripe API error: ${response.statusText}`)
+            const txt = await response.text()
+            throw new Error(`Stripe API error: ${response.status} ${response.statusText} - ${txt}`)
           }
 
           return response.json()

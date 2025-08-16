@@ -251,7 +251,19 @@ async function handleInvoicePaymentFailed(invoice: any, supabase: any) {
       due_date: new Date(invoice.due_date * 1000).toISOString(),
     })
 
-  console.log(`Invoice payment failed for profile ${subscription.profile_id}`)
+  // Schedule profile to go offline after 3 days grace period
+  const gracePeriodEnd = new Date()
+  gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3)
+  
+  await supabase
+    .from('profiles')
+    .update({
+      subscription_status: 'past_due',
+      grace_period_ends_at: gracePeriodEnd.toISOString(),
+    })
+    .eq('id', subscription.profile_id)
+
+  console.log(`Invoice payment failed for profile ${subscription.profile_id}, grace period until ${gracePeriodEnd.toISOString()}`)
 }
 
 

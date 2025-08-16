@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,7 @@ import { Step5SocialTestimonials } from '@/components/onboarding/steps/Step5Soci
 import { Step6Footer } from '@/components/onboarding/steps/Step6Footer';
 import { Step7Preview } from '@/components/onboarding/steps/Step7Preview';
 import { Json } from '@/integrations/supabase/types';
+import StripeService from '@/services/stripeService';
 
 interface BusinessHours {
   monday: { open: string; close: string; closed: boolean };
@@ -112,6 +113,20 @@ interface OnboardingData {
   profileId?: string;
 }
 
+// Helper function to safely access nested properties
+const safeGet = (obj: unknown, path: string[]): unknown => {
+  if (!obj || typeof obj !== 'object') return undefined;
+  let current: Record<string, unknown> = obj as Record<string, unknown>;
+  for (const key of path) {
+    if (current && typeof current === 'object' && key in current) {
+      current = current[key] as Record<string, unknown>;
+    } else {
+      return undefined;
+    }
+  }
+  return current;
+};
+
 export default function Onboarding() {
   const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(1);
@@ -130,6 +145,7 @@ export default function Onboarding() {
   });
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLivePreviewActive, setIsLivePreviewActive] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -206,8 +222,12 @@ export default function Onboarding() {
   };
 
   const loadExistingProfile = async () => {
+    // start initial loader
+    setIsInitialLoading(true);
+
     if (!user?.id) {
       console.log('No user ID found, skipping profile load');
+      setIsInitialLoading(false);
       return;
     }
 
@@ -280,6 +300,51 @@ export default function Onboarding() {
             socials: existingProfile.socials as OnboardingData['socials'] || prev.socials,
             socialLinks: existingProfile.about && typeof existingProfile.about === 'object' && 'socialLinks' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).socialLinks as OnboardingData['socialLinks'] : prev.socialLinks,
             testimonials: cleanTestimonials,
+            // Prefill footer fields (columns preferred, then JSON fallbacks)
+            footerBusinessName: ((existingProfile as Record<string, unknown>).footer_business_name as string) 
+              ?? (safeGet(existingProfile.footer, ['businessName']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'businessName']) as string)
+              ?? prev.footerBusinessName,
+            footerAddress: ((existingProfile as Record<string, unknown>).footer_address as string) 
+              ?? (safeGet(existingProfile.footer, ['address']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'address']) as string)
+              ?? prev.footerAddress,
+            footerEmail: ((existingProfile as Record<string, unknown>).footer_email as string) 
+              ?? (safeGet(existingProfile.footer, ['email']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'email']) as string)
+              ?? prev.footerEmail,
+            footerPhone: ((existingProfile as Record<string, unknown>).footer_phone as string) 
+              ?? (safeGet(existingProfile.footer, ['phone']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'phone']) as string)
+              ?? prev.footerPhone,
+            footerHours: ((existingProfile as Record<string, unknown>).footer_hours as OnboardingData['footerHours']) 
+              ?? (safeGet(existingProfile.footer, ['hours']) as OnboardingData['footerHours'])
+              ?? (safeGet(existingProfile.about, ['footer', 'hours']) as OnboardingData['footerHours'])
+              ?? prev.footerHours,
+            footerNextAvailable: ((existingProfile as Record<string, unknown>).footer_next_available as string) 
+              ?? (safeGet(existingProfile.footer, ['nextAvailable']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'nextAvailable']) as string)
+              ?? prev.footerNextAvailable,
+            footerCancellationPolicy: ((existingProfile as Record<string, unknown>).footer_cancellation_policy as string) 
+              ?? (safeGet(existingProfile.footer, ['cancellationPolicy']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'cancellationPolicy']) as string)
+              ?? prev.footerCancellationPolicy,
+            footerPrivacyPolicy: ((existingProfile as Record<string, unknown>).footer_privacy_policy as string) 
+              ?? (safeGet(existingProfile.footer, ['privacyPolicy']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'privacyPolicy']) as string)
+              ?? prev.footerPrivacyPolicy,
+            footerTermsOfService: ((existingProfile as Record<string, unknown>).footer_terms_of_service as string) 
+              ?? (safeGet(existingProfile.footer, ['termsOfService']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'termsOfService']) as string)
+              ?? prev.footerTermsOfService,
+            footerShowMaps: ((existingProfile as Record<string, unknown>).footer_show_maps as boolean) 
+              ?? (safeGet(existingProfile.footer, ['showMaps']) as boolean)
+              ?? (safeGet(existingProfile.about, ['footer', 'showMaps']) as boolean)
+              ?? prev.footerShowMaps,
+            footerShowAttribution: ((existingProfile as Record<string, unknown>).footer_show_attribution as boolean) 
+              ?? (safeGet(existingProfile.footer, ['showAttribution']) as boolean)
+              ?? (safeGet(existingProfile.about, ['footer', 'showAttribution']) as boolean)
+              ?? prev.footerShowAttribution,
           };
           
           console.log('🔧 Updated onboarding data after refresh:', newData);
@@ -332,6 +397,8 @@ export default function Onboarding() {
       }
     } catch (error) {
       console.error('Error loading existing profile:', error);
+    } finally {
+      setIsInitialLoading(false);
     }
   };
   
@@ -355,6 +422,7 @@ export default function Onboarding() {
   // Redirect if no user
   useEffect(() => {
     if (!user) {
+      setIsInitialLoading(false);
       navigate('/login');
     }
   }, [user, navigate]);
@@ -476,6 +544,51 @@ export default function Onboarding() {
             socials: existingProfile.socials as OnboardingData['socials'] || prev.socials,
             socialLinks: existingProfile.about && typeof existingProfile.about === 'object' && 'socialLinks' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).socialLinks as OnboardingData['socialLinks'] : prev.socialLinks,
             testimonials: existingProfile.about && typeof existingProfile.about === 'object' && 'testimonials' in existingProfile.about ? (existingProfile.about as Record<string, unknown>).testimonials as OnboardingData['testimonials'] : prev.testimonials,
+            // Prefill footer fields on refresh as well
+            footerBusinessName: ((existingProfile as Record<string, unknown>).footer_business_name as string) 
+              ?? (safeGet(existingProfile.footer, ['businessName']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'businessName']) as string)
+              ?? prev.footerBusinessName,
+            footerAddress: ((existingProfile as Record<string, unknown>).footer_address as string) 
+              ?? (safeGet(existingProfile.footer, ['address']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'address']) as string)
+              ?? prev.footerAddress,
+            footerEmail: ((existingProfile as Record<string, unknown>).footer_email as string) 
+              ?? (safeGet(existingProfile.footer, ['email']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'email']) as string)
+              ?? prev.footerEmail,
+            footerPhone: ((existingProfile as Record<string, unknown>).footer_phone as string) 
+              ?? (safeGet(existingProfile.footer, ['phone']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'phone']) as string)
+              ?? prev.footerPhone,
+            footerHours: ((existingProfile as Record<string, unknown>).footer_hours as OnboardingData['footerHours']) 
+              ?? (safeGet(existingProfile.footer, ['hours']) as OnboardingData['footerHours'])
+              ?? (safeGet(existingProfile.about, ['footer', 'hours']) as OnboardingData['footerHours'])
+              ?? prev.footerHours,
+            footerNextAvailable: ((existingProfile as Record<string, unknown>).footer_next_available as string) 
+              ?? (safeGet(existingProfile.footer, ['nextAvailable']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'nextAvailable']) as string)
+              ?? prev.footerNextAvailable,
+            footerCancellationPolicy: ((existingProfile as Record<string, unknown>).footer_cancellation_policy as string) 
+              ?? (safeGet(existingProfile.footer, ['cancellationPolicy']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'cancellationPolicy']) as string)
+              ?? prev.footerCancellationPolicy,
+            footerPrivacyPolicy: ((existingProfile as Record<string, unknown>).footer_privacy_policy as string) 
+              ?? (safeGet(existingProfile.footer, ['privacyPolicy']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'privacyPolicy']) as string)
+              ?? prev.footerPrivacyPolicy,
+            footerTermsOfService: ((existingProfile as Record<string, unknown>).footer_terms_of_service as string) 
+              ?? (safeGet(existingProfile.footer, ['termsOfService']) as string)
+              ?? (safeGet(existingProfile.about, ['footer', 'termsOfService']) as string)
+              ?? prev.footerTermsOfService,
+            footerShowMaps: ((existingProfile as Record<string, unknown>).footer_show_maps as boolean) 
+              ?? (safeGet(existingProfile.footer, ['showMaps']) as boolean)
+              ?? (safeGet(existingProfile.about, ['footer', 'showMaps']) as boolean)
+              ?? prev.footerShowMaps,
+            footerShowAttribution: ((existingProfile as Record<string, unknown>).footer_show_attribution as boolean) 
+              ?? (safeGet(existingProfile.footer, ['showAttribution']) as boolean)
+              ?? (safeGet(existingProfile.about, ['footer', 'showAttribution']) as boolean)
+              ?? prev.footerShowAttribution,
           };
           
           console.log('🔧 Updated onboarding data after refresh:', newData);
@@ -1874,25 +1987,40 @@ export default function Onboarding() {
 
   const handleSubscribe = async () => {
     try {
-      // This will redirect to Stripe checkout
       console.log('Starting subscription flow for handle:', onboardingData.handle);
       
-      // You would typically:
-      // 1. Create a Stripe checkout session
-      // 2. Redirect to Stripe checkout
-      // 3. Handle the success/failure webhooks
+      if (!onboardingData.handle) {
+        toast({
+          title: "Fout",
+          description: "Geen handle gevonden. Publiceer eerst je profiel.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get profile ID from the database using the handle
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('handle', onboardingData.handle)
+        .single();
       
-      // For now, show a message
-      toast({
-        title: "Stripe Integratie",
-        description: "De Stripe integratie wordt geïmplementeerd voor iDEAL, PayPal en creditcard betalingen.",
+      if (error || !profile?.id) {
+        throw new Error('Profile niet gevonden');
+      }
+
+      // Redirect to Stripe checkout
+      await StripeService.redirectToCheckout({
+        profileId: profile.id,
+        successUrl: `${window.location.origin}/dashboard?success=true`,
+        cancelUrl: `${window.location.origin}/onboarding?step=7`,
       });
       
     } catch (error) {
       console.error('Failed to start subscription:', error);
       toast({
         title: "Abonnement Mislukt",
-        description: "Er is een fout opgetreden bij het starten van het abonnement.",
+        description: "Er is een fout opgetreden bij het starten van het abonnement. Probeer het opnieuw.",
         variant: "destructive",
       });
     }
@@ -1903,21 +2031,15 @@ export default function Onboarding() {
     console.log('Publishing profile with data:', onboardingData);
     
     try {
-      // Calculate trial end date (7 days from now)
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 7);
-      
       const profileData = {
         ...onboardingData,
-        trialStartDate: new Date().toISOString(),
-        trialEndDate: trialEndDate.toISOString(),
-        subscriptionStatus: 'trial',
-        subscriptionPlan: 'free_trial'
+        subscriptionStatus: 'pending',
+        subscriptionPlan: 'monthly'
       };
       
-      const profileId = await saveProfileData(profileData, 'published');
+      const profileId = await saveProfileData(profileData, 'draft');
       if (profileId) {
-        console.log('Profile published successfully with ID:', profileId);
+        console.log('Profile saved successfully with ID:', profileId);
         
         // Update onboarding completion status
         try {
@@ -1934,16 +2056,17 @@ export default function Onboarding() {
         }
         
         toast({
-          title: "Profile Published! 🎉",
-          description: "Your Bookr page is now live! Complete your subscription to keep it published.",
+          title: "Profiel Opgeslagen! 🎉",
+          description: "Je profiel is opgeslagen. Start je abonnement om je pagina live te maken.",
         });
-        // Redirect to dashboard after successful publishing
-        navigate('/dashboard');
+        
+        // Start Stripe checkout immediately
+        await handleSubscribe();
       } else {
-        console.log('Profile publishing failed');
+        console.log('Profile saving failed');
         toast({
-          title: "Publishing Failed",
-          description: "Failed to publish your profile. Please try again.",
+          title: "Opslaan Mislukt",
+          description: "Je profiel kon niet worden opgeslagen. Probeer het opnieuw.",
           variant: "destructive",
         });
       }
@@ -2068,6 +2191,17 @@ export default function Onboarding() {
     
     return canStart;
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Gegevens laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null; // Will redirect via useEffect

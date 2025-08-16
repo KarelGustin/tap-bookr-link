@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-email',
 }
 
 serve(async (req) => {
@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { profileId } = await req.json()
+    const { profileId, returnUrl } = await req.json()
 
     if (!profileId) {
       throw new Error('Profile ID is required')
@@ -36,13 +36,13 @@ serve(async (req) => {
     }
 
     // Create customer portal session
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     })
 
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripe_customer_id,
-      return_url: `${req.headers.get('origin')}/dashboard`,
+      return_url: returnUrl || `${req.headers.get('origin')}/dashboard`,
     })
 
     return new Response(
@@ -56,7 +56,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error creating customer portal session:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
@@ -74,27 +74,29 @@ interface Stripe {
   }
 }
 
-const Stripe = (secretKey: string, config: any): Stripe => {
-  // This is a simplified Stripe client for Deno
-  // In production, you'd use the official Stripe Deno library
+const Stripe = (secretKey: string, _config: any): Stripe => {
+  // Simplified Stripe client for Deno
   return {
     billingPortal: {
       sessions: {
         create: async (params: any) => {
+          const form = new URLSearchParams({
+            'customer': params.customer,
+            'return_url': params.return_url,
+          })
+
           const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${secretKey}`,
               'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: new URLSearchParams({
-              'customer': params.customer,
-              'return_url': params.return_url,
-            }),
+            body: form,
           })
 
           if (!response.ok) {
-            throw new Error(`Stripe API error: ${response.statusText}`)
+            const txt = await response.text()
+            throw new Error(`Stripe API error: ${response.status} ${response.statusText} - ${txt}`)
           }
 
           return response.json()

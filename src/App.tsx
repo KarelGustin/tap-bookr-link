@@ -34,16 +34,16 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/edit" element={
-                <ProtectedRoute requireOnboarding={true}>
+                <ProtectedRoute requireOnboarding={true} requireActiveSubscription={true}>
                   <Edit />
                 </ProtectedRoute>
               } />
               <Route path="/dashboard" element={
-                <ProtectedRoute requireOnboarding={true}>
+                <ProtectedRoute requireOnboarding={true} requireActiveSubscription={true}>
                   <Dashboard />
                 </ProtectedRoute>
               } />
-              <Route path="/:handle" element={<PublicProfile />} />
+              <Route path=":handle" element={<PublicProfile />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

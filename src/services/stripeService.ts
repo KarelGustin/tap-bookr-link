@@ -8,6 +8,7 @@ export interface StripeCheckoutParams {
 
 export interface StripeCustomerPortalParams {
   profileId: string
+  returnUrl?: string
 }
 
 export class StripeService {
@@ -15,15 +16,19 @@ export class StripeService {
     functionName: string,
     params: any
   ): Promise<T> {
+    const { data: auth } = await supabase.auth.getUser()
+    const email = auth?.user?.email || undefined
+
     const { data, error } = await supabase.functions.invoke(functionName, {
       body: params,
+      headers: email ? { 'x-user-email': email } : undefined,
     })
 
     if (error) {
-      throw new Error(error.message)
+      throw new Error(error.message || 'Edge Function returned a non-2xx status code')
     }
 
-    return data
+    return data as T
   }
 
   /**

@@ -1,59 +1,77 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingStatus } from '@/hooks/use-onboarding-status';
+import { useSubscriptionStatus } from '@/hooks/use-subscription-status';
 import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireOnboarding?: boolean; // true = moet onboarding hebben, false = mag geen onboarding hebben
+	children: React.ReactNode;
+	requireOnboarding?: boolean; // true = moet onboarding hebben, false = mag geen onboarding hebben
+	requireActiveSubscription?: boolean; // true = alleen met actief/grace abonnement + published
 }
 
 export const ProtectedRoute = ({ 
-  children, 
-  requireOnboarding = true 
+	children, 
+	requireOnboarding = true,
+	requireActiveSubscription = false,
 }: ProtectedRouteProps) => {
-  const { user } = useAuth();
-  const { isLoading, onboardingCompleted } = useOnboardingStatus();
-  const navigate = useNavigate();
+	const { user } = useAuth();
+	const { isLoading: onboardingLoading, onboardingCompleted } = useOnboardingStatus();
+	const { isLoading: subscriptionLoading, allowed } = useSubscriptionStatus();
+	const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!isLoading && user) {
-      if (requireOnboarding && !onboardingCompleted) {
-        // Gebruiker moet onboarding afmaken
-        navigate('/onboarding');
-      } else if (!requireOnboarding && onboardingCompleted) {
-        // Gebruiker heeft onboarding al afgerond, redirect naar dashboard
-        navigate('/dashboard');
-      }
-    }
-  }, [isLoading, user, onboardingCompleted, requireOnboarding, navigate]);
+	useEffect(() => {
+		if (!user) return;
 
-  // Toon loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Laden...</p>
-        </div>
-      </div>
-    );
-  }
+		// Onboarding guard
+		if (!onboardingLoading) {
+			if (requireOnboarding && !onboardingCompleted) {
+				navigate('/onboarding?step=7');
+				return;
+			}
+			if (!requireOnboarding && onboardingCompleted) {
+				navigate('/dashboard');
+				return;
+			}
+		}
 
-  // Als gebruiker niet is ingelogd
-  if (!user) {
-    navigate('/login');
-    return null;
-  }
+		// Subscription guard (for dashboard-like pages)
+		if (requireActiveSubscription && !subscriptionLoading) {
+			if (!allowed) {
+				// Geen geldig abonnement of niet published: terug naar onboarding preview
+				navigate('/onboarding?step=7');
+				return;
+			}
+		}
+	}, [user, onboardingLoading, onboardingCompleted, requireOnboarding, subscriptionLoading, requireActiveSubscription, allowed, navigate]);
 
-  // Als onboarding status niet overeenkomt met vereiste
-  if (requireOnboarding && !onboardingCompleted) {
-    return null; // Redirect wordt afgehandeld door useEffect
-  }
+	// Toon loading state
+	if (onboardingLoading || (requireActiveSubscription && subscriptionLoading)) {
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="text-center">
+					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+					<p className="text-gray-600">Laden...</p>
+				</div>
+			</div>
+		);
+	}
 
-  if (!requireOnboarding && onboardingCompleted) {
-    return null; // Redirect wordt afgehandeld door useEffect
-  }
+	// Als gebruiker niet is ingelogd
+	if (!user) {
+		navigate('/login');
+		return null;
+	}
 
-  return <>{children}</>;
+	// Als onboarding status niet overeenkomt met vereiste
+	if (requireOnboarding && !onboardingCompleted) {
+		return null; // Redirect wordt afgehandeld door useEffect
+	}
+
+	// Subscription gating
+	if (requireActiveSubscription && !allowed) {
+		return null; // Redirect via effect
+	}
+
+	return <>{children}</>;
 };
