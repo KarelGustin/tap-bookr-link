@@ -356,13 +356,16 @@ export default function Onboarding() {
           )}
 
           {currentStep === 7 && (
-            <Step7Preview
+            <Step7Preview 
               profileData={onboardingData}
               onStartLivePreview={handleStartLivePreview}
               onPublish={handlePublish}
-              onSubscribe={handleSubscribe}
-              isLivePreviewActive={isLivePreviewActive}
+              onSaveDraft={handleSaveDraft}
+              onBack={() => setCurrentStep(6)}
+              handle={onboardingData?.handle || ''}
+              canPublish={canPublish}
               isPublishing={isPublishing}
+              isPreviewActive={isLivePreviewActive}
             />
           )}
         </OnboardingLayout>
