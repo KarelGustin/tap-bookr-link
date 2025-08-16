@@ -2031,17 +2031,12 @@ export default function Onboarding() {
     console.log('Publishing profile with data:', onboardingData);
     
     try {
-      const profileData = {
-        ...onboardingData,
-        subscriptionStatus: 'pending',
-        subscriptionPlan: 'monthly'
-      };
-      
-      const profileId = await saveProfileData(profileData, 'draft');
+      // Save profile as draft first
+      const profileId = await saveProfileData(onboardingData, 'draft');
       if (profileId) {
         console.log('Profile saved successfully with ID:', profileId);
         
-        // Update onboarding completion status
+        // Update onboarding completion status  
         try {
           await supabase
             .from('profiles')
@@ -2055,13 +2050,26 @@ export default function Onboarding() {
           console.error('Error updating onboarding completion status:', error);
         }
         
-        toast({
-          title: "Profiel Opgeslagen! 🎉",
-          description: "Je profiel is opgeslagen. Start je abonnement om je pagina live te maken.",
-        });
+        // Copy link to clipboard
+        const profileUrl = `https://tapbookr.com/${onboardingData.handle}`;
+        try {
+          await navigator.clipboard.writeText(profileUrl);
+          toast({
+            title: "Profiel Gepubliceerd! 🎉",
+            description: `Je link is gekopieerd: ${profileUrl}`,
+          });
+        } catch (clipboardError) {
+          toast({
+            title: "Profiel Gepubliceerd! 🎉", 
+            description: `Je profiel link: ${profileUrl}`,
+          });
+        }
         
-        // Start Stripe checkout immediately
-        await handleSubscribe();
+        // Navigate to dashboard after a short delay
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
+        
       } else {
         console.log('Profile saving failed');
         toast({
@@ -2074,7 +2082,7 @@ export default function Onboarding() {
       console.error('Publishing error:', error);
       toast({
         title: "Publishing Error",
-        description: "An error occurred while publishing your profile.",
+        description: "Er is een fout opgetreden bij het publiceren van je profiel.",
         variant: "destructive",
       });
     } finally {

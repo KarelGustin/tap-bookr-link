@@ -368,13 +368,24 @@ export const Step7Preview = ({
               {isSubscribing ? 'Bezig...' : 'Ga live met jouw eigen website!'}
             </Button>
           ) : (
-            <Button
-              onClick={onPublish}
-              disabled={!canPublish || isPublishing}
-              className="flex-1"
-            >
-              {isPublishing ? 'Publiceren...' : 'Publiceren & Link Kopiëren'}
-            </Button>
+            <div className="flex gap-3 flex-1">
+              <Button
+                onClick={onPublish}
+                disabled={!canPublish || isPublishing}
+                className="flex-1"
+              >
+                {isPublishing ? 'Publiceren...' : 'Publiceren & Link Kopiëren'}
+              </Button>
+              <Button
+                onClick={handleSubscribe}
+                disabled={isSubscribing}
+                variant="outline"
+                className="flex-1"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                {isSubscribing ? 'Bezig...' : 'Direct Abonnement'}
+              </Button>
+            </div>
           )}
         </div>
 

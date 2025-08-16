@@ -29,9 +29,9 @@ export const useSubscriptionStatus = () => {
 				}
 
 				// Access rules:
-				// - Page must be published
-				// - subscription_status must be 'active'
-				// - or 'past_due' while grace_period_ends_at is in the future
+				// - Page must be published AND
+				// - subscription_status must be 'active' OR
+				// - 'past_due' while grace_period_ends_at is in the future (3 day grace period)
 				const nowIso = new Date().toISOString()
 				const isPublished = profile?.status === 'published'
 				const isActive = profile?.subscription_status === 'active'
@@ -40,7 +40,19 @@ export const useSubscriptionStatus = () => {
 					profile?.grace_period_ends_at &&
 					profile.grace_period_ends_at > nowIso
 
-				setAllowed(Boolean(isPublished && (isActive || isPastDueInGrace)))
+				const isAccessAllowed = Boolean(isPublished && (isActive || isPastDueInGrace))
+				
+				console.log('Subscription access check:', {
+					isPublished,
+					subscriptionStatus: profile?.subscription_status,
+					isActive,
+					isPastDueInGrace,
+					gracePeriodEndsAt: profile?.grace_period_ends_at,
+					currentTime: nowIso,
+					finalAccess: isAccessAllowed
+				})
+
+				setAllowed(isAccessAllowed)
 			} catch (e) {
 				console.error('Subscription status check failed:', e)
 				setAllowed(false)

@@ -215,7 +215,7 @@ export default function Dashboard() {
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('onboarding_completed')
+          .select('onboarding_completed, onboarding_step')
           .eq('user_id', user.id)
           .single();
 
@@ -228,9 +228,10 @@ export default function Dashboard() {
           const onboardingCompleted = (profile as any).onboarding_completed || false;
           setOnboardingCompleted(onboardingCompleted);
           
-          // If onboarding not completed, redirect to onboarding
+          // If onboarding not completed, redirect to onboarding at correct step
           if (!onboardingCompleted) {
-            navigate('/onboarding');
+            const step = (profile as any).onboarding_step || 1;
+            navigate(`/onboarding?step=${step}`);
           }
         }
       } catch (error) {
@@ -2213,7 +2214,7 @@ export default function Dashboard() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 pt-6 border-t border-gray-200">
-                  {subscription ? (
+                  {subscription && subscription.status === 'active' ? (
                     <>
                       <Button 
                         variant="outline"
@@ -2239,6 +2240,40 @@ export default function Dashboard() {
                       >
                         <Download className="w-4 h-4 mr-2" />
                         Facturen downloaden
+                      </Button>
+                    </>
+                  ) : subscription && ['canceled', 'incomplete', 'past_due'].includes(subscription.status) ? (
+                    <>
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
+                        <p className="text-sm text-amber-800">
+                          {subscription.status === 'canceled' && 'Je abonnement is geannuleerd.'}
+                          {subscription.status === 'past_due' && 'Je betaling is achterstallig.'}
+                          {subscription.status === 'incomplete' && 'Je abonnement is niet volledig.'}
+                          {' '}Heractiveer om je pagina weer live te zetten.
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => StripeService.redirectToCheckout({
+                          profileId: profile?.id || '',
+                          successUrl: `${window.location.origin}/dashboard?success=true`,
+                          cancelUrl: `${window.location.origin}/dashboard?canceled=true`
+                        })}
+                        className="w-full bg-purple-700 hover:bg-purple-800"
+                      >
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Heractiveer Abonnement
+                      </Button>
+                      
+                      <Button 
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => StripeService.redirectToCustomerPortal({
+                          profileId: profile?.id || '',
+                          returnUrl: `${window.location.origin}/dashboard`
+                        })}
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Bekijk Details
                       </Button>
                     </>
                   ) : (

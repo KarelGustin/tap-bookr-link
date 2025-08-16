@@ -197,7 +197,7 @@ export default function PublicProfile() {
         }
       }
 
-      setProfile(data);
+      setProfile(data as any);
     } catch (error) {
       console.error('Error in loadProfile:', error);
       setNotFound(true);

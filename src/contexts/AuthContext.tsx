@@ -29,22 +29,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Check onboarding status on login
+        if (event === 'SIGNED_IN' && session?.user) {
+          await checkAndRedirectOnboarding(session.user.id);
+        }
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Check onboarding status for existing session
+      if (session?.user) {
+        await checkAndRedirectOnboarding(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const checkAndRedirectOnboarding = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_completed, onboarding_step')
+        .eq('user_id', userId)
+        .single();
+      
+      if (profile && !profile.onboarding_completed) {
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('/onboarding')) {
+          const step = profile.onboarding_step || 1;
+          window.location.href = `/onboarding?step=${step}`;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({
@@ -70,7 +100,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .insert({
             user_id: data.user.id,
             handle: '',
-            status: 'draft'
+            status: 'draft',
+            onboarding_completed: false,
+            onboarding_step: 1
           });
         
         if (profileError) {

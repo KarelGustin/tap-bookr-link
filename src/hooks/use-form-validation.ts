@@ -58,9 +58,10 @@ export const useFormValidation = <T extends Record<string, string | number | boo
     let isValid = true;
 
     Object.keys(validationRules).forEach((field) => {
-      const error = validateField(field as keyof T, data[field as keyof T]);
+      const fieldKey = field as keyof T;
+      const error = validateField(fieldKey, data[fieldKey]);
       if (error) {
-        newErrors[field as string] = error;
+        newErrors[field] = error;
         isValid = false;
       }
     });
@@ -75,7 +76,7 @@ export const useFormValidation = <T extends Record<string, string | number | boo
 
   const getFieldError = useCallback((field: keyof T): string | null => {
     if (!touched.has(field)) return null;
-    return errors[field] || null;
+    return errors[field as string] || null;
   }, [errors, touched]);
 
   const clearErrors = useCallback(() => {
