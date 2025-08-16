@@ -45,50 +45,22 @@ export default function Login() {
           description: error.message,
           variant: "destructive",
         });
-      } else {
-        if (isLogin) {
-          // Check onboarding status after login
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('onboarding_completed')
-                .eq('user_id', user.id)
-                .single<{ onboarding_completed: boolean | null }>();
-
-              if (profileError) {
-                console.error('Error checking profile:', profileError);
-                navigate('/onboarding');
-              } else if (profile?.onboarding_completed) {  
-                navigate('/dashboard');
-              } else {
-                navigate('/onboarding');
-              }
-            } else {
-              navigate('/onboarding');
-            }
-          } catch (error) {
-            console.error('Error checking onboarding status:', error);
-            navigate('/onboarding');
-          }
-        } else {
-          // For signup, redirect to onboarding
-          toast({
-            title: "Account created!",
-            description: "Please check your email to verify your account.",
-          });
-          // After signup, redirect to onboarding
-          navigate('/onboarding');
-        }
+        setLoading(false);
+      } else if (!isLogin) {
+        // Only show signup success message, AuthContext handles login redirects
+        toast({
+          title: "Account created!",
+          description: "Please check your email to verify your account.",
+        });
+        setLoading(false);
       }
+      // For login success, let AuthContext handle the redirect
     } catch (error) {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } finally {
       setLoading(false);
     }
   };
