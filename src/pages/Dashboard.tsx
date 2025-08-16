@@ -241,6 +241,11 @@ export default function Dashboard() {
     created_at: string;
   }[]>([]);
 
+  // Voeg deze state toe bij de andere state variabelen
+  const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [addressInputValue, setAddressInputValue] = useState('');
+
   // Check onboarding completion status
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -1200,6 +1205,45 @@ export default function Dashboard() {
     return urls;
   };
 
+  // Voeg deze functie toe voor adres suggesties
+  const getAddressSuggestions = async (input: string) => {
+    if (input.length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    try {
+      // Google Places Autocomplete API
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        console.warn('Google Maps API key niet gevonden');
+        return;
+      }
+
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&components=country:nl&key=${apiKey}`
+      );
+
+      const data = await response.json();
+      
+      if (data.predictions) {
+        const suggestions = data.predictions.map((pred: any) => pred.description);
+        setAddressSuggestions(suggestions);
+        setShowAddressSuggestions(true);
+      }
+    } catch (error) {
+      console.error('Error fetching address suggestions:', error);
+    }
+  };
+
+  // Voeg deze functie toe voor het selecteren van een adres
+  const selectAddress = (address: string) => {
+    setDesign((d) => ({ ...d, footerAddress: address }));
+    setAddressInputValue(address);
+    setShowAddressSuggestions(false);
+    setAddressSuggestions([]);
+  };
+
   if (authLoading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1415,24 +1459,32 @@ export default function Dashboard() {
 
             {/* Design Section */}
             {activeSection === 'design' && (
-              <div className="bg-white rounded-lg p-6 border border-gray-200 space-y-8">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Hier is jouw publieke pagina</h3>
-                  <Button onClick={saveDesign} disabled={designLoading}>
-                    {designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}
-                  </Button>
+              <div className="space-y-8">
+                {/* Page Header */}
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900">Pagina Designer</h3>
+                      <p className="text-gray-600 mt-1">Pas je publieke pagina aan en zie live preview</p>
+                    </div>
+                    <Button onClick={saveDesign} disabled={designLoading} size="lg">
+                      {designLoading ? 'Opslaan…' : 'Alle Wijzigingen Opslaan'}
+                    </Button>
+                  </div>
                 </div>
 
-                {/* Live Preview */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-gray-700">Live Voorvertoning</h4>
+                {/* Live Preview Section */}
+                <div className="bg-white rounded-lg p-6 border border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-xl font-semibold text-gray-900"> Live Voorvertoning</h4>
+                      <p className="text-gray-600 text-sm">Zie hoe je pagina eruit ziet voor bezoekers</p>
+                    </div>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => {
                         setPreviewKey(prev => prev + 1);
-                        // Force iframe refresh for external domain
                         const iframes = document.querySelectorAll('iframe[title*="Preview"]');
                         iframes.forEach(iframe => {
                           if (iframe instanceof HTMLIFrameElement) {
@@ -1444,18 +1496,16 @@ export default function Dashboard() {
                           }
                         });
                       }}
-                      className="text-xs"
                     >
-                      Voorvertoning Vernieuwen
+                       Vernieuwen
                     </Button>
                   </div>
-                  <div className="relative">
-                    {/* iPhone Mockup Preview - Always Mobile */}
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex justify-center">
                       <div className="relative">
-                        {/* iPhone Frame - iPhone 14 Pro dimensions */}
+                        {/* iPhone Frame */}
                         <div className="relative bg-black rounded-[2.5rem] p-1.5 shadow-2xl">
-                          {/* Screen */}
                           <div className="bg-white rounded-[2rem] overflow-hidden" style={{ width: '320px', height: '692px' }}>
                             <iframe
                               key={previewKey}
@@ -1473,696 +1523,843 @@ export default function Dashboard() {
                           </div>
                         </div>
                         
-                        {/* Home Indicator */}
+                        {/* iPhone Details */}
                         <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-28 h-1 bg-black rounded-full opacity-60"></div>
-                        
-                        {/* Dynamic Island */}
                         <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-20 h-6 bg-black rounded-b-2xl"></div>
-                        
-                        {/* Volume Buttons */}
                         <div className="absolute left-0 top-20 w-1 h-8 bg-gray-800 rounded-r-sm"></div>
                         <div className="absolute left-0 top-32 w-1 h-8 bg-gray-800 rounded-r-sm"></div>
-                        
-                        {/* Power Button */}
                         <div className="absolute right-0 top-24 w-1 h-12 bg-gray-800 rounded-l-sm"></div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <Separator />
+                {/* Design Sections */}
+                <div className="space-y-6">
+                  {/* 1) Banner Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">1</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">🎨 Banner & Hoofdtekst</h4>
+                            <p className="text-sm text-gray-600">Stel je hoofdbanner en titels in</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveBanner} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Banner Opslaan'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 space-y-4">
+                      {/* Banner Type Selection */}
+                      <div className="flex gap-3">
+                        {/* <Button
+                          type="button"
+                          variant={design.bannerType === 'color' ? 'default' : 'outline'}
+                          onClick={() => setDesign((d) => ({ ...d, bannerType: 'color' }))}
+                        >
+                          🎨 Kleur gebruiken
+                        </Button> */}
+                        <Button
+                          type="button"
+                          variant={design.bannerType === 'image' ? 'default' : 'outline'}
+                          onClick={() => setDesign((d) => ({ ...d, bannerType: 'image' }))}
+                        >
+                          📷 Afbeelding gebruiken
+                        </Button>
+                      </div>
 
-                {/* 1) Banner */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Landingspagina Banner</h4>
-                    <Button onClick={saveBanner} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Banner Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      type="button"
-                      variant={design.bannerType === 'color' ? 'default' : 'outline'}
-                      onClick={() => setDesign((d) => ({ ...d, bannerType: 'color' }))}
-                    >
-                      Kleur gebruiken
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={design.bannerType === 'image' ? 'default' : 'outline'}
-                      onClick={() => setDesign((d) => ({ ...d, bannerType: 'image' }))}
-                    >
-                      Afbeelding gebruiken
-                    </Button>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Afbeelding is standaard geselecteerd. Als er geen afbeelding wordt geüpload, wordt de TapBookr accentkleur gebruikt als fallback.
-                  </p>
+                      {/* Banner Content Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label>Categorie</Label>
+                          <Input
+                            placeholder="bijv. Fotograaf, Designer, Consultant"
+                            value={design.category}
+                            onChange={(e) => setDesign((d) => ({ ...d, category: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Tekstkleur</Label>
+                          <Input
+                            type="color"
+                            value={design.bannerTextColor}
+                            onChange={(e) => setDesign((d) => ({ ...d, bannerTextColor: e.target.value }))}
+                            className="w-24 p-1"
+                          />
+                        </div>
+                        <div>
+                          <Label>Banner Hoofdtitel</Label>
+                          <Input
+                            placeholder="Je hoofdtitel voor de banner"
+                            value={design.bannerHeading}
+                            onChange={(e) => setDesign((d) => ({ ...d, bannerHeading: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label>Banner Ondertitel</Label>
+                          <Input
+                            placeholder="Je ondertitel of tagline"
+                            value={design.bannerSubheading}
+                            onChange={(e) => setDesign((d) => ({ ...d, bannerSubheading: e.target.value }))}
+                          />
+                        </div>
+                      </div>
 
-                  {/* Banner Content */}
-                  <div className="space-y-3">
-                    {/* <div>
-                      <Label>Name</Label>
-                      <Input
-                        placeholder="Your business or personal name"
-                        value={design.name}
-                        onChange={(e) => setDesign((d) => ({ ...d, name: e.target.value }))}
-                      />
-                    </div> */}
-                    <div>
-                      <Label>Categorie</Label>
-                      <Input
-                        placeholder="bijv. Fotograaf, Designer, Consultant"
-                        value={design.category}
-                        onChange={(e) => setDesign((d) => ({ ...d, category: e.target.value }))}
-                      />
-                    </div>
-                    {/* <div>
-                      <Label>Slogan</Label>
-                      <Input
-                        placeholder="Your business tagline or description"
-                        value={design.slogan}
-                        onChange={(e) => setDesign((d) => ({ ...d, slogan: e.target.value }))}
-                      />
-                    </div> */}
-                    <div>
-                      <Label>Banner Hoofdtitel</Label>
-                      <Input
-                        placeholder="Je hoofdtitel voor de banner (optioneel - gebruikt naam als leeg)"
-                        value={design.bannerHeading}
-                        onChange={(e) => setDesign((d) => ({ ...d, bannerHeading: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Banner Ondertitel</Label>
-                      <Input
-                        placeholder="Je ondertitel of tagline voor de banner (optioneel - gebruikt slogan als leeg)"
-                        value={design.bannerSubheading}
-                        onChange={(e) => setDesign((d) => ({ ...d, bannerSubheading: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Tekstkleur</Label>
-                      <Input
-                        type="color"
-                        value={design.bannerTextColor}
-                        onChange={(e) => setDesign((d) => ({ ...d, bannerTextColor: e.target.value }))}
-                        className="w-24 p-1"
-                      />
+                      {/* Banner Background */}
+                      {design.bannerType === 'color' ? (
+                        <div className="flex items-center gap-3">
+                          <Label className="w-32">Achtergrondkleur</Label>
+                          <Input
+                            type="color"
+                            value={design.bannerColor}
+                            onChange={(e) => setDesign((d) => ({ ...d, bannerColor: e.target.value }))}
+                            className="w-24 p-1"
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <Label>Banner afbeelding</Label>
+                          <div className="flex items-center gap-3">
+                            <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
+                              {bannerPreview ? ' Banner wijzigen' : ' Banner uploaden'}
+                            </Button>
+                            <input
+                              ref={bannerInputRef}
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                setDesign((d) => ({ ...d, bannerImageFile: file }));
+                                if (file) setBannerPreview(URL.createObjectURL(file));
+                              }}
+                            />
+                          </div>
+                          
+                          {/* Current banner preview */}
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-1">Huidige banner</p>
+                            <div className="w-full max-w-md aspect-[3/1] rounded-md overflow-hidden border bg-gray-100">
+                              {bannerPreview ? (
+                                <img src={bannerPreview} className="w-full h-full object-cover" />
+                              ) : (
+                                (() => {
+                                  const bPreview: BannerPartial = (profile?.banner ?? {}) as BannerPartial;
+                                  const color = typeof bPreview.color === 'string' ? bPreview.color : '#e5e7eb';
+                                  return <div style={{ backgroundColor: color }} className="w-full h-full" />;
+                                })()
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {design.bannerType === 'color' ? (
-                    <div className="flex items-center gap-3">
-                      <Label className="w-32">Kleur</Label>
-                      <Input
-                        type="color"
-                        value={design.bannerColor}
-                        onChange={(e) => setDesign((d) => ({ ...d, bannerColor: e.target.value }))}
-                        className="w-24 p-1"
-                      />
+                  {/* 2) Profile Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-green-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">2</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900"> Profiel & Avatar</h4>
+                            <p className="text-sm text-gray-600">Upload je profielfoto en stel basisinformatie in</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveProfile} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Profiel Opslaan'}
+                        </Button>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label>Banner afbeelding</Label>
+                    
+                    <div className="p-6 space-y-4">
                       <div className="flex items-center gap-3">
-                        <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
-                          {bannerPreview ? 'Banner wijzigen' : 'Banner uploaden'}
+                        <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()}>
+                          {avatarPreview ? ' Avatar wijzigen' : ' Avatar uploaden'}
                         </Button>
                         <input
-                          ref={bannerInputRef}
+                          ref={avatarInputRef}
                           type="file"
                           accept="image/*"
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0] || null;
-                            setDesign((d) => ({ ...d, bannerImageFile: file }));
-                            if (file) setBannerPreview(URL.createObjectURL(file));
+                            setDesign((d) => ({ ...d, avatarFile: file }));
+                            if (file) setAvatarPreview(URL.createObjectURL(file));
                           }}
                         />
                       </div>
-                      {/* Current banner preview */}
-                      <div className="mt-2">
-                        <p className="text-xs text-muted-foreground mb-1">Huidige banner</p>
-                        <div className="w-full max-w-md aspect-[3/1] rounded-md overflow-hidden border bg-muted/30">
-                          {bannerPreview ? (
-                            <img src={bannerPreview} className="w-full h-full object-cover" />
+                      
+                      {/* Current avatar preview */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-16 rounded-full overflow-hidden border bg-gray-100">
+                          {avatarPreview ? (
+                            <img src={avatarPreview} className="w-full h-full object-cover" />
                           ) : (
-                            (() => {
-                              const bPreview: BannerPartial = (profile?.banner ?? {}) as BannerPartial;
-                              const color = typeof bPreview.color === 'string' ? bPreview.color : '#e5e7eb';
-                              return <div style={{ backgroundColor: color }} className="w-full h-full" />;
-                            })()
+                            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                              <span className="text-gray-400 text-lg">👤</span>
+                            </div>
                           )}
                         </div>
+                        <p className="text-sm text-gray-600">Huidige profielfoto</p>
+                      </div>
+                      
+                      <div className="text-sm text-gray-500 bg-blue-50 p-3 rounded-lg">
+                        💡 <strong>Tip:</strong> De "Maak kennis met" sectie gebruikt deze foto. Gebruik een foto van jezelf om meer vertrouwen te wekken bij bezoekers.
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <Separator />
-
-                {/* 2) Profile */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Profiel</h4>
-                    <Button onClick={saveProfile} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Profiel Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Avatar</Label>
-                    <div className="flex items-center gap-3">
-                      <Button type="button" variant="outline" onClick={() => avatarInputRef.current?.click()}>
-                        {avatarPreview ? 'Avatar wijzigen' : 'Avatar uploaden'}
-                      </Button>
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0] || null;
-                          setDesign((d) => ({ ...d, avatarFile: file }));
-                          if (file) setAvatarPreview(URL.createObjectURL(file));
-                        }}
-                      />
-                    </div>
-                    {/* Current avatar preview */}
-                    <div className="mt-2 flex items-center gap-3">
-                      <div className="w-16 h-16 rounded-full overflow-hidden border bg-muted/30">
-                        {avatarPreview ? (
-                          <img src={avatarPreview} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Momenteel gebruikte avatar</p>
-                    </div>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Naam, categorie en slogan worden nu geconfigureerd in de Banner sectie hierboven.
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 3) About */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Over sectie</h4>
-                    <Button onClick={saveAbout} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Over Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Titel</Label>
-                      <Input value={design.aboutTitle} onChange={(e) => setDesign((d) => ({ ...d, aboutTitle: e.target.value }))} />
-                    </div>
-                    <div>
-                      <Label>Tekstuitlijning</Label>
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant={design.aboutAlignment === 'center' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'center' }))}
-                        >
-                          Midden
-                        </Button>
-                        <Button
-                          type="button"
-                          variant={design.aboutAlignment === 'left' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'left' }))}
-                        >
-                          Links
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Label>Beschrijving</Label>
-                      <Textarea 
-                        rows={6} 
-                        value={design.aboutDescription} 
-                        onChange={(e) => setDesign((d) => ({ ...d, aboutDescription: e.target.value }))}
-                        placeholder="Voer je beschrijving hier in. Gebruik Enter/Return om nieuwe paragrafen te maken."
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Gebruik Enter/Return om nieuwe paragrafen te maken. Regelafbrekingen worden bewaard.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 4) Media gallery */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Media galerij</h4>
-                    <Button onClick={saveMedia} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Galerij Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Maximaal 6 afbeeldingen</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{design.mediaOrder.length + galleryNewPreviews.length}/6</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => galleryInputRef.current?.click()}
-                        disabled={design.mediaOrder.length + galleryNewPreviews.length >= 6}
-                      >
-                        + Afbeelding toevoegen
-                      </Button>
-                      <input
-                        ref={galleryInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          // limit to max 6
-                          if (design.mediaOrder.length + galleryNewPreviews.length >= 6) return;
-                          setDesign((d) => ({ ...d, mediaFiles: [...d.mediaFiles, file] }));
-                          setGalleryNewPreviews((p) => [...p, URL.createObjectURL(file)]);
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-2">
-                    {design.mediaOrder.map((u, i) => (
-                      <div
-                        key={u + i}
-                        className={`w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0 relative ${design.draggedIndex === i ? 'ring-2 ring-primary' : ''}`}
-                        draggable
-                        onDragStart={() => handleMediaDragStart(i)}
-                        onDragOver={(e) => handleMediaDragOver(e, i)}
-                        onDrop={handleMediaDrop}
-                      >
-                        <img src={u} className="w-full h-full object-cover" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
-                          onClick={() => removeMediaItem(u, i)}
-                          disabled={designLoading}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ))}
-                    {galleryNewPreviews.map((u, i) => (
-                      <div key={`new-${i}`} className="w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0 opacity-80 relative">
-                        <img src={u} className="w-full h-full object-cover" />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
-                          onClick={() => {
-                            // Remove from new files and previews
-                            setDesign((d) => ({ 
-                              ...d, 
-                              mediaFiles: d.mediaFiles.filter((_, idx) => idx !== i) 
-                            }));
-                            setGalleryNewPreviews((p) => p.filter((_, idx) => idx !== i));
-                          }}
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    ))}
-                    {design.mediaOrder.length + galleryNewPreviews.length === 0 && (
-                      <p className="text-xs text-muted-foreground">Nog geen afbeeldingen</p>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 5) Social links */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Sociale links</h4>
-                    <Button onClick={saveSocials} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Sociale Links Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {design.socials.map((s, i) => (
-                      <div key={i} className="grid sm:grid-cols-3 gap-2">
-                        <Input
-                          placeholder="Titel (bijv. Instagram)"
-                          value={s.title || ''}
-                          onChange={(e) => {
-                            const next = [...design.socials];
-                            next[i] = { ...next[i], title: e.target.value };
-                            setDesign((d) => ({ ...d, socials: next }));
-                          }}
-                        />
-                        <Input
-                          placeholder="Platform (optioneel)"
-                          value={s.platform || ''}
-                          onChange={(e) => {
-                            const next = [...design.socials];
-                            next[i] = { ...next[i], platform: e.target.value };
-                            setDesign((d) => ({ ...d, socials: next }));
-                          }}
-                        />
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="https://..."
-                            value={s.url || ''}
-                            onChange={(e) => {
-                              const next = [...design.socials];
-                              next[i] = { ...next[i], url: e.target.value };
-                              setDesign((d) => ({ ...d, socials: next }));
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const next = design.socials.filter((_, idx) => idx !== i);
-                              setDesign((d) => ({ ...d, socials: next }));
-                            }}
-                          >
-                            Verwijderen
-                          </Button>
+                  {/* 3) About Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">3</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">📝 Over Sectie</h4>
+                            <p className="text-sm text-gray-600">Schrijf je verhaal en stel tekstuitlijning in</p>
+                          </div>
                         </div>
+                        <Button onClick={saveAbout} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Over Opslaan'}
+                        </Button>
                       </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setDesign((d) => ({ ...d, socials: [...d.socials, { title: '', url: '' }] }))}
-                    >
-                      Sociale link toevoegen
-                    </Button>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 6) Booking */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Boeken</h4>
-                    <Button onClick={saveBooking} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Boeken Opslaan'}
-                    </Button>
-                  </div>
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <div className="sm:col-span-3">
-                      <Label>Boekings-URL</Label>
-                      <Input
-                        placeholder="https://..."
-                        value={design.bookingUrl}
-                        onChange={(e) => setDesign((d) => ({ ...d, bookingUrl: e.target.value }))}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Embed modus wordt standaard gebruikt.</p>
                     </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 7) Testimonials */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">Aanbevelingen</h4>
-                      {design.testimonials.length > 0 && design.testimonials.every(t => 
-                        t.customer_name === 'Sarah Johnson' || 
-                        t.customer_name === 'Mike Chen' || 
-                        t.customer_name === 'Emily Rodriguez'
-                      ) && (
-                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
-                          Gebruikt placeholders
-                        </span>
-                      )}
-                      {(() => {
-                        // Check if testimonials exist in the database
-                        const about = (profile?.about ?? {}) as { [key: string]: unknown };
-                        const hasTestimonialsInDB = typeof about.testimonials === 'object' && Array.isArray(about.testimonials) && about.testimonials.length > 0;
-                        
-                        if (design.testimonials.length > 0 && !hasTestimonialsInDB) {
-                          return (
-                            <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full animate-pulse">
-                              Auto-opslaan...
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                    <Button onClick={saveTestimonials} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Aanbevelingen Opslaan'}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Voeg een paar korte beoordelingen toe (afbeelding optioneel). Placeholder aanbevelingen worden standaard getoond en worden automatisch opgeslagen op je publieke pagina. Je kunt ze altijd bewerken, vervangen of verwijderen.
-                  </p>
-                  {design.testimonials.map((t, i) => (
-                    <div key={i} className="grid sm:grid-cols-4 gap-2 items-start">
-                      <div className="sm:col-span-4 flex items-center gap-3">
-                        <div className="w-32 aspect-[4/5] rounded-md overflow-hidden border bg-muted/30 flex-shrink-0">
-                          {testimonialPreviews[i] ? (
-                            <img src={testimonialPreviews[i]} className="w-full h-full object-cover" />
-                          ) : t.image_url ? (
-                            <img src={t.image_url} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image</div>
-                          )}
-                        </div>
+                    
+                    <div className="p-6 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              if (!testimonialInputRefs.current[i]) return;
-                              testimonialInputRefs.current[i]!.click();
-                            }}
-                          >
-                            {testimonialPreviews[i] || t.image_url ? 'Change image' : 'Upload image'}
-                          </Button>
-                          <input
-                            ref={(el) => (testimonialInputRefs.current[i] = el)}
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setTestimonialPreviews((p) => ({ ...p, [i]: URL.createObjectURL(file) }));
-                              // temporarily stash file path on testimonial via image_url placeholder to mark change
-                              const next = [...design.testimonials] as WithFile[];
-                              next[i] = { ...next[i], _file: file };
-                              setDesign((d) => ({ ...d, testimonials: next }));
-                            }}
+                          <Label>Titel</Label>
+                          <Input 
+                            value={design.aboutTitle} 
+                            onChange={(e) => setDesign((d) => ({ ...d, aboutTitle: e.target.value }))}
+                            placeholder="Je over-sectie titel"
                           />
                         </div>
+                        {/* <div>
+                          <Label>Tekstuitlijning</Label>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant={design.aboutAlignment === 'center' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'center' }))}
+                            >
+                              🎯 Midden
+                            </Button>
+                            <Button
+                              type="button"
+                              variant={design.aboutAlignment === 'left' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setDesign((d) => ({ ...d, aboutAlignment: 'left' }))}
+                            >
+                              ⬅️ Links
+                            </Button>
+                          </div>
+                        </div> */}
                       </div>
-                      <Input
-                        placeholder="Klantnaam"
-                        value={t.customer_name}
-                        onChange={(e) => {
-                          const next = [...design.testimonials];
-                          next[i] = { ...next[i], customer_name: e.target.value };
-                          setDesign((d) => ({ ...d, testimonials: next }));
-                        }}
-                      />
-                      <Input
-                        placeholder="Beoordelingstitel"
-                        value={t.review_title}
-                        onChange={(e) => {
-                          const next = [...design.testimonials];
-                          next[i] = { ...next[i], review_title: e.target.value };
-                          setDesign((d) => ({ ...d, testimonials: next }));
-                        }}
-                      />
-                      <Input
-                        placeholder="Beoordelingstekst"
-                        value={t.review_text}
-                        onChange={(e) => {
-                          const next = [...design.testimonials];
-                          next[i] = { ...next[i], review_text: e.target.value };
-                          setDesign((d) => ({ ...d, testimonials: next }));
-                        }}
-                      />
-                      <div className="sm:col-span-4">
+                      
+                      <div>
+                        <Label>Beschrijving</Label>
+                        <Textarea 
+                          rows={6} 
+                          value={design.aboutDescription} 
+                          onChange={(e) => setDesign((d) => ({ ...d, aboutDescription: e.target.value }))}
+                          placeholder="Vertel je verhaal hier. Gebruik Enter/Return om nieuwe paragrafen te maken."
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          💡 Gebruik Enter/Return om nieuwe paragrafen te maken. Regelafbrekingen worden bewaard.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4) Media Gallery Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-orange-50 to-red-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">4</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">️ Media Galerij</h4>
+                            <p className="text-sm text-gray-600">Upload en orden je beste werk (maximaal 6 afbeeldingen)</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveMedia} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Galerij Opslaan'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="font-medium">{design.mediaOrder.length + galleryNewPreviews.length}/6</span>
+                          <span>afbeeldingen geüpload</span>
+                        </div>
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => setDesign((d) => ({ ...d, testimonials: d.testimonials.filter((_, idx) => idx !== i) }))}
+                          onClick={() => galleryInputRef.current?.click()}
+                          disabled={design.mediaOrder.length + galleryNewPreviews.length >= 6}
                         >
-                          Verwijderen
+                          📤 Afbeelding toevoegen
+                        </Button>
+                        <input
+                          ref={galleryInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (design.mediaOrder.length + galleryNewPreviews.length >= 6) return;
+                            setDesign((d) => ({ ...d, mediaFiles: [...d.mediaFiles, file] }));
+                            setGalleryNewPreviews((p) => [...p, URL.createObjectURL(file)]);
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Gallery Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {design.mediaOrder.map((u, i) => (
+                          <div
+                            key={u + i}
+                            className={`aspect-[4/5] rounded-lg overflow-hidden border-2 relative ${
+                              design.draggedIndex === i ? 'ring-2 ring-blue-500' : 'border-gray-200'
+                            }`}
+                            draggable
+                            onDragStart={() => handleMediaDragStart(i)}
+                            onDragOver={(e) => handleMediaDragOver(e, i)}
+                            onDrop={handleMediaDrop}
+                          >
+                            <img src={u} className="w-full h-full object-cover" />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
+                              onClick={() => removeMediaItem(u, i)}
+                              disabled={designLoading}
+                            >
+                              ×
+                            </Button>
+                            <div className="absolute bottom-1 left-1 right-1 bg-black/50 text-white text-xs p-1 rounded text-center">
+                              {i + 1}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {galleryNewPreviews.map((u, i) => (
+                          <div key={`new-${i}`} className="aspect-[4/5] rounded-lg overflow-hidden border-2 border-blue-300 relative">
+                            <img src={u} className="w-full h-full object-cover" />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 w-6 h-6 p-0 rounded-full opacity-80 hover:opacity-100"
+                              onClick={() => {
+                                setDesign((d) => ({ 
+                                  ...d, 
+                                  mediaFiles: d.mediaFiles.filter((_, idx) => idx !== i) 
+                                }));
+                                setGalleryNewPreviews((p) => p.filter((_, idx) => idx !== i));
+                              }}
+                            >
+                              ×
+                            </Button>
+                            <div className="absolute bottom-1 left-1 right-1 bg-blue-500/80 text-white text-xs p-1 rounded text-center">
+                              Nieuw
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {design.mediaOrder.length + galleryNewPreviews.length === 0 && (
+                          <div className="col-span-full text-center py-8 text-gray-500">
+                            <div className="text-4xl mb-2">🖼️</div>
+                            <p>Nog geen afbeeldingen geüpload</p>
+                            <p className="text-sm">Sleep afbeeldingen hierheen of klik op "Afbeelding toevoegen"</p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <p className="text-xs text-gray-500 text-center">
+                         Sleep afbeeldingen om ze te herordenen. De volgorde bepaalt hoe ze op je publieke pagina worden getoond.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 5) Social Links Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-indigo-50 to-cyan-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">5</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">🔗 Sociale Links</h4>
+                            <p className="text-sm text-gray-600">Voeg links naar je sociale media toe</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveSocials} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Sociale Links Opslaan'}
                         </Button>
                       </div>
                     </div>
-                  ))}
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={design.testimonials.length >= 6}
-                      onClick={() => setDesign((d) => ({ ...d, testimonials: [...d.testimonials, { customer_name: '', review_title: '', review_text: '' }] }))}
-                    >
-                      + Aanbeveling toevoegen
-                    </Button>
-                    {design.testimonials.length > 0 && (
+                    
+                    <div className="p-6 space-y-4">
+                      {design.socials.map((s, i) => (
+                        <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg">
+                          <Input
+                            placeholder="Titel (bijv. Instagram)"
+                            value={s.title || ''}
+                            onChange={(e) => {
+                              const next = [...design.socials];
+                              next[i] = { ...next[i], title: e.target.value };
+                              setDesign((d) => ({ ...d, socials: next }));
+                            }}
+                          />
+                          <Input
+                            placeholder="Platform (optioneel)"
+                            value={s.platform || ''}
+                            onChange={(e) => {
+                              const next = [...design.socials];
+                              next[i] = { ...next[i], platform: e.target.value };
+                              setDesign((d) => ({ ...d, socials: next }));
+                            }}
+                          />
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder="https://..."
+                              value={s.url || ''}
+                              onChange={(e) => {
+                                const next = [...design.socials];
+                                next[i] = { ...next[i], url: e.target.value };
+                                setDesign((d) => ({ ...d, socials: next }));
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const next = design.socials.filter((_, idx) => idx !== i);
+                                setDesign((d) => ({ ...d, socials: next }));
+                              }}
+                            >
+                              🗑️
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setDesign((d) => ({ ...d, testimonials: [] }))}
-                        className="text-red-600 hover:text-red-700"
+                        onClick={() => setDesign((d) => ({ ...d, socials: [...d.socials, { title: '', url: '' }] }))}
+                        className="w-full"
                       >
-                        Alles Wissen
+                        ➕ Sociale link toevoegen
                       </Button>
-                    )}
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* 8) Footer */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Footer Instellingen</h4>
-                    <Button onClick={saveAbout} disabled={designLoading} size="sm">
-                      {designLoading ? 'Opslaan…' : 'Footer Opslaan'}
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Configureer je footer informatie en beleid. Dit verschijnt onderaan je publieke pagina.
-                  </p>
-                  
-                  {/* Business Information */}
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Bedrijfsnaam</Label>
-                      <Input 
-                        placeholder="Je bedrijfsnaam"
-                        value={design.footerBusinessName}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerBusinessName: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Adres</Label>
-                      <Input 
-                        placeholder="Je bedrijfsadres"
-                        value={design.footerAddress}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerAddress: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>E-mail</Label>
-                      <Input 
-                        type="email"
-                        placeholder="jouw@email.com"
-                        value={design.footerEmail}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerEmail: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Telefoon</Label>
-                      <Input 
-                        type="tel"
-                        placeholder="+31 (0) 6 12345678"
-                        value={design.footerPhone}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerPhone: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Openingstijden</Label>
-                      <Input 
-                        placeholder="Ma-Vr 9:00-18:00, Za 10:00-16:00"
-                        value={design.footerHours}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerHours: e.target.value }))}
-                      />
-                    </div>
-                    <div>
-                      <Label>Volgende Beschikbaar</Label>
-                      <Input 
-                        placeholder="Di 14:30 (optioneel)"
-                        value={design.footerNextAvailable}
-                        onChange={(e) => setDesign((d) => ({ ...d, footerNextAvailable: e.target.value }))}
-                      />
                     </div>
                   </div>
 
-                  {/* Policies */}
-                  <div className="space-y-3">
-                    <h5 className="font-medium text-sm">Beleid & Vertrouwen</h5>
-                    <div className="grid gap-3">
+                  {/* 6) Booking Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">6</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">📅 Boeken</h4>
+                            <p className="text-sm text-gray-600">Stel je boekingssysteem in</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveBooking} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Boeken Opslaan'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 space-y-4">
                       <div>
-                        <Label>Annuleringsbeleid</Label>
-                        <Textarea 
-                          rows={2}
-                          placeholder="Plannen gewijzigd? Herplan of annuleer 24 uur van tevoren om een vergoeding te voorkomen."
-                          value={design.footerCancellationPolicy}
-                          onChange={(e) => setDesign((d) => ({ ...d, footerCancellationPolicy: e.target.value }))}
+                        <Label>Boekings-URL</Label>
+                        <Input
+                          placeholder="https://..."
+                          value={design.bookingUrl}
+                          onChange={(e) => setDesign((d) => ({ ...d, bookingUrl: e.target.value }))}
                         />
-                      </div>
-                      <div>
-                        <Label>Privacybeleid</Label>
-                        <Textarea 
-                          rows={2}
-                          placeholder="We gebruiken je gegevens alleen om je afspraak te beheren. Geen spam."
-                          value={design.footerPrivacyPolicy}
-                          onChange={(e) => setDesign((d) => ({ ...d, footerPrivacyPolicy: e.target.value }))}
-                        />
-                      </div>
-                      <div>
-                        <Label>Algemene Voorwaarden</Label>
-                        <Textarea 
-                          rows={2}
-                          placeholder="Veilige boeking afgehandeld door toonaangevende boekingsplatforms."
-                          value={design.footerTermsOfService}
-                          onChange={(e) => setDesign((d) => ({ ...d, footerTermsOfService: e.target.value }))}
-                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          💡 Embed modus wordt standaard gebruikt. Je boekingssysteem wordt direct in je pagina getoond.
+                        </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Display Options */}
-                  <div className="space-y-3">
-                    <h5 className="font-medium text-sm">Weergave-opties</h5>
-                    <div className="flex items-center space-x-6">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="showMaps"
-                          checked={design.footerShowMaps}
-                          onChange={(e) => setDesign((d) => ({ ...d, footerShowMaps: e.target.checked }))}
-                          className="rounded"
-                        />
-                        <Label htmlFor="showMaps">Google Maps tonen</Label>
+                  {/* 7) Testimonials Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">7</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">⭐ Aanbevelingen</h4>
+                            <p className="text-sm text-gray-600">Voeg klantbeoordelingen toe om vertrouwen te wekken</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveTestimonials} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Aanbevelingen Opslaan'}
+                        </Button>
                       </div>
-                     
-                      {/* <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="showAttribution"
-                          checked={design.footerShowAttribution}
-                          onChange={(e) => setDesign((d) => ({ ...d, footerShowAttribution: e.target.checked }))}
-                          className="rounded"
-                        />
-                        <Label htmlFor="showAttribution">Show "Powered by Bookr"</Label>
-                      </div> */}
+                    </div>
+                    
+                    <div className="p-6 space-y-4">
+                      {/* Status indicators */}
+                      <div className="flex items-center gap-2">
+                        {design.testimonials.length > 0 && design.testimonials.every(t => 
+                          t.customer_name === 'Sarah Johnson' || 
+                          t.customer_name === 'Mike Chen' || 
+                          t.customer_name === 'Emily Rodriguez'
+                        ) && (
+                          <span className="px-3 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                            🎭 Gebruikt placeholders
+                          </span>
+                        )}
+                        {(() => {
+                          const about = (profile?.about ?? {}) as { [key: string]: unknown };
+                          const hasTestimonialsInDB = typeof about.testimonials === 'object' && Array.isArray(about.testimonials) && about.testimonials.length > 0;
+                          
+                          if (design.testimonials.length > 0 && !hasTestimonialsInDB) {
+                            return (
+                              <span className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full animate-pulse">
+                                💾 Auto-opslaan...
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                      
+                      <p className="text-sm text-gray-600 bg-amber-50 p-3 rounded-lg">
+                        💡 <strong>Tip:</strong> Placeholder aanbevelingen worden standaard getoond en automatisch opgeslagen. 
+                        Je kunt ze altijd bewerken, vervangen of verwijderen.
+                      </p>
+                      
+                      {/* Testimonials Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {design.testimonials.map((t, i) => (
+                          <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="w-20 aspect-[4/5] rounded-md overflow-hidden border bg-white flex-shrink-0">
+                                {testimonialPreviews[i] ? (
+                                  <img src={testimonialPreviews[i]} className="w-full h-full object-cover" />
+                                ) : t.image_url ? (
+                                  <img src={t.image_url} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                                    <span className="text-gray-400 text-sm">📷</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <Input
+                                  placeholder="Klantnaam"
+                                  value={t.customer_name}
+                                  onChange={(e) => {
+                                    const next = [...design.testimonials];
+                                    next[i] = { ...next[i], customer_name: e.target.value };
+                                    setDesign((d) => ({ ...d, testimonials: next }));
+                                  }}
+                                  className="mb-2"
+                                />
+                                <Input
+                                  placeholder="Beoordelingstitel"
+                                  value={t.review_title}
+                                  onChange={(e) => {
+                                    const next = [...design.testimonials];
+                                    next[i] = { ...next[i], review_title: e.target.value };
+                                    setDesign((d) => ({ ...d, testimonials: next }));
+                                  }}
+                                  className="mb-2"
+                                />
+                                <Textarea
+                                  placeholder="Beoordelingstekst"
+                                  value={t.review_text}
+                                  onChange={(e) => {
+                                    const next = [...design.testimonials];
+                                    next[i] = { ...next[i], review_text: e.target.value };
+                                    setDesign((d) => ({ ...d, testimonials: next }));
+                                  }}
+                                  rows={3}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  if (!testimonialInputRefs.current[i]) return;
+                                  testimonialInputRefs.current[i]!.click();
+                                }}
+                                size="sm"
+                              >
+                                {testimonialPreviews[i] || t.image_url ? '🔄 Afbeelding wijzigen' : '📤 Afbeelding uploaden'}
+                              </Button>
+                              <input
+                                ref={(el) => (testimonialInputRefs.current[i] = el)}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setTestimonialPreviews((p) => ({ ...p, [i]: URL.createObjectURL(file) }));
+                                  const next = [...design.testimonials] as WithFile[];
+                                  next[i] = { ...next[i], _file: file };
+                                  setDesign((d) => ({ ...d, testimonials: next }));
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setDesign((d) => ({ ...d, testimonials: d.testimonials.filter((_, idx) => idx !== i) }))}
+                                size="sm"
+                              >
+                                🗑️ Verwijderen
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={design.testimonials.length >= 6}
+                          onClick={() => setDesign((d) => ({ ...d, testimonials: [...d.testimonials, { customer_name: '', review_title: '', review_text: '' }] }))}
+                        >
+                          ➕ Aanbeveling toevoegen
+                        </Button>
+                        {design.testimonials.length > 0 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setDesign((d) => ({ ...d, testimonials: [] }))}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            🗑️ Alles Wissen
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end">
-                  <Button onClick={saveDesign} disabled={designLoading}>{designLoading ? 'Opslaan…' : 'Wijzigingen opslaan'}</Button>
+                  {/* 8) Footer Section */}
+                  <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 py-4 border-b border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-slate-500 rounded-lg flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">8</span>
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900">🏢 Footer Instellingen</h4>
+                            <p className="text-sm text-gray-600">Configureer je footer informatie en beleid</p>
+                          </div>
+                        </div>
+                        <Button onClick={saveAbout} disabled={designLoading} size="sm">
+                          {designLoading ? 'Opslaan…' : 'Footer Opslaan'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="p-6 space-y-6">
+                      {/* Business Information */}
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-3"> Bedrijfsinformatie</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label>Bedrijfsnaam</Label>
+                            <Input 
+                              placeholder="Je bedrijfsnaam"
+                              value={design.footerBusinessName}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerBusinessName: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Adres</Label>
+                            <div className="relative">
+                              <Input 
+                                placeholder="Begin te typen voor adres suggesties..."
+                                value={addressInputValue || design.footerAddress}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setAddressInputValue(value);
+                                  setDesign((d) => ({ ...d, footerAddress: value }));
+                                  
+                                  // Debounce voor API calls
+                                  clearTimeout((window as any).addressTimeout);
+                                  (window as any).addressTimeout = setTimeout(() => {
+                                    getAddressSuggestions(value);
+                                  }, 300);
+                                }}
+                                onFocus={() => {
+                                  if (addressSuggestions.length > 0) {
+                                    setShowAddressSuggestions(true);
+                                  }
+                                }}
+                                onBlur={() => {
+                                  // Delay hiding suggestions to allow clicking
+                                  setTimeout(() => setShowAddressSuggestions(false), 200);
+                                }}
+                              />
+                              
+                              {/* Address Suggestions Dropdown */}
+                              {showAddressSuggestions && addressSuggestions.length > 0 && (
+                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                  {addressSuggestions.map((suggestion, index) => (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                                      onClick={() => selectAddress(suggestion)}
+                                    >
+                                      <div className="flex items-center space-x-3">
+                                        <span className="text-gray-400">📍</span>
+                                        <span className="text-gray-900">{suggestion}</span>
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <p className="text-xs text-gray-500 mt-1">
+                              💡 Begin te typen om adres suggesties te krijgen. We gebruiken Google Places voor accurate adressen.
+                            </p>
+                          </div>
+                          <div>
+                            <Label>E-mail</Label>
+                            <Input 
+                              type="email"
+                              placeholder="jouw@email.com"
+                              value={design.footerEmail}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerEmail: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Telefoon</Label>
+                            <Input 
+                              type="tel"
+                              placeholder="+31 (0) 6 12345678"
+                              value={design.footerPhone}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerPhone: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Openingstijden</Label>
+                            <Input 
+                              placeholder="Ma-Vr 9:00-18:00, Za 10:00-16:00"
+                              value={design.footerHours}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerHours: e.target.value }))}
+                            />
+                          </div>
+                          {/* <div>
+                            <Label>Volgende Beschikbaar</Label>
+                            <Input 
+                              placeholder="Di 14:30 (optioneel)"
+                              value={design.footerNextAvailable}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerNextAvailable: e.target.value }))}
+                            />
+                          </div> */}
+                        </div>
+                      </div>
+
+                      {/* Policies */}
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-3">📜 Beleid & Vertrouwen</h5>
+                        <div className="grid gap-4">
+                          <div>
+                            <Label>Annuleringsbeleid</Label>
+                            <Textarea 
+                              rows={2}
+                              placeholder="Plannen gewijzigd? Herplan of annuleer 24 uur van tevoren om een vergoeding te voorkomen."
+                              value={design.footerCancellationPolicy}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerCancellationPolicy: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Privacybeleid</Label>
+                            <Textarea 
+                              rows={2}
+                              placeholder="We gebruiken je gegevens alleen om je afspraak te beheren. Geen spam."
+                              value={design.footerPrivacyPolicy}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerPrivacyPolicy: e.target.value }))}
+                            />
+                          </div>
+                          <div>
+                            <Label>Algemene Voorwaarden</Label>
+                            <Textarea 
+                              rows={2}
+                              placeholder="Veilige boeking afgehandeld door toonaangevende boekingsplatforms."
+                              value={design.footerTermsOfService}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerTermsOfService: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Display Options */}
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-3">⚙️ Weergave-opties</h5>
+                        <div className="flex items-center space-x-6">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="showMaps"
+                              checked={design.footerShowMaps}
+                              onChange={(e) => setDesign((d) => ({ ...d, footerShowMaps: e.target.checked }))}
+                              className="rounded"
+                            />
+                            <Label htmlFor="showMaps">️ Google Maps tonen</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Final Save Button */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <div className="text-center">
+                      <p className="text-gray-600 mb-4">
+                        💾 Alle wijzigingen worden automatisch opgeslagen per sectie, maar je kunt ook alles tegelijk opslaan
+                      </p>
+                      <Button onClick={saveDesign} disabled={designLoading} size="lg">
+                        {designLoading ? '💾 Opslaan…' : ' Alle Wijzigingen Opslaan'}
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

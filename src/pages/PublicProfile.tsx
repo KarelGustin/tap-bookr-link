@@ -139,7 +139,7 @@ export default function PublicProfile() {
       // PRIORITY 1: If user has active subscription, ALWAYS allow access
       if (hasActiveSubscription) {
         console.log('✅ User has active subscription - page always accessible regardless of preview status');
-        setProfile(profileData);
+        setProfile(profileData as Profile);
         setNotFound(false);
         return;
       }
@@ -147,7 +147,7 @@ export default function PublicProfile() {
       // PRIORITY 2: If profile is published, allow access
       if (isPublished) {
         console.log('✅ Profile is published - page accessible');
-        setProfile(profileData);
+        setProfile(profileData as Profile);
         setNotFound(false);
         return;
       }
@@ -168,7 +168,7 @@ export default function PublicProfile() {
         }
         
         console.log('✅ Preview is still active');
-        setProfile(profileData);
+        setProfile(profileData as Profile);
         setNotFound(false);
         return;
       }
