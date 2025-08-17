@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,7 @@ export default function Login() {
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,20 +58,20 @@ export default function Login() {
                 .eq('user_id', user.id)
                 .single<{ onboarding_completed: boolean | null; onboarding_step: number | null }>();
 
-              if (profileError) {
+              if (profileError || !profile) {
                 console.error('Error checking profile:', profileError);
-                navigate('/onboarding?step=7', { replace: true });
+                navigate('/onboarding?step=1', { replace: true });
+              } else if (!profile.onboarding_completed) {
+                navigate(`/onboarding?step=${profile.onboarding_step || 1}`, { replace: true });
               } else {
-                // Always force onboarding step 7 unless the user has an active/grace subscription
-                // We do not have subscription status here, so always route to onboarding step 7
                 navigate(`/onboarding?step=7`, { replace: true });
               }
             } else {
-              navigate('/onboarding');
+              navigate('/onboarding?step=1');
             }
           } catch (error) {
             console.error('Error checking onboarding status:', error);
-            navigate('/onboarding');
+            navigate('/onboarding?step=1');
           }
         } else {
           // For signup, redirect to onboarding
@@ -78,8 +79,10 @@ export default function Login() {
             title: "Account created!",
             description: "Please check your email to verify your account.",
           });
-          // After signup, redirect to onboarding
-          navigate('/onboarding');
+          // After signup, redirect to onboarding step 1
+          const prefillHandle = searchParams.get('handle');
+          const target = prefillHandle ? `/onboarding?step=1&handle=${encodeURIComponent(prefillHandle)}` : '/onboarding?step=1';
+          navigate(target);
         }
       }
     } catch (error) {
@@ -101,13 +104,13 @@ export default function Login() {
           <div className="flex items-center justify-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">TapBookr</h1>
-              <p className="text-sm text-gray-600">Your booking link, made beautiful</p>
+              <p className="text-sm text-gray-600">Jouw booking link, maar dan mooier</p>
             </div>
           </div>
           
           <Link to="/" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to home
+            Terug naar home
           </Link>
         </div>
         
@@ -115,12 +118,12 @@ export default function Login() {
         <Card className="border border-gray-200 bg-white rounded-2xl shadow-sm">
           <CardHeader className="space-y-3 pb-6">
             <CardTitle className="text-2xl font-bold text-center text-gray-900">
-              {isLogin ? 'Welcome back' : 'Create account'}
+              {isLogin ? 'Welkom terug' : 'Maak een account'}
             </CardTitle>
             <CardDescription className="text-center text-gray-600">
               {isLogin 
-                ? 'Sign in to your account to continue' 
-                : 'Enter your information to create an account'
+                ? 'Log in om verder te gaan' 
+                : 'Vul je gegevens in om een account te maken'
               }
             </CardDescription>
           </CardHeader>
@@ -131,7 +134,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder="Vul je email in"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -139,11 +142,11 @@ export default function Login() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 font-medium">Password</Label>
+                <Label htmlFor="password" className="text-gray-700 font-medium">Wachtwoord</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder="Vul je wachtwoord in"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -152,11 +155,11 @@ export default function Login() {
               </div>
               {!isLogin && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">Bevestig wachtwoord</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder="Bevestig je wachtwoord"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="border-gray-200 focus:border-primary focus:ring-primary/20"
@@ -169,7 +172,7 @@ export default function Login() {
                 className="w-full bg-primary hover:bg-primary/90 text-gray-900 font-semibold py-3 rounded-xl transition-colors"
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+                {loading ? 'Even geduld...' : (isLogin ? 'Inloggen' : 'Account aanmaken')}
               </Button>
             </form>
             
@@ -186,8 +189,8 @@ export default function Login() {
                 className="text-sm text-gray-600 hover:text-primary transition-colors font-medium"
               >
                 {isLogin 
-                  ? "Don't have an account? Sign up" 
-                  : "Already have an account? Sign in"
+                  ? "Heb je nog geen account? Registreer je hier" 
+                  : "Heb je al een account? Log in hier"
                 }
               </button>
             </div>
@@ -199,15 +202,15 @@ export default function Login() {
           <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
             <span className="flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-              Secure & encrypted
+              Beveiligd & versleuteld
             </span>
             <span className="flex items-center">
               <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-              The Solution for your small business
+              De oplossing voor je onderneming
             </span>
           </div>
           <p className="text-xs text-gray-400">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            Door verder te gaan, ga je akkoord met onze Algemene Voorwaarden en Privacybeleid
           </p>
         </div>
       </div>

@@ -148,7 +148,7 @@ export const Hero = () => {
                 }`}
                 disabled={!handleAvailable || !userInput}
               >
-                <Link to="/login">
+                <Link to={`/login?handle=${encodeURIComponent(sanitizeHandle(userInput))}`}>
                   Claim je Bookr Link
                 </Link>
               </Button>
@@ -167,7 +167,7 @@ export const Hero = () => {
                   <div className="relative w-full h-full overflow-hidden">
                     <iframe
                       key={debouncedHandle}
-                      src={previewUrl}
+                      src="https://tapbookr.com/bla"
                       className="w-full h-full"
                       title="Live Mobile Preview"
                       style={{ 

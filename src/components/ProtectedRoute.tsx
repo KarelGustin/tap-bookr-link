@@ -16,7 +16,7 @@ export const ProtectedRoute = ({
 	requireActiveSubscription = false,
 }: ProtectedRouteProps) => {
 	const { user } = useAuth();
-	const { isLoading: onboardingLoading, onboardingCompleted } = useOnboardingStatus();
+	const { isLoading: onboardingLoading, onboardingCompleted, currentStep } = useOnboardingStatus();
 	const { isLoading: subscriptionLoading, allowed } = useSubscriptionStatus();
 	const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ export const ProtectedRoute = ({
 		// Onboarding guard
 		if (!onboardingLoading) {
 			if (requireOnboarding && !onboardingCompleted) {
-				navigate('/onboarding?step=7', { replace: true });
+				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
 				return;
 			}
 			// Remove the aggressive auto-redirect to dashboard

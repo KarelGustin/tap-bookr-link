@@ -131,7 +131,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .insert({
             user_id: data.user.id,
             handle: '',
-            status: 'draft'
+            status: 'draft',
+            onboarding_completed: false,
+            onboarding_step: 1
           });
         
         if (profileError) {

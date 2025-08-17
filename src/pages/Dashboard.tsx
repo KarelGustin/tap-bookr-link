@@ -644,13 +644,13 @@ export default function Dashboard() {
         updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase.from('profiles').update(updatePayload).eq('id', profile.id);
+      const { error } = await supabase.from('profiles').update(updatePayload).eq('id', profile.id).eq('user_id', user.id);
       if (error) throw error;
       toast({ title: 'Saved', description: 'Your design changes were saved.' });
 
       // Reset files and refresh profile
       setDesign((d) => ({ ...d, mediaFiles: [], avatarFile: null, bannerImageFile: null }));
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaFiles: [], avatarFile: null, bannerImageFile: null }));
       setPreviewKey(prev => prev + 1);
@@ -693,14 +693,15 @@ export default function Dashboard() {
       const { error } = await supabase
         .from('profiles')
         .update({ banner: bannerJson as Json, updated_at: new Date().toISOString() })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Banner saved', description: 'Your banner changes were saved.' });
 
       // Reset file and refresh profile
       setDesign((d) => ({ ...d, bannerImageFile: null }));
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, bannerImageFile: null }));
       setPreviewKey(prev => prev + 1);
@@ -732,14 +733,15 @@ export default function Dashboard() {
           avatar_url,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Profile saved', description: 'Your profile changes were saved.' });
 
       // Reset file and refresh profile
       setDesign((d) => ({ ...d, avatarFile: null }));
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, avatarFile: null }));
       setPreviewKey(prev => prev + 1);
@@ -782,13 +784,14 @@ export default function Dashboard() {
           about: about as Json,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'About section saved', description: 'Your about section changes were saved.' });
 
       // Refresh profile
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
     } catch (e) {
@@ -818,14 +821,15 @@ export default function Dashboard() {
           media: media as Json,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Media gallery saved', description: 'Your media gallery changes were saved.' });
 
       // Reset files and refresh profile
       setDesign((d) => ({ ...d, mediaFiles: [] }));
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaFiles: [] }));
       setPreviewKey(prev => prev + 1);
@@ -847,13 +851,14 @@ export default function Dashboard() {
           socials: design.socials as Json,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Social links saved', description: 'Your social links changes were saved.' });
 
       // Refresh profile
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
       setPreviewKey(prev => prev + 1);
@@ -875,13 +880,14 @@ export default function Dashboard() {
           booking_url: design.bookingUrl || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Booking settings saved', description: 'Your booking settings were saved.' });
 
       // Refresh profile
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
       setPreviewKey(prev => prev + 1);
@@ -947,7 +953,7 @@ export default function Dashboard() {
       toast({ title: 'Testimonials saved', description: 'Your testimonials were saved.' });
 
       // Refresh profile
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
       setPreviewKey(prev => prev + 1);
@@ -1005,13 +1011,14 @@ export default function Dashboard() {
           media: media as Json,
           updated_at: new Date().toISOString()
         })
-        .eq('id', profile.id);
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       toast({ title: 'Image removed', description: 'Image was removed from your gallery.' });
 
       // Refresh profile
-      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).single();
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot({ ...design, mediaOrder: newMediaOrder }));
       setPreviewKey(prev => prev + 1);

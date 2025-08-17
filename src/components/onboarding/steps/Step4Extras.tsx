@@ -75,10 +75,55 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
   const aboutDescription = existingData?.aboutDescription || t('onboarding.step4.aboutYou.subtitle');
   const avatarUrl = existingData?.avatar_url;
 
+  // Helper: extract possible media URLs from various DB shapes
+  const extractMediaUrls = (raw: unknown): string[] => {
+    const urls: string[] = [];
+    const pushFromObject = (obj: Record<string, unknown>) => {
+      if (typeof obj.url === 'string') urls.push(obj.url);
+      else if (typeof obj.imageUrl === 'string') urls.push(obj.imageUrl);
+      else if (typeof (obj as Record<string, unknown>).image_url === 'string') urls.push((obj as Record<string, unknown>).image_url as string);
+      else if (typeof (obj as Record<string, unknown>).file_url === 'string') urls.push((obj as Record<string, unknown>).file_url as string);
+    };
+    if (!raw) return urls;
+    if (Array.isArray(raw)) {
+      raw.forEach(item => {
+        if (typeof item === 'string') urls.push(item);
+        else if (typeof item === 'object' && item !== null) pushFromObject(item as Record<string, unknown>);
+      });
+      return urls;
+    }
+    if (typeof raw === 'object') {
+      const obj = raw as Record<string, unknown>;
+      // Common shapes: { items: [...] }, { media: [...] }, { files: [...] }
+      if (Array.isArray(obj.items)) {
+        (obj.items as unknown[]).forEach(item => {
+          if (typeof item === 'string') urls.push(item);
+          else if (typeof item === 'object' && item !== null) pushFromObject(item as Record<string, unknown>);
+        });
+      } else if (Array.isArray(obj.media)) {
+        (obj.media as unknown[]).forEach(item => {
+          if (typeof item === 'string') urls.push(item);
+          else if (typeof item === 'object' && item !== null) pushFromObject(item as Record<string, unknown>);
+        });
+      } else if (Array.isArray(obj.files)) {
+        (obj.files as unknown[]).forEach(item => {
+          if (typeof item === 'string') urls.push(item);
+          else if (typeof item === 'object' && item !== null) pushFromObject(item as Record<string, unknown>);
+        });
+      } else {
+        // Single object fallback
+        pushFromObject(obj);
+      }
+    }
+    return urls;
+  };
+
   useEffect(() => {
-    // Initialize media previews from existing data
-    if (existingData?.media?.items && existingData.media.items.length > 0) {
-      setMediaPreviews(existingData.media.items.map(item => item.url));
+    // Initialize media previews from existing data (robust to different shapes)
+    const rawMedia = existingData?.media as unknown;
+    const urls = extractMediaUrls(rawMedia);
+    if (urls.length > 0) {
+      setMediaPreviews(urls);
     }
     
     // Initialize about photo preview from existing data
@@ -90,6 +135,46 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
       reader.readAsDataURL(existingData.aboutPhotoFile);
     }
   }, [existingData]);
+
+  // Keep socials in sync if existingData updates after mount (supports object or array shapes)
+  useEffect(() => {
+    const raw = existingData?.socials as unknown;
+    if (!raw) return;
+    const next = { ...socials };
+
+    if (Array.isArray(raw)) {
+      for (const item of raw) {
+        if (typeof item === 'object' && item !== null) {
+          const obj = item as Record<string, unknown>;
+          const platform = (obj.platform || obj.title) as string | undefined;
+          const url = obj.url as string | undefined;
+          if (platform && url) {
+            const key = platform.toLowerCase();
+            if (key.includes('insta')) next.instagram = url;
+            else if (key.includes('face')) next.facebook = url;
+            else if (key.includes('link')) next.linkedin = url;
+            else if (key.includes('you')) next.youtube = url;
+            else if (key.includes('whats') || key.includes('wa.me')) next.whatsapp = url;
+          }
+        }
+      }
+      setSocials(next);
+      return;
+    }
+
+    // Object shape (platform: url)
+    if (typeof raw === 'object' && raw !== null) {
+      const obj = raw as Record<string, unknown>;
+      setSocials(prev => ({
+        instagram: typeof obj.instagram === 'string' ? obj.instagram : prev.instagram,
+        facebook: typeof obj.facebook === 'string' ? obj.facebook : prev.facebook,
+        linkedin: typeof obj.linkedin === 'string' ? obj.linkedin : prev.linkedin,
+        youtube: typeof obj.youtube === 'string' ? obj.youtube : prev.youtube,
+        whatsapp: typeof obj.whatsapp === 'string' ? obj.whatsapp : prev.whatsapp,
+      }));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingData?.socials]);
 
   const handleAboutPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -104,8 +189,8 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
-    // Check if adding these files would exceed the limit
-    const currentCount = mediaFiles.length;
+    // Check if adding these files would exceed the limit (count existing previews + new files)
+    const currentCount = mediaPreviews.length;
     const maxAllowed = 6;
     const availableSlots = maxAllowed - currentCount;
     
@@ -290,6 +375,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             
             <input
               ref={aboutPhotoInputRef}
+              
               type="file"
               accept="image/*"
               onChange={handleAboutPhotoChange}
@@ -331,9 +417,14 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{t('onboarding.step4.mediaGallery.title')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {mediaPreviews.length}/6 {t('onboarding.step4.mediaGallery.images')}
-            </p>
+            {(() => {
+              const totalMediaCount = mediaPreviews.length;
+              return (
+                <p className="text-sm text-muted-foreground">
+                  {totalMediaCount}/6 {t('onboarding.step4.mediaGallery.images')}
+                </p>
+              );
+            })()}
           </div>
           
           <p className="text-sm text-muted-foreground">
@@ -385,31 +476,41 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
           )}
 
           {/* Upload button - always visible but disabled when limit reached */}
-          <Button
+          {(() => {
+            const totalMediaCount = mediaPreviews.length;
+            return (
+              <Button
             type="button"
             variant="outline"
             onClick={() => mediaInputRef.current?.click()}
-            disabled={mediaPreviews.length >= 6}
+                disabled={totalMediaCount >= 6}
             className={`w-full h-12 border-dashed ${
-              mediaPreviews.length >= 6 
+                  totalMediaCount >= 6 
                 ? 'opacity-50 cursor-not-allowed bg-gray-100' 
                 : 'hover:bg-gray-50'
             }`}
           >
             <Upload className="w-4 h-4 mr-2" />
-            {mediaPreviews.length >= 6 
-              ? `Maximum bereikt (6/6 afbeeldingen)`
-              : `${t('onboarding.step4.mediaGallery.addMedia')} (${6 - mediaPreviews.length} ${t('onboarding.step4.mediaGallery.remaining')})`
-            }
-          </Button>
+                {totalMediaCount >= 6 
+                  ? `Maximum bereikt (6/6 afbeeldingen)`
+                  : `${t('onboarding.step4.mediaGallery.addMedia')} (${6 - totalMediaCount} ${t('onboarding.step4.mediaGallery.remaining')})`
+                }
+              </Button>
+            );
+          })()}
           
           {/* Help text */}
-          <p className="text-xs text-muted-foreground text-center">
-            {mediaPreviews.length >= 6 
-              ? "Verwijder eerst een afbeelding om een nieuwe toe te voegen"
-              : "Sleep afbeeldingen om de volgorde te wijzigen"
-            }
-          </p>
+          {(() => {
+            const totalMediaCount = mediaPreviews.length;
+            return (
+              <p className="text-xs text-muted-foreground text-center">
+                {totalMediaCount >= 6 
+                  ? "Verwijder eerst een afbeelding om een nieuwe toe te voegen"
+                  : "Sleep afbeeldingen om de volgorde te wijzigen"
+                }
+              </p>
+            );
+          })()}
           
           <input
             ref={mediaInputRef}

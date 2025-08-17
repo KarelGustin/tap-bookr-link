@@ -374,9 +374,9 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
     >
       <div className="max-w-4xl mx-auto p-6 space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900">Connect & Build Trust</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Verbind & Bouw Vertrouwen</h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Voeg je sociale media links en klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
+            Voeg je klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
           </p>
           {isSaving && (
             <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
@@ -387,7 +387,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         </div>
 
         {/* Social Links Section */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
               <Share2 className="w-6 h-6 text-primary" />
@@ -455,7 +455,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
               Nog een Sociale Platform Toevoegen
             </Button>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Testimonials Section */}
         <Card>

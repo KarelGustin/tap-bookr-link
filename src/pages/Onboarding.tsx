@@ -143,6 +143,13 @@ export default function Onboarding() {
     socialLinks: [],
     testimonials: [],
   });
+  // Prefill handle from URL if present (from hero)
+  useEffect(() => {
+    const h = searchParams.get('handle');
+    if (h && !onboardingData.handle) {
+      setOnboardingData(prev => ({ ...prev, handle: h.toLowerCase() }));
+    }
+  }, [searchParams, onboardingData.handle]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLivePreviewActive, setIsLivePreviewActive] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -417,16 +424,16 @@ export default function Onboarding() {
     const stepParam = searchParams.get('step');
     if (stepParam) {
       const step = parseInt(stepParam, 10);
-      if (step >= 1 && step <= 7) {
+      if (step >= 1 && step <= 8) {
         setCurrentStep(step);
         console.log('🔧 Setting current step from URL parameter:', step);
       }
     }
   }, [searchParams]);
 
-  // Auto-start live preview when reaching step 7
+  // Auto-start live preview when reaching step 8
   useEffect(() => {
-    if (currentStep === 7 && user && onboardingData.profileId && !isLivePreviewActive) {
+    if (currentStep === 8 && user && onboardingData.profileId && !isLivePreviewActive) {
       console.log('🔧 Auto-starting live preview for step 7');
       startLivePreview().catch(error => {
         console.error('🔧 Auto-start live preview failed:', error);
@@ -1122,7 +1129,7 @@ export default function Onboarding() {
     
     console.log('🔧 Updated onboarding data:', updatedData);
     
-    // Patch handle to database immediately
+    // Patch handle to database immediately (ensure link to this user's profile)
     console.log('🔧 Patching handle:', data.handle);
     await patchFieldToDatabase('handle', data.handle);
     
@@ -2119,7 +2126,7 @@ export default function Onboarding() {
           title: "Draft Saved",
           description: "Your progress has been saved. You can finish later.",
         });
-        navigate('/dashboard');
+        navigate(`/onboarding?step=${currentStep}`);
       } else {
         toast({
           title: "Save Failed",
@@ -2237,11 +2244,11 @@ export default function Onboarding() {
             {/* Progress Indicator */}
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
-                <span>Step {currentStep}/7</span>
+                <span>Step {currentStep}/8</span>
                 <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${(currentStep / 7) * 100}%` }}
+                    style={{ width: `${(currentStep / 8) * 100}%` }}
                   />
                 </div>
               </div>
@@ -2259,7 +2266,7 @@ export default function Onboarding() {
               return (
                 <Step1Handle 
                   onNext={handleStep1} 
-                  onBack={() => navigate('/dashboard')}
+                  onBack={() => navigate('/')}
                   existingData={{
                     handle: onboardingData.handle,
                     businessName: onboardingData.businessName,
@@ -2351,8 +2358,30 @@ export default function Onboarding() {
                   }}
                 />
               );
-            
+
             case 7:
+              return (
+                <Step6Footer
+                  onNext={handleStep7}
+                  onBack={goBack}
+                  handle={onboardingData.handle}
+                  existingData={{
+                    footerBusinessName: onboardingData.footerBusinessName,
+                    footerAddress: onboardingData.footerAddress,
+                    footerEmail: onboardingData.footerEmail,
+                    footerPhone: onboardingData.footerPhone,
+                    footerHours: onboardingData.footerHours,
+                    footerNextAvailable: onboardingData.footerNextAvailable,
+                    footerCancellationPolicy: onboardingData.footerCancellationPolicy,
+                    footerPrivacyPolicy: onboardingData.footerPrivacyPolicy,
+                    footerTermsOfService: onboardingData.footerTermsOfService,
+                    footerShowMaps: onboardingData.footerShowMaps,
+                    footerShowAttribution: onboardingData.footerShowAttribution,
+                  }}
+                />
+              );
+
+            case 8:
               return (
                 <Step7Preview 
                   onPublish={handlePublish}

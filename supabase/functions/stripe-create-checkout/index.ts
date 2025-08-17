@@ -50,8 +50,8 @@ serve(async (req) => {
       throw new Error('Profile ID is required')
     }
 
-    // @ts-expect-error - Deno environment
-    const priceId = Deno.env.get('STRIPE_PRICE_ID')
+    // deno-lint-ignore no-undef
+    const priceId = (globalThis as unknown as { Deno?: { env: { get: (k: string) => string | undefined }}}).Deno?.env.get('STRIPE_PRICE_ID')
     console.log('🔧 Price ID:', priceId)
     
     if (!priceId) {
@@ -59,7 +59,8 @@ serve(async (req) => {
     }
 
     // Get Payment Method Configuration ID from environment
-    const paymentMethodConfigurationId = Deno.env.get('STRIPE_PAYMENT_METHOD_CONFIG_ID')
+    // deno-lint-ignore no-undef
+    const paymentMethodConfigurationId = (globalThis as unknown as { Deno?: { env: { get: (k: string) => string | undefined }}}).Deno?.env.get('STRIPE_PAYMENT_METHOD_CONFIG_ID')
     console.log('🔧 Payment Method Config ID:', paymentMethodConfigurationId)
     
     if (!paymentMethodConfigurationId) {
@@ -67,15 +68,15 @@ serve(async (req) => {
     }
 
     // Get Discount ID from environment
-    const discountId = Deno.env.get('STRIPE_DISCOUNT_ID')
+    // deno-lint-ignore no-undef
+    const discountId = (globalThis as unknown as { Deno?: { env: { get: (k: string) => string | undefined }}}).Deno?.env.get('STRIPE_DISCOUNT_ID')
     console.log('🔧 Discount ID:', discountId)
 
-    // @ts-expect-error - Deno environment
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    // deno-lint-ignore no-undef
+    const stripeSecretKey = (globalThis as unknown as { Deno?: { env: { get: (k: string) => string | undefined }}}).Deno?.env.get('STRIPE_SECRET_KEY')
     console.log('🔧 Stripe Secret Key exists:', !!stripeSecretKey)
 
     // Initialize Stripe (shim)
-    // @ts-expect-error - Deno environment
     const stripe = Stripe(stripeSecretKey || '', {
       apiVersion: '2023-10-16',
     })
@@ -100,6 +101,12 @@ serve(async (req) => {
       success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
       cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
       customer_email: req.headers.get('x-user-email') || undefined,
+      // Ensure the created subscription carries the profile_id as metadata
+      subscription_data: {
+        metadata: {
+          profile_id: String(profileId),
+        },
+      },
       metadata: {
         profile_id: profileId,
       },
@@ -168,6 +175,10 @@ const Stripe = (secretKey: string, _config: Record<string, unknown>): Stripe => 
            // Put metadata at session level only
            if (params.metadata?.profile_id) {
              form.append('metadata[profile_id]', params.metadata.profile_id)
+           }
+           // Ensure subscription_data metadata is attached to the created subscription
+           if (params.subscription_data?.metadata?.profile_id) {
+             form.append('subscription_data[metadata][profile_id]', params.subscription_data.metadata.profile_id)
            }
            if (params.customer_email) {
              form.append('customer_email', params.customer_email)

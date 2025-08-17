@@ -149,6 +149,8 @@ async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload
       trial_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
       trial_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
       status: 'published', // Set profile to published
+      onboarding_completed: true,
+      onboarding_step: 8,
       updated_at: new Date().toISOString(),
     })
     .eq('id', profileId)
@@ -200,6 +202,9 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
     .update({
       subscription_status: subscription.status,
       stripe_customer_id: subscription.customer, // Keep stripe_customer_id updated
+      subscription_id: subscription.id,
+      onboarding_completed: subscription.status === 'active' ? true : undefined,
+      onboarding_step: subscription.status === 'active' ? 8 : undefined,
       status: profileStatus,
     })
     .eq('id', profileId)
