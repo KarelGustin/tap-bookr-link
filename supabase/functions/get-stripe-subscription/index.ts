@@ -21,7 +21,9 @@ serve(async (req) => {
     }
 
     // Get profile data to find subscription_id
+    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -43,6 +45,7 @@ serve(async (req) => {
     }
 
     // Get Stripe subscription data
+    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
     const stripe = new Stripe(stripeSecretKey)
 

@@ -21,7 +21,9 @@ serve(async (req) => {
     }
 
     // Get profile data to find stripe_customer_id
+    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
@@ -42,22 +44,15 @@ serve(async (req) => {
       )
     }
 
-    // Check if user has active subscription
-    if (!profile?.subscription_status || profile.subscription_status !== 'active') {
-      return new Response(
-        JSON.stringify({ error: 'No active subscription found' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
+    // Allow access to the customer portal even if subscription is not active,
+    // so users can manage/cancel or view billing history.
 
     // Get customer ID from profile or fetch from Stripe if needed
     let customerId = profile.stripe_customer_id
     
     if (!customerId && profile.subscription_id) {
       // If no customer ID in profile, fetch from Stripe using subscription ID
+      // @ts-expect-error -- Deno runtime environment
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
       const stripe = new Stripe(stripeSecretKey)
       
@@ -93,6 +88,7 @@ serve(async (req) => {
     }
 
     // Get Stripe customer portal session
+    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
     const stripe = new Stripe(stripeSecretKey)
 

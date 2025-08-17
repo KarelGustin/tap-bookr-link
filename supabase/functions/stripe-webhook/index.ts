@@ -10,6 +10,26 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Narrow Stripe payload types used by this file (avoid `any` in function params)
+type StripeSubscriptionPayload = {
+  id: string
+  customer: string
+  status: string
+  current_period_start: number
+  current_period_end: number
+  cancel_at_period_end: boolean
+  metadata?: { profile_id?: string }
+}
+
+type StripeInvoicePayload = {
+  id: string
+  subscription: string
+  amount_paid?: number
+  amount_due?: number
+  currency: string
+  due_date?: number
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -21,8 +41,8 @@ serve(async (req) => {
     if (!signature) {
       throw new Error('No Stripe signature found')
     }
-
     const body = await req.text()
+// @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
     
     if (!webhookSecret) {
@@ -36,7 +56,11 @@ serve(async (req) => {
     console.log('Received webhook event:', event.type)
 
     // Initialize Supabase client
+// @ts-expect-error -- Deno runtime environment
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+// @ts-expect-error -- Deno runtime environment
+
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -85,7 +109,8 @@ serve(async (req) => {
   }
 })
 
-async function handleSubscriptionCreated(subscription: any, supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload, supabase: any) {
   const profileId = subscription.metadata?.profile_id
   
   if (!profileId) {
@@ -136,7 +161,8 @@ async function handleSubscriptionCreated(subscription: any, supabase: any) {
   console.log(`✅ Profile ${profileId} is now published with active subscription`)
 }
 
-async function handleSubscriptionUpdated(subscription: any, supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload, supabase: any) {
   const profileId = subscription.metadata?.profile_id
   
   if (!profileId) {
@@ -181,7 +207,8 @@ async function handleSubscriptionUpdated(subscription: any, supabase: any) {
   console.log(`Subscription updated for profile ${profileId}, status: ${subscription.status}`)
 }
 
-async function handleSubscriptionDeleted(subscription: any, supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleSubscriptionDeleted(subscription: StripeSubscriptionPayload, supabase: any) {
   const profileId = subscription.metadata?.profile_id
   
   if (!profileId) {
@@ -209,7 +236,8 @@ async function handleSubscriptionDeleted(subscription: any, supabase: any) {
   console.log(`Subscription canceled for profile ${profileId}`)
 }
 
-async function handleInvoicePaymentSucceeded(invoice: any, supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleInvoicePaymentSucceeded(invoice: StripeInvoicePayload, supabase: any) {
   const subscriptionId = invoice.subscription
   
   if (!subscriptionId) return
@@ -238,7 +266,8 @@ async function handleInvoicePaymentSucceeded(invoice: any, supabase: any) {
   console.log(`Invoice payment succeeded for profile ${subscription.profile_id}`)
 }
 
-async function handleInvoicePaymentFailed(invoice: any, supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleInvoicePaymentFailed(invoice: StripeInvoicePayload, supabase: any) {
   const subscriptionId = invoice.subscription
   
   if (!subscriptionId) return
@@ -261,7 +290,7 @@ async function handleInvoicePaymentFailed(invoice: any, supabase: any) {
       amount: invoice.amount_due,
       currency: invoice.currency,
       status: 'open',
-      due_date: new Date(invoice.due_date * 1000).toISOString(),
+      due_date: invoice.due_date ? new Date(invoice.due_date * 1000).toISOString() : undefined,
     })
 
   // Schedule profile to go offline after 3 days grace period

@@ -334,14 +334,14 @@ export default function Dashboard() {
 
       if (error) {
         console.log('Error fetching Stripe subscription:', error);
-        // Fallback to profile data if Edge Function fails
+        // Fallback to profile data if Edge Function fails (no synthetic dates)
         const fallbackData = {
           id: profile.id,
           status: profile.subscription_status,
           stripe_subscription_id: profile.subscription_id,
           stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
-          current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
-          current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
+          current_period_start: profile.trial_start_date || null,
+          current_period_end: profile.trial_end_date || null,
           cancel_at_period_end: false,
         };
         console.log('Using fallback data:', fallbackData);
@@ -351,14 +351,14 @@ export default function Dashboard() {
         setSubscription(subscriptionData);
       } else {
         console.log('No subscription data returned from Edge Function');
-        // Use fallback
+        // Use fallback (no synthetic dates)
         const fallbackData = {
           id: profile.id,
           status: profile.subscription_status,
           stripe_subscription_id: profile.subscription_id,
           stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
-          current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
-          current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
+          current_period_start: profile.trial_start_date || null,
+          current_period_end: profile.trial_end_date || null,
           cancel_at_period_end: false,
         };
         setSubscription(fallbackData);
@@ -369,14 +369,14 @@ export default function Dashboard() {
       
     } catch (error) {
       console.log('Error loading subscription data:', error);
-      // Fallback to profile data
+      // Fallback to profile data (no synthetic dates)
       const fallbackData = {
         id: profile.id,
         status: profile.subscription_status,
         stripe_subscription_id: profile.subscription_id,
         stripe_customer_id: profile.stripe_customer_id || profile.subscription_id,
-        current_period_start: profile.trial_start_date || profile.created_at || new Date().toISOString(),
-        current_period_end: profile.trial_end_date || profile.updated_at || new Date().toISOString(),
+        current_period_start: profile.trial_start_date || null,
+        current_period_end: profile.trial_end_date || null,
         cancel_at_period_end: false,
       };
       console.log('Using fallback data due to error:', fallbackData);
@@ -2498,30 +2498,9 @@ export default function Dashboard() {
                           <span className="font-semibold text-gray-900">Volgende Factuur</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {(() => {
-                            // Try to get date from subscription first, then fallback to profile
-                            if (subscription?.current_period_end) {
-                              return new Date(subscription.current_period_end).toLocaleDateString('nl-NL', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              });
-                            }
-                            
-                            // Fallback: calculate next billing date from profile created_at
-                            if (profile?.created_at) {
-                              const createdDate = new Date(profile.created_at);
-                              const nextBilling = new Date(createdDate);
-                              nextBilling.setMonth(nextBilling.getMonth() + 1);
-                              return nextBilling.toLocaleDateString('nl-NL', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              });
-                            }
-                            
-                            return 'Niet beschikbaar';
-                          })()}
+                          {subscription?.current_period_end
+                            ? new Date(subscription.current_period_end).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : 'Niet beschikbaar'}
                         </p>
                       </div>
                       
@@ -2532,27 +2511,9 @@ export default function Dashboard() {
                           <span className="font-semibold text-gray-900">Gestart Op</span>
                         </div>
                         <p className="text-sm text-gray-600">
-                          {(() => {
-                            // Try to get date from subscription first, then fallback to profile
-                            if (subscription?.current_period_start) {
-                              return new Date(subscription.current_period_start).toLocaleDateString('nl-NL', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              });
-                            }
-                            
-                            // Fallback: use profile created_at as subscription start
-                            if (profile?.created_at) {
-                              return new Date(profile.created_at).toLocaleDateString('nl-NL', {
-                                day: 'numeric',
-                                month: 'long',
-                                year: 'numeric'
-                              });
-                            }
-                            
-                            return 'Niet beschikbaar';
-                          })()}
+                          {subscription?.current_period_start
+                            ? new Date(subscription.current_period_start).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : 'Niet beschikbaar'}
                         </p>
                       </div>
                     </div>
