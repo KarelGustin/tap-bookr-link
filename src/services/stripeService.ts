@@ -103,8 +103,11 @@ export class StripeService {
    */
   static async redirectToCustomerPortal(params: StripeCustomerPortalParams): Promise<void> {
     try {
-      const { url } = await this.createCustomerPortalSession(params)
-      window.location.href = url
+      // Use fixed Stripe Customer Portal login URL provided by project owner
+      // Open in a new tab to avoid losing the current session/context
+      void params
+      const portalUrl = 'https://billing.stripe.com/p/login/6oU28rfsE8nG5aUaSU7kc00'
+      window.open(portalUrl, '_blank', 'noopener,noreferrer')
     } catch (error) {
       console.error('Error redirecting to customer portal:', error)
       throw error
