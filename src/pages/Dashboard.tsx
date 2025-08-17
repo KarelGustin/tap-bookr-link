@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
@@ -190,7 +192,15 @@ export default function Dashboard() {
     footerAddress: '',
     footerEmail: '',
     footerPhone: '',
-    footerHours: '',
+    footerHours: {
+      monday: { open: '09:00', close: '17:00', closed: false },
+      tuesday: { open: '09:00', close: '17:00', closed: false },
+      wednesday: { open: '09:00', close: '17:00', closed: false },
+      thursday: { open: '09:00', close: '17:00', closed: false },
+      friday: { open: '09:00', close: '17:00', closed: false },
+      saturday: { open: '10:00', close: '16:00', closed: false },
+      sunday: { open: '10:00', close: '16:00', closed: true },
+    } as Record<string, { open: string; close: string; closed: boolean }>,
     footerNextAvailable: '',
     footerCancellationPolicy: '',
     footerPrivacyPolicy: '',
@@ -452,6 +462,7 @@ export default function Dashboard() {
     if (!profile) return;
     const b: BannerPartial = (profile.banner ?? {}) as BannerPartial;
     const about = (profile.about ?? {}) as { [key: string]: unknown };
+    const footer = (profile.footer ?? {}) as { [key: string]: unknown };
 
     const existingMediaUrls = getExistingMediaUrls();
 
@@ -480,18 +491,77 @@ export default function Dashboard() {
       aboutDescription: typeof about.description === 'string' ? (about.description as string) : '',
       aboutAlignment: typeof about.alignment === 'string' ? (about.alignment as 'center' | 'left') : 'center',
 
-      // Footer settings
-      footerBusinessName: typeof about.businessName === 'string' ? (about.businessName as string) : profile.name || '',
-      footerAddress: typeof about.address === 'string' ? (about.address as string) : '',
-      footerEmail: typeof about.email === 'string' ? (about.email as string) : '',
-      footerPhone: typeof about.phone === 'string' ? (about.phone as string) : '',
-      footerHours: typeof about.hours === 'string' ? (about.hours as string) : '',
-      footerNextAvailable: typeof about.nextAvailable === 'string' ? (about.nextAvailable as string) : '',
-      footerCancellationPolicy: typeof about.cancellationPolicy === 'string' ? (about.cancellationPolicy as string) : 'Plans changed? Reschedule or cancel 24h in advance to avoid a fee.',
-      footerPrivacyPolicy: typeof about.privacyPolicy === 'string' ? (about.privacyPolicy as string) : 'We only use your details to manage your appointment. No spam.',
-      footerTermsOfService: typeof about.termsOfService === 'string' ? (about.termsOfService as string) : 'Secure booking handled by top booking platforms.',
-      footerShowMaps: typeof about.showMaps === 'boolean' ? (about.showMaps as boolean) : true,
-      footerShowAttribution: typeof about.showAttribution === 'boolean' ? (about.showAttribution as boolean) : true,
+      // Footer settings (prefer dedicated footer JSON, fallback to about JSON, then profile/name defaults)
+      footerBusinessName:
+        (profile as unknown as Record<string, unknown>).footer_business_name as string
+          ?? (typeof footer.businessName === 'string' ? (footer.businessName as string) : undefined)
+          ?? (typeof about.businessName === 'string' ? (about.businessName as string) : undefined)
+          ?? profile.name
+          ?? '',
+      footerAddress:
+        (profile as unknown as Record<string, unknown>).footer_address as string
+          ?? (typeof footer.address === 'string' ? (footer.address as string) : undefined)
+          ?? (typeof about.address === 'string' ? (about.address as string) : undefined)
+          ?? '',
+      footerEmail:
+        (profile as unknown as Record<string, unknown>).footer_email as string
+          ?? (typeof footer.email === 'string' ? (footer.email as string) : undefined)
+          ?? (typeof about.email === 'string' ? (about.email as string) : undefined)
+          ?? '',
+      footerPhone:
+        (profile as unknown as Record<string, unknown>).footer_phone as string
+          ?? (typeof footer.phone === 'string' ? (footer.phone as string) : undefined)
+          ?? (typeof about.phone === 'string' ? (about.phone as string) : undefined)
+          ?? '',
+      footerHours: (() => {
+        const col = (profile as unknown as Record<string, unknown>).footer_hours;
+        if (col && typeof col === 'object') return col as Record<string, { open: string; close: string; closed: boolean }>;
+        if (footer && typeof footer === 'object' && 'hours' in footer && typeof (footer as Record<string, unknown>).hours === 'object') {
+          return (footer as Record<string, unknown>).hours as Record<string, { open: string; close: string; closed: boolean }>;
+        }
+        if (about && typeof about === 'object' && 'hours' in about && typeof (about as Record<string, unknown>).hours === 'object') {
+          return (about as Record<string, unknown>).hours as Record<string, { open: string; close: string; closed: boolean }>;
+        }
+        return {
+          monday: { open: '09:00', close: '17:00', closed: false },
+          tuesday: { open: '09:00', close: '17:00', closed: false },
+          wednesday: { open: '09:00', close: '17:00', closed: false },
+          thursday: { open: '09:00', close: '17:00', closed: false },
+          friday: { open: '09:00', close: '17:00', closed: false },
+          saturday: { open: '10:00', close: '16:00', closed: false },
+          sunday: { open: '10:00', close: '16:00', closed: true },
+        } as Record<string, { open: string; close: string; closed: boolean }>;
+      })(),
+      footerNextAvailable:
+        (profile as unknown as Record<string, unknown>).footer_next_available as string
+          ?? (typeof footer.nextAvailable === 'string' ? (footer.nextAvailable as string) : undefined)
+          ?? (typeof about.nextAvailable === 'string' ? (about.nextAvailable as string) : undefined)
+          ?? '',
+      footerCancellationPolicy:
+        (profile as unknown as Record<string, unknown>).footer_cancellation_policy as string
+          ?? (typeof footer.cancellationPolicy === 'string' ? (footer.cancellationPolicy as string) : undefined)
+          ?? (typeof about.cancellationPolicy === 'string' ? (about.cancellationPolicy as string) : undefined)
+          ?? 'Plans changed? Reschedule or cancel 24h in advance to avoid a fee.',
+      footerPrivacyPolicy:
+        (profile as unknown as Record<string, unknown>).footer_privacy_policy as string
+          ?? (typeof footer.privacyPolicy === 'string' ? (footer.privacyPolicy as string) : undefined)
+          ?? (typeof about.privacyPolicy === 'string' ? (about.privacyPolicy as string) : undefined)
+          ?? 'We only use your details to manage your appointment. No spam.',
+      footerTermsOfService:
+        (profile as unknown as Record<string, unknown>).footer_terms_of_service as string
+          ?? (typeof footer.termsOfService === 'string' ? (footer.termsOfService as string) : undefined)
+          ?? (typeof about.termsOfService === 'string' ? (about.termsOfService as string) : undefined)
+          ?? 'Secure booking handled by top booking platforms.',
+      footerShowMaps:
+        ((profile as unknown as Record<string, unknown>).footer_show_maps as boolean)
+          ?? (typeof footer.showMaps === 'boolean' ? (footer.showMaps as boolean) : undefined)
+          ?? (typeof about.showMaps === 'boolean' ? (about.showMaps as boolean) : undefined)
+          ?? true,
+      footerShowAttribution:
+        ((profile as unknown as Record<string, unknown>).footer_show_attribution as boolean)
+          ?? (typeof footer.showAttribution === 'boolean' ? (footer.showAttribution as boolean) : undefined)
+          ?? (typeof about.showAttribution === 'boolean' ? (about.showAttribution as boolean) : undefined)
+          ?? true,
 
       socials: Array.isArray(profile.socials) ? (profile.socials as SocialItem[]) : [],
 
@@ -764,18 +834,6 @@ export default function Dashboard() {
         description: design.aboutDescription || null,
         alignment: design.aboutAlignment,
         testimonials: existingAbout.testimonials || null,
-        // Footer settings
-        businessName: design.footerBusinessName || null,
-        address: design.footerAddress || null,
-        email: design.footerEmail || null,
-        phone: design.footerPhone || null,
-        hours: design.footerHours || null,
-        nextAvailable: design.footerNextAvailable || null,
-        cancellationPolicy: design.footerCancellationPolicy || null,
-        privacyPolicy: design.footerPrivacyPolicy || null,
-        termsOfService: design.footerTermsOfService || null,
-        showMaps: design.footerShowMaps,
-        showAttribution: design.footerShowAttribution,
       } as Json;
 
       const { error } = await supabase
@@ -794,6 +852,64 @@ export default function Dashboard() {
       const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
       if (refreshed) setProfile(refreshed as Profile);
       setBaseline(dirtySnapshot(design));
+    } catch (e) {
+      toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
+    } finally {
+      setDesignLoading(false);
+    }
+  };
+
+  const saveFooter = async () => {
+    if (!user || !profile) return;
+    try {
+      setDesignLoading(true);
+
+      const footer = {
+        businessName: design.footerBusinessName || null,
+        address: design.footerAddress || null,
+        email: design.footerEmail || null,
+        phone: design.footerPhone || null,
+        hours: design.footerHours || null,
+        nextAvailable: design.footerNextAvailable || null,
+        cancellationPolicy: design.footerCancellationPolicy || null,
+        privacyPolicy: design.footerPrivacyPolicy || null,
+        termsOfService: design.footerTermsOfService || null,
+        showMaps: design.footerShowMaps,
+        showAttribution: design.footerShowAttribution,
+      } as Json;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          // Write to the same columns onboarding uses
+          footer_business_name: design.footerBusinessName || null,
+          footer_address: design.footerAddress || null,
+          footer_email: design.footerEmail || null,
+          footer_phone: design.footerPhone || null,
+          footer_hours: design.footerHours || null,
+          footer_next_available: design.footerNextAvailable || null,
+          footer_cancellation_policy: design.footerCancellationPolicy || null,
+          footer_privacy_policy: design.footerPrivacyPolicy || null,
+          footer_terms_of_service: design.footerTermsOfService || null,
+          footer_show_maps: design.footerShowMaps,
+          footer_show_attribution: design.footerShowAttribution,
+          // Keep JSON footer in sync for backward-compatible readers
+          footer: footer as Json,
+          // Optionally mirror businessName to profile.name if provided
+          name: design.footerBusinessName || profile.name || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', profile.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast({ title: 'Footer saved', description: 'Your footer settings were saved.' });
+
+      // Refresh profile
+      const { data: refreshed } = await supabase.from('profiles').select('*').eq('id', profile.id).eq('user_id', user.id).single();
+      if (refreshed) setProfile(refreshed as Profile);
+      setBaseline(dirtySnapshot(design));
+      setPreviewKey(prev => prev + 1);
     } catch (e) {
       toast({ title: 'Save failed', description: 'Please try again.', variant: 'destructive' });
     } finally {
@@ -2259,7 +2375,7 @@ export default function Dashboard() {
                             <p className="text-sm text-gray-600">Configureer je footer informatie en beleid</p>
                           </div>
                         </div>
-                        <Button onClick={saveAbout} disabled={designLoading} size="sm">
+                        <Button onClick={saveFooter} disabled={designLoading} size="sm">
                           {designLoading ? 'Opslaan…' : 'Footer Opslaan'}
                         </Button>
                       </div>
@@ -2321,7 +2437,8 @@ export default function Dashboard() {
                                         <span className="text-gray-900">{suggestion}</span>
                                       </div>
                                     </button>
-                                  ))}
+                                  ))} 
+                                  
                                 </div>
                               )}
                             </div>
@@ -2350,11 +2467,90 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <Label>Openingstijden</Label>
-                            <Input 
-                              placeholder="Ma-Vr 9:00-18:00, Za 10:00-16:00"
-                              value={design.footerHours}
-                              onChange={(e) => setDesign((d) => ({ ...d, footerHours: e.target.value }))}
-                            />
+                            <div className="space-y-3 mt-1">
+                              <Tabs defaultValue="monday" className="w-full">
+                                <TabsList className="grid w-full grid-cols-7">
+                                  <TabsTrigger value="monday">Ma</TabsTrigger>
+                                  <TabsTrigger value="tuesday">Di</TabsTrigger>
+                                  <TabsTrigger value="wednesday">Wo</TabsTrigger>
+                                  <TabsTrigger value="thursday">Do</TabsTrigger>
+                                  <TabsTrigger value="friday">Vr</TabsTrigger>
+                                  <TabsTrigger value="saturday">Za</TabsTrigger>
+                                  <TabsTrigger value="sunday">Zo</TabsTrigger>
+                                </TabsList>
+
+                                {Object.entries(design.footerHours).map(([day, hours]) => (
+                                  <TabsContent key={day} value={day} className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="text-sm font-medium">
+                                        {day === 'monday' && 'Maandag'}
+                                        {day === 'tuesday' && 'Dinsdag'}
+                                        {day === 'wednesday' && 'Woensdag'}
+                                        {day === 'thursday' && 'Donderdag'}
+                                        {day === 'friday' && 'Vrijdag'}
+                                        {day === 'saturday' && 'Zaterdag'}
+                                        {day === 'sunday' && 'Zondag'}
+                                      </h3>
+                                      <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={`${day}-closed`}
+                                          checked={hours.closed}
+                                          onCheckedChange={(checked) =>
+                                            setDesign((d) => ({
+                                              ...d,
+                                              footerHours: {
+                                                ...d.footerHours,
+                                                [day]: { ...d.footerHours[day], closed: Boolean(checked) }
+                                              }
+                                            }))
+                                          }
+                                        />
+                                        <Label htmlFor={`${day}-closed`}>Gesloten</Label>
+                                      </div>
+                                    </div>
+
+                                    {!hours.closed && (
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <Label htmlFor={`${day}-open`}>Openingstijd</Label>
+                                          <Input
+                                            id={`${day}-open`}
+                                            type="time"
+                                            value={hours.open}
+                                            onChange={(e) =>
+                                              setDesign((d) => ({
+                                                ...d,
+                                                footerHours: {
+                                                  ...d.footerHours,
+                                                  [day]: { ...d.footerHours[day], open: e.target.value }
+                                                }
+                                              }))
+                                            }
+                                          />
+                                        </div>
+                                        <div>
+                                          <Label htmlFor={`${day}-close`}>Sluitingstijd</Label>
+                                          <Input
+                                            id={`${day}-close`}
+                                            type="time"
+                                            value={hours.close}
+                                            onChange={(e) =>
+                                              setDesign((d) => ({
+                                                ...d,
+                                                footerHours: {
+                                                  ...d.footerHours,
+                                                  [day]: { ...d.footerHours[day], close: e.target.value }
+                                                }
+                                              }))
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    )}
+                                  </TabsContent>
+                                ))}
+                              </Tabs>
+                            </div>
                           </div>
                           {/* <div>
                             <Label>Volgende Beschikbaar</Label>
