@@ -5,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-email',
 }
 
 serve(async (req) => {
@@ -15,22 +15,26 @@ serve(async (req) => {
 
   try {
     const { profileId, returnUrl, section } = await req.json()
+    const userEmail = req.headers.get('x-user-email') || undefined
     
     if (!profileId) {
       throw new Error('Profile ID is required')
     }
 
-    // Get profile data to find stripe_customer_id
     // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    // @ts-expect-error -- Deno runtime environment
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const stripe = new Stripe(stripeSecretKey)
     
+    // Read profile details
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('stripe_customer_id, subscription_status, subscription_id')
+      .select('stripe_customer_id, subscription_id')
       .eq('id', profileId)
       .single()
 
@@ -44,31 +48,53 @@ serve(async (req) => {
       )
     }
 
-    // Allow access to the customer portal even if subscription is not active,
-    // so users can manage/cancel or view billing history.
+    let customerId = profile?.stripe_customer_id as string | null
 
-    // Get customer ID from profile or fetch from Stripe if needed
-    let customerId = profile.stripe_customer_id
-    
-    if (!customerId && profile.subscription_id) {
-      // If no customer ID in profile, fetch from Stripe using subscription ID
-      // @ts-expect-error -- Deno runtime environment
-      const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
-      const stripe = new Stripe(stripeSecretKey)
-      
+    // If no customer on profile, try to derive from subscription
+    if (!customerId && profile?.subscription_id) {
       try {
         const subscription = await stripe.subscriptions.retrieve(profile.subscription_id)
-        customerId = subscription.customer
-        
-        // Update profile with customer ID for future use
+        customerId = subscription.customer as string
+
+        if (customerId) {
+          await supabase
+            .from('profiles')
+            .update({ stripe_customer_id: customerId })
+            .eq('id', profileId)
+        }
+      } catch (e) {
+        console.error('Error retrieving subscription from Stripe:', e)
+        // Fall through to customer creation
+      }
+    }
+
+    // If still no customer, create one using the user's email
+    if (!customerId) {
+      if (!userEmail) {
+        return new Response(
+          JSON.stringify({ error: 'No Stripe customer found and no user email provided' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      try {
+        const customer = await stripe.customers.create({
+          email: userEmail,
+          metadata: { profile_id: profileId },
+        })
+        customerId = customer.id
+
         await supabase
           .from('profiles')
           .update({ stripe_customer_id: customerId })
           .eq('id', profileId)
-      } catch (stripeError) {
-        console.error('Error fetching customer ID from Stripe:', stripeError)
+      } catch (e) {
+        console.error('Error creating Stripe customer:', e)
         return new Response(
-          JSON.stringify({ error: 'Unable to fetch customer information' }),
+          JSON.stringify({ error: 'Unable to create Stripe customer' }),
           { 
             status: 500, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -77,36 +103,15 @@ serve(async (req) => {
       }
     }
 
-    if (!customerId) {
-      return new Response(
-        JSON.stringify({ error: 'No Stripe customer found' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Get Stripe customer portal session
-    // @ts-expect-error -- Deno runtime environment
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
-    const stripe = new Stripe(stripeSecretKey)
-
-    // Prepare portal session parameters
-    const portalParams: {
-      customer: string;
-      return_url: string;
-    } = {
-      customer: customerId,
+    // Prepare portal session parameters (allow regardless of subscription status)
+    const portalParams: { customer: string; return_url: string } = {
+      customer: customerId!,
       return_url: returnUrl || `${req.headers.get('origin')}/dashboard`,
     }
 
-    // Add section-specific parameters
     if (section === 'cancel') {
-      // For cancellation, focus on subscription management
       portalParams.return_url = `${returnUrl || req.headers.get('origin')}/dashboard?cancellation=initiated`
     } else if (section === 'billing') {
-      // For billing, focus on invoice history
       portalParams.return_url = `${returnUrl || req.headers.get('origin')}/dashboard?billing=viewed`
     }
 
@@ -123,7 +128,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -132,7 +137,7 @@ serve(async (req) => {
   }
 })
 
-// Stripe class for API calls
+// Minimal Stripe API wrapper
 class Stripe {
   private secretKey: string
   private baseURL = 'https://api.stripe.com/v1'
@@ -150,11 +155,29 @@ class Stripe {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
+      if (!response.ok) throw new Error(`Stripe API error: ${response.status}`)
+      return await response.json()
+    }
+  }
 
-      if (!response.ok) {
-        throw new Error(`Stripe API error: ${response.status}`)
+  customers = {
+    create: async (params: { email?: string; metadata?: Record<string, string> }) => {
+      const formData = new URLSearchParams()
+      if (params.email) formData.append('email', params.email)
+      if (params.metadata) {
+        for (const [k, v] of Object.entries(params.metadata)) {
+          formData.append(`metadata[${k}]`, String(v))
+        }
       }
-
+      const response = await fetch(`${this.baseURL}/customers`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.secretKey}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formData,
+      })
+      if (!response.ok) throw new Error(`Stripe API error: ${response.status}`)
       return await response.json()
     }
   }
