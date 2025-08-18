@@ -59,6 +59,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "invoices_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "invoices_subscription_id_fkey"
             columns: ["subscription_id"]
             isOneToOne: false
@@ -111,6 +118,13 @@ export type Database = {
           type?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "payment_methods_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payment_methods_subscription_id_fkey"
             columns: ["subscription_id"]
@@ -276,13 +290,13 @@ export type Database = {
         Row: {
           cancel_at_period_end: boolean | null
           created_at: string | null
-          current_period_end: string | null
-          current_period_start: string | null
+          current_period_end: string
+          current_period_start: string
           id: string
-          profile_id: string | null
-          status: string | null
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
+          profile_id: string
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
           trial_end: string | null
           trial_start: string | null
           updated_at: string | null
@@ -290,13 +304,13 @@ export type Database = {
         Insert: {
           cancel_at_period_end?: boolean | null
           created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
+          current_period_end: string
+          current_period_start: string
           id?: string
-          profile_id?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
+          profile_id: string
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
           trial_end?: string | null
           trial_start?: string | null
           updated_at?: string | null
@@ -304,13 +318,13 @@ export type Database = {
         Update: {
           cancel_at_period_end?: boolean | null
           created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
-          profile_id?: string | null
-          status?: string | null
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
+          profile_id?: string
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
           trial_end?: string | null
           trial_start?: string | null
           updated_at?: string | null
@@ -323,104 +337,11 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "subscriptions_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          about: Json | null
-          accent_color: string | null
-          avatar_url: string | null
-          banner: Json | null
-          booking_mode: string | null
-          booking_url: string | null
-          category: string | null
-          created_at: string | null
-          footer_business_name: string | null
-          footer_cancellation_policy: string | null
-          footer_hours: Json | null
-          footer_next_available: string | null
-          footer_privacy_policy: string | null
-          footer_show_attribution: boolean | null
-          footer_show_maps: boolean | null
-          footer_terms_of_service: string | null
-          handle: string | null
-          id: string | null
-          media: Json | null
-          name: string | null
-          slogan: string | null
-          socials: Json | null
-          status: string | null
-          testimonials: Json | null
-          theme_mode: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          about?: Json | null
-          accent_color?: string | null
-          avatar_url?: string | null
-          banner?: Json | null
-          booking_mode?: string | null
-          booking_url?: string | null
-          category?: string | null
-          created_at?: string | null
-          footer_business_name?: string | null
-          footer_cancellation_policy?: string | null
-          footer_hours?: Json | null
-          footer_next_available?: string | null
-          footer_privacy_policy?: string | null
-          footer_show_attribution?: boolean | null
-          footer_show_maps?: boolean | null
-          footer_terms_of_service?: string | null
-          handle?: string | null
-          id?: string | null
-          media?: Json | null
-          name?: string | null
-          slogan?: string | null
-          socials?: Json | null
-          status?: string | null
-          testimonials?: Json | null
-          theme_mode?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          about?: Json | null
-          accent_color?: string | null
-          avatar_url?: string | null
-          banner?: Json | null
-          booking_mode?: string | null
-          booking_url?: string | null
-          category?: string | null
-          created_at?: string | null
-          footer_business_name?: string | null
-          footer_cancellation_policy?: string | null
-          footer_hours?: Json | null
-          footer_next_available?: string | null
-          footer_privacy_policy?: string | null
-          footer_show_attribution?: boolean | null
-          footer_show_maps?: boolean | null
-          footer_terms_of_service?: string | null
-          handle?: string | null
-          id?: string | null
-          media?: Json | null
-          name?: string | null
-          slogan?: string | null
-          socials?: Json | null
-          status?: string | null
-          testimonials?: Json | null
-          theme_mode?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       is_handle_available: {
