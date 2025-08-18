@@ -281,7 +281,7 @@ export const Step7Preview = ({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
+                onClick={() => window.location.href = `https://tapbookr.com/${handle}`}
                 disabled={!isLivePreviewActive}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />

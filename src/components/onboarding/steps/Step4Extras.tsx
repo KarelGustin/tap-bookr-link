@@ -37,6 +37,7 @@ interface Step4ExtrasProps {
     mediaFiles?: File[];
     whatsappNumber?: string;
     // Support different media formats from DB - flexible typing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     media?: any;
     // Add fields from Step4PersonalImage
     aboutTitle?: string;

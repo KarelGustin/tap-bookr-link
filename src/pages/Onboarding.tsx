@@ -158,6 +158,7 @@ const Onboarding = () => {
 
         if (existingProfile) {
           // Extract about data
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const aboutData = existingProfile.about as any;
           
           setOnboardingData(prev => ({
@@ -173,20 +174,25 @@ const Onboarding = () => {
             useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
             whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
             avatarUrl: existingProfile.avatar_url || prev.avatarUrl,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             banner: existingProfile.banner as any || prev.banner,
             aboutTitle: aboutData?.title || prev.aboutTitle,
             aboutDescription: aboutData?.description || prev.aboutDescription,
             accentColor: existingProfile.accent_color || prev.accentColor,
             themeMode: (existingProfile.theme_mode as 'light' | 'dark') || prev.themeMode,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             socials: existingProfile.socials as any || prev.socials,
             socialLinks: aboutData?.socialLinks || prev.socialLinks,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             media: existingProfile.media as any || prev.media,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             testimonials: existingProfile.testimonials as any || prev.testimonials,
             footerBusinessName: existingProfile.footer_business_name || prev.footerBusinessName,
             footerEmail: existingProfile.footer_email || prev.footerEmail,
             footerPhone: existingProfile.footer_phone || prev.footerPhone,
             footerAddress: existingProfile.footer_address || prev.footerAddress,
-            footerHours: existingProfile.footer_hours as any || prev.footerHours,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            footerHours: existingProfile.footer_hours as any || prev.footerHours, 
             footerNextAvailable: existingProfile.footer_next_available || prev.footerNextAvailable,
             footerCancellationPolicy: existingProfile.footer_cancellation_policy || prev.footerCancellationPolicy,
             footerPrivacyPolicy: existingProfile.footer_privacy_policy || prev.footerPrivacyPolicy,
@@ -236,6 +242,7 @@ const Onboarding = () => {
   }, [currentStep, updateStep, navigate]);
 
   // Database update functions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patchFieldToDatabase = async (field: string, value: any) => {
     if (!onboardingData.profileId) return;
 
