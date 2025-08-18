@@ -7,6 +7,7 @@ import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, AlertCircle, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Step1HandleProps {
   onNext: (data: { 
@@ -33,6 +34,7 @@ interface HandleStatus {
 
 export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }: Step1HandleProps) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [userHandle, setUserHandle] = useState<string>('');
   const [handle, setHandle] = useState(existingData?.handle || '');
   const [businessName, setBusinessName] = useState(existingData?.businessName || '');
@@ -108,32 +110,43 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     setHandleStatus(prev => ({ ...prev, checking: true }));
 
     try {
+      // Check of handle al bestaat in database
       const { data: existingProfile, error } = await supabase
         .from('profiles')
-        .select('handle')
+        .select('id, handle, user_id')
         .eq('handle', handleToCheck.toLowerCase())
         .single();
 
       if (error && error.code === 'PGRST116') {
-        // Handle is available
+        // Handle is beschikbaar
         setHandleStatus({
           available: true,
           checking: false,
           suggestions: [],
         });
       } else if (existingProfile) {
-        // Handle is taken, generate suggestions
-        const suggestions = [
-          `${handleToCheck}-nl`,
-          `${handleToCheck}-amsterdam`,
-          `${handleToCheck}-${Math.floor(Math.random() * 999) + 1}`,
-        ];
+        // Handle is al in gebruik
+        if (existingProfile.user_id === user?.id) {
+          // Dit is de eigen handle van de gebruiker
+          setHandleStatus({
+            available: true,
+            checking: false,
+            suggestions: [],
+          });
+        } else {
+          // Handle is door iemand anders in gebruik
+          const suggestions = [
+            `${handleToCheck}-nl`,
+            `${handleToCheck}-amsterdam`,
+            `${handleToCheck}-${Math.floor(Math.random() * 999) + 1}`,
+          ];
 
-        setHandleStatus({
-          available: false,
-          checking: false,
-          suggestions,
-        });
+          setHandleStatus({
+            available: false,
+            checking: false,
+            suggestions,
+          });
+        }
       }
     } catch (error) {
       console.error('Error checking handle availability:', error);

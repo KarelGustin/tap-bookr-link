@@ -30,6 +30,19 @@ type StripeInvoicePayload = {
   due_date?: number
 }
 
+type StripeCustomerPayload = {
+  id: string
+  email?: string
+  metadata?: { profile_id?: string }
+}
+
+type StripeCheckoutSessionPayload = {
+  id: string
+  customer?: string
+  subscription?: string
+  metadata?: { profile_id?: string }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -65,6 +78,14 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     switch (event.type) {
+      case 'checkout.session.completed':
+        await handleCheckoutSessionCompleted(event.data.object, supabase)
+        break
+        
+      case 'customer.created':
+        await handleCustomerCreated(event.data.object, supabase)
+        break
+        
       case 'customer.subscription.created':
         await handleSubscriptionCreated(event.data.object, supabase)
         break
@@ -122,7 +143,7 @@ async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload
 
   // Create subscription record
   const { error: subError } = await supabase
-    .from('subscriptions')
+    .from('subscriptions') // Verwijder 'private.'
     .insert({
       profile_id: profileId,
       stripe_subscription_id: subscription.id,
@@ -131,6 +152,8 @@ async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
+      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
     })
 
   if (subError) {
@@ -142,15 +165,7 @@ async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload
   const { error: profileError } = await supabase
     .from('profiles')
     .update({
-      subscription_status: 'active',
-      subscription_id: subscription.id,
-      stripe_customer_id: subscription.customer, // Add stripe_customer_id
-      // Store subscription dates for better frontend display
-      trial_start_date: new Date(subscription.current_period_start * 1000).toISOString(),
-      trial_end_date: new Date(subscription.current_period_end * 1000).toISOString(),
-      status: 'published', // Set profile to published
-      onboarding_completed: true,
-      onboarding_step: 8,
+      status: 'published', // Alleen publieke status
       updated_at: new Date().toISOString(),
     })
     .eq('id', profileId)
@@ -174,7 +189,7 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
 
   // Update subscription record
   const { error } = await supabase
-    .from('subscriptions')
+    .from('private.subscriptions') // Privé schema
     .update({
       status: subscription.status,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
@@ -221,24 +236,42 @@ async function handleSubscriptionDeleted(subscription: StripeSubscriptionPayload
     return
   }
 
+  console.log(`🔧 Processing subscription deleted for profile ${profileId}`)
+
   // Update subscription record
-  await supabase
-    .from('subscriptions')
+  const { error: subError } = await supabase
+    .from('private.subscriptions') // Privé schema
     .update({
       status: 'canceled',
+      updated_at: new Date().toISOString(),
     })
     .eq('stripe_subscription_id', subscription.id)
 
-  // Set profile to draft (offline)
-  await supabase
+  if (subError) {
+    console.error('Error updating subscription record:', subError)
+  }
+
+  // Set profile to draft (offline) and clear subscription data
+  const { error: profileError } = await supabase
     .from('profiles')
     .update({
       subscription_status: 'canceled',
       status: 'draft',
+      // Clear subscription-related fields
+      subscription_id: null,
+      stripe_customer_id: null,
+      trial_start_date: null,
+      trial_end_date: null,
+      grace_period_ends_at: null,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', profileId)
 
-  console.log(`Subscription canceled for profile ${profileId}`)
+  if (profileError) {
+    console.error('Error updating profile status:', profileError)
+  } else {
+    console.log(`✅ Profile ${profileId} set to draft and subscription data cleared`)
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,17 +280,22 @@ async function handleInvoicePaymentSucceeded(invoice: StripeInvoicePayload, supa
   
   if (!subscriptionId) return
 
+  console.log(`🔧 Processing invoice payment succeeded for subscription ${subscriptionId}`)
+
   // Get subscription to find profile_id
-  const { data: subscription } = await supabase
-    .from('subscriptions')
+  const { data: subscription, error: subError } = await supabase
+    .from('private.subscriptions') // Privé schema
     .select('profile_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single()
 
-  if (!subscription) return
+  if (subError || !subscription) {
+    console.error('Error finding subscription for invoice:', subError)
+    return
+  }
 
   // Create invoice record
-  await supabase
+  const { error: invoiceError } = await supabase
     .from('invoices')
     .insert({
       profile_id: subscription.profile_id,
@@ -268,7 +306,25 @@ async function handleInvoicePaymentSucceeded(invoice: StripeInvoicePayload, supa
       paid_at: new Date().toISOString(),
     })
 
-  console.log(`Invoice payment succeeded for profile ${subscription.profile_id}`)
+  if (invoiceError) {
+    console.error('Error creating invoice record:', invoiceError)
+  }
+
+  // Update profile status to active if payment succeeded
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      subscription_status: 'active',
+      status: 'published',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', subscription.profile_id)
+
+  if (profileError) {
+    console.error('Error updating profile status:', profileError)
+  } else {
+    console.log(`✅ Profile ${subscription.profile_id} status updated to active after successful payment`)
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,17 +333,22 @@ async function handleInvoicePaymentFailed(invoice: StripeInvoicePayload, supabas
   
   if (!subscriptionId) return
 
+  console.log(`🔧 Processing invoice payment failed for subscription ${subscriptionId}`)
+
   // Get subscription to find profile_id
-  const { data: subscription } = await supabase
-    .from('subscriptions')
+  const { data: subscription, error: subError } = await supabase
+    .from('private.subscriptions') // Privé schema
     .select('profile_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single()
 
-  if (!subscription) return
+  if (subError || !subscription) {
+    console.error('Error finding subscription for invoice:', subError)
+    return
+  }
 
   // Create invoice record
-  await supabase
+  const { error: invoiceError } = await supabase
     .from('invoices')
     .insert({
       profile_id: subscription.profile_id,
@@ -298,19 +359,118 @@ async function handleInvoicePaymentFailed(invoice: StripeInvoicePayload, supabas
       due_date: invoice.due_date ? new Date(invoice.due_date * 1000).toISOString() : undefined,
     })
 
+  if (invoiceError) {
+    console.error('Error creating invoice record:', invoiceError)
+  }
+
   // Schedule profile to go offline after 3 days grace period
   const gracePeriodEnd = new Date()
   gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 3)
   
-  await supabase
+  const { error: profileError } = await supabase
     .from('profiles')
     .update({
       subscription_status: 'past_due',
       grace_period_ends_at: gracePeriodEnd.toISOString(),
+      updated_at: new Date().toISOString(),
     })
     .eq('id', subscription.profile_id)
 
-  console.log(`Invoice payment failed for profile ${subscription.profile_id}, grace period until ${gracePeriodEnd.toISOString()}`)
+  if (profileError) {
+    console.error('Error updating profile grace period:', profileError)
+  } else {
+    console.log(`✅ Profile ${subscription.profile_id} grace period set until ${gracePeriodEnd.toISOString()}`)
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleCheckoutSessionCompleted(session: StripeCheckoutSessionPayload, supabase: any) {
+  const profileId = session.metadata?.profile_id
+  
+  if (!profileId) {
+    console.error('No profile_id in checkout session metadata')
+    return
+  }
+
+  console.log(`🔧 Processing checkout session completed for profile ${profileId}`)
+
+  // Update profile with customer ID from checkout session
+  if (session.customer) {
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        stripe_customer_id: session.customer,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', profileId)
+
+    if (profileError) {
+      console.error('Error updating profile with customer ID:', profileError)
+    } else {
+      console.log(`✅ Profile ${profileId} updated with customer ID from checkout`)
+    }
+  }
+
+  // If there's a subscription in the checkout session, process it
+  if (session.subscription) {
+    console.log(`🔧 Checkout session contains subscription ${session.subscription}`)
+    
+    // Get the full subscription object from Stripe
+    try {
+      // @ts-expect-error -- Deno runtime environment
+      const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+      if (!stripeSecretKey) {
+        console.error('STRIPE_SECRET_KEY not configured')
+        return
+      }
+      
+      const stripe = new Stripe(stripeSecretKey)
+      const subscription = await stripe.subscriptions.retrieve(session.subscription)
+      
+      // Process the subscription as if it was created
+      const subscriptionPayload: StripeSubscriptionPayload = {
+        id: subscription.id,
+        customer: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id || '',
+        status: subscription.status,
+        current_period_start: subscription.current_period_start,
+        current_period_end: subscription.current_period_end,
+        cancel_at_period_end: !!subscription.cancel_at_period_end,
+        metadata: { profile_id: profileId },
+      }
+      
+      await handleSubscriptionCreated(subscriptionPayload, supabase)
+      
+    } catch (error) {
+      console.error('Error processing subscription from checkout session:', error)
+    }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function handleCustomerCreated(customer: StripeCustomerPayload, supabase: any) {
+  const profileId = customer.metadata?.profile_id
+  
+  if (!profileId) {
+    console.log('No profile_id in customer metadata, skipping')
+    return
+  }
+
+  console.log(`🔧 Processing customer created for profile ${profileId}`)
+
+  // Update profile with customer ID
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      stripe_customer_id: customer.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', profileId)
+
+  if (profileError) {
+    console.error('Error updating profile with customer ID:', profileError)
+  } else {
+    console.log(`✅ Profile ${profileId} updated with new customer ID`)
+  }
 }
 
 

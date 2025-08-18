@@ -985,20 +985,33 @@ export default function Onboarding() {
     try {
       // Map frontend field names to database field names
       const dbFieldMap: Record<string, string> = {
-        'name': 'name', // business name
-        'businessName': 'name', // also map businessName to name
+        // Step 1
         'handle': 'handle',
+        'businessName': 'name', // Map naar 'name' kolom
+        'isBusiness': 'is_business',
+        
+        // Step 2
+        'bookingUrl': 'booking_url',
+        'bookingMode': 'booking_mode',
+        'useWhatsApp': 'use_whatsapp',
+        'whatsappNumber': 'whatsapp_number',
+        
+        // Step 3
+        'name': 'name',
         'slogan': 'slogan',
-        'category': 'category',
+        'avatarFile': 'avatar_url',
         'banner': 'banner',
+        'category': 'category',
+        
+        // Step 4
         'about': 'about',
         'socials': 'socials',
         'media': 'media',
-        'avatarFile': 'avatar_url', // map avatarFile to avatar_url
-        'booking_url': 'booking_url',
-        'booking_mode': 'booking_mode',
-        'use_whatsapp': 'use_whatsapp',
-        'whatsapp_number': 'whatsapp_number',
+        
+        // Step 5
+        'testimonials': 'testimonials',
+        
+        // Step 6
         'footerBusinessName': 'footer_business_name',
         'footerAddress': 'footer_address',
         'footerEmail': 'footer_email',
@@ -1010,7 +1023,6 @@ export default function Onboarding() {
         'footerTermsOfService': 'footer_terms_of_service',
         'footerShowMaps': 'footer_show_maps',
         'footerShowAttribution': 'footer_show_attribution',
-        'is_business': 'is_business',
       };
 
       const dbField = dbFieldMap[field] || field;
@@ -1125,28 +1137,67 @@ export default function Onboarding() {
   // Step handlers
   const handleStep1 = async (data: { handle: string; businessName?: string; isBusiness: boolean }) => {
     console.log('🔧 Step 1 data received:', data);
-    console.log('🔧 Current onboarding data before update:', onboardingData);
     
-    const updatedData = { ...onboardingData, ...data };
-    setOnboardingData(updatedData);
-    
-    console.log('🔧 Updated onboarding data:', updatedData);
-    
-    // Patch handle to database immediately (ensure link to this user's profile)
-    console.log('🔧 Patching handle:', data.handle);
-    await patchFieldToDatabase('handle', data.handle);
-    
-    // Patch business name if provided (always patch to ensure it gets saved)
-    if (data.businessName !== undefined) {
-      console.log('🔧 Patching business name:', data.businessName);
-      await patchFieldToDatabase('name', data.businessName);
+    try {
+      // Eerst profiel aanmaken als deze nog niet bestaat
+      if (!onboardingData.profileId) {
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user?.id,
+            handle: data.handle.toLowerCase(),
+            name: data.businessName || null,
+            is_business: data.isBusiness,
+            status: 'draft',
+            onboarding_step: 1,
+            onboarding_completed: false,
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          toast({
+            title: "Profile Creation Failed",
+            description: "Could not create profile. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Update onboarding data met nieuwe profileId
+        const updatedData = { 
+          ...onboardingData, 
+          ...data, 
+          profileId: newProfile.id 
+        };
+        setOnboardingData(updatedData);
+        
+        console.log('✅ Profile created with ID:', newProfile.id);
+      } else {
+        // Profiel bestaat al, update alleen de velden
+        const updatedData = { ...onboardingData, ...data };
+        setOnboardingData(updatedData);
+        
+        // Update bestaande profiel
+        await patchFieldToDatabase('handle', data.handle);
+        if (data.businessName !== undefined) {
+          await patchFieldToDatabase('name', data.businessName);
+        }
+        await patchFieldToDatabase('is_business', data.isBusiness);
+      }
+      
+      // Ga naar volgende stap
+      updateStep(2);
+      
+    } catch (error) {
+      console.error('Error in handleStep1:', error);
+      toast({
+        title: "Step 1 Failed",
+        description: "Could not save your information. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    // Patch isBusiness flag to database
-    console.log('🔧 Patching isBusiness flag:', data.isBusiness);
-    await patchFieldToDatabase('is_business', data.isBusiness);
-    
-    updateStep(2);
   };
 
   const handleStep2 = async (data: { 
