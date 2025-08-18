@@ -356,13 +356,13 @@ const Onboarding = () => {
     setOnboardingData(updatedData);
     
     // Save each field  
-    if (data.businessName) {
+    if (data.businessName !== undefined) {
       await patchFieldToDatabase('name', data.businessName);
     }
-    if (data.slogan) {
+    if (data.slogan !== undefined) {
       await patchFieldToDatabase('slogan', data.slogan);
     }
-    if (data.category) {
+    if (data.category !== undefined) {
       await patchFieldToDatabase('category', data.category);
     }
     if (data.banner) {
