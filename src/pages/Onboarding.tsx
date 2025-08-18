@@ -378,42 +378,43 @@ const Onboarding = () => {
   };
 
   const handleStep4 = async (data: {
-    bannerType?: 'image' | 'video';
-    bannerFile?: File;
-    bannerUrl?: string;
-    socialProofs?: Array<{
-      id: string;
-      type: 'featured_in' | 'client_logo' | 'certification';
-      imageUrl?: string;
-      imageFile?: File;
-      title?: string;
-      subtitle?: string;
-    }>;
+    aboutAlignment?: 'center' | 'left';
+    aboutPhotoFile?: File;
+    socials: {
+      instagram?: string;
+      facebook?: string;
+      linkedin?: string;
+      youtube?: string;
+      whatsapp?: string;
+    };
+    mediaFiles: File[];
   }) => {
     console.log('🔧 Step 4 data received:', data);
     
-    const updatedData = { ...onboardingData, ...data };
+    const updatedData = { ...onboardingData, socials: data.socials };
     setOnboardingData(updatedData);
     
     updateStep(5);
   };
 
   const handleStep5 = async (data: {
-    testimonials?: Array<{
+    socialLinks: Array<{
       id: string;
-      name: string;
-      avatar?: string;
-      avatarFile?: File;
-      review: string;
-      rating: number;
-      platform?: 'google' | 'facebook' | 'linkedin' | 'custom';
-      verified?: boolean;
+      title: string;
+      platform?: string;
+      url: string;
+    }>;
+    testimonials: Array<{
+      customer_name: string;
+      review_title: string;
+      review_text: string;
+      image_url?: string;
+      _file?: File;
     }>;
   }) => {
     console.log('🔧 Step 5 data received:', data);
     
-    const updatedData = { ...onboardingData, ...data };
-    setOnboardingData(updatedData);
+    setOnboardingData(prev => ({ ...prev }));
     
     updateStep(6);
   };
@@ -581,9 +582,8 @@ const Onboarding = () => {
             onNext={handleStep4} 
             onBack={goBack}
             existingData={{
-              bannerType: onboardingData.bannerType,
-              bannerUrl: onboardingData.bannerUrl,
-              socialProofs: onboardingData.socialProofs || [],
+              socials: onboardingData.socials,
+              mediaFiles: [],
             }}
           />
         );
@@ -594,7 +594,8 @@ const Onboarding = () => {
             onNext={handleStep5} 
             onBack={goBack}
             existingData={{
-              testimonials: onboardingData.testimonials || [],
+              socialLinks: [],
+              testimonials: [],
             }}
           />
         );
@@ -616,7 +617,6 @@ const Onboarding = () => {
               footerTermsOfService: onboardingData.footerTermsOfService,
               footerShowMaps: onboardingData.footerShowMaps,
               footerShowAttribution: onboardingData.footerShowAttribution,
-              socials: onboardingData.socials,
             }}
           />
         );
@@ -624,38 +624,20 @@ const Onboarding = () => {
       case 7:
         return (
           <Step7Preview 
-            onNext={handleFinish} 
+            onPublish={handleFinish}
+            onSaveDraft={async () => {}}
             onBack={goBack}
-            data={{
-              handle: onboardingData.handle,
+            onStartLivePreview={async () => {}}
+            handle={onboardingData.handle || ''}
+            canPublish={true}
+            isPublishing={isLoading}
+            profileData={{
+              handle: onboardingData.handle || '',
               name: onboardingData.name,
               slogan: onboardingData.slogan,
               category: onboardingData.category,
-              avatarUrl: onboardingData.avatarUrl,
-              bannerUrl: onboardingData.bannerUrl,
-              bannerType: onboardingData.bannerType,
-              bookingUrl: onboardingData.bookingUrl,
-              bookingMode: onboardingData.bookingMode,
-              useWhatsApp: onboardingData.useWhatsApp,
-              whatsappNumber: onboardingData.whatsappNumber,
-              accentColor: onboardingData.accentColor,
-              themeMode: onboardingData.themeMode,
-              socialProofs: onboardingData.socialProofs || [],
-              testimonials: onboardingData.testimonials || [],
-              socials: onboardingData.socials || {},
-              footerBusinessName: onboardingData.footerBusinessName,
-              footerEmail: onboardingData.footerEmail,
-              footerPhone: onboardingData.footerPhone,
-              footerAddress: onboardingData.footerAddress,
-              footerHours: onboardingData.footerHours,
-              footerNextAvailable: onboardingData.footerNextAvailable,
-              footerCancellationPolicy: onboardingData.footerCancellationPolicy,
-              footerPrivacyPolicy: onboardingData.footerPrivacyPolicy,
-              footerTermsOfService: onboardingData.footerTermsOfService,
-              footerShowMaps: onboardingData.footerShowMaps,
-              footerShowAttribution: onboardingData.footerShowAttribution,
+              avatar_url: onboardingData.avatarUrl,
             }}
-            isLoading={isLoading}
           />
         );
 
