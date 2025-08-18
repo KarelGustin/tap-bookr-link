@@ -438,26 +438,29 @@ export default function PublicProfile() {
         </section>
 
                 {/* Social Links Section */}
-        {profile.socials && Array.isArray(profile.socials) && profile.socials.length > 0 && (
+        {profile.socials && typeof profile.socials === 'object' && profile.socials !== null && Object.keys(profile.socials).length > 0 && (
           <section className="py-8 px-4" style={{ backgroundColor: '#FFFFFF' }}>
             <div className="max-w-4xl mx-auto text-center">
               <h3 className="text-2xl font-bold mb-6" style={{ color: '#1F2937' }}>Social Media</h3>
               <div className="flex flex-wrap justify-center gap-4">
-                {(profile.socials as SocialLink[]).map((social: SocialLink, index: number) => {
-                  if (typeof social === 'object' && social !== null && 'url' in social && social.url) {
+                {Object.entries(profile.socials as Record<string, string>).map(([platform, url]) => {
+                  if (url && typeof url === 'string' && url.trim()) {
+                    // Platform naam mooi maken
+                    const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+                    
                     return (
                       <a
-                        key={index}
-                        href={social.url}
+                        key={platform}
+                        href={url.startsWith('http') ? url : `https://${url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center px-6 py-3 rounded-lg transition-colors"
                         style={{
-                          backgroundColor: '#EC4899', // Warm pink for beauty industry
-                          color: '#FFFFFF'
+                          backgroundColor: 'hsl(var(--primary))', // Warm pink for beauty industry
+                          color: '#000000'
                         }}
                       >
-                        <span className="font-medium">{social.title || social.platform || 'Social'}</span>
+                        <span className="font-medium">{platformName}</span>
                       </a>
                     );
                   }
