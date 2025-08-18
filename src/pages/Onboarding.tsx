@@ -47,6 +47,11 @@ interface OnboardingData {
   name?: string;
   slogan?: string;
   category?: string;
+  banner?: {
+    type?: 'image';
+    imageUrl?: string;
+    textColor?: string;
+  };
   accentColor?: string;
   themeMode?: 'light' | 'dark';
   
@@ -64,18 +69,28 @@ interface OnboardingData {
     youtube?: string;
     whatsapp?: string;
   };
+  media?: {
+    items: Array<{
+      type: 'image';
+      imageUrl: string;
+      description?: string;
+    }>;
+  };
   mediaFiles?: File[];
   
-  // Step 6 - Testimonials
-  testimonials?: Array<{
+  // Step 6 - Social Links & Testimonials
+  socialLinks?: Array<{
     id: string;
-    name: string;
-    avatar?: string;
-    avatarFile?: File;
-    review: string;
-    rating: number;
-    platform?: 'google' | 'facebook' | 'linkedin' | 'custom';
-    verified?: boolean;
+    title: string;
+    platform?: string;
+    url: string;
+  }>;
+  testimonials?: Array<{
+    customer_name: string;
+    review_title: string;
+    review_text: string;
+    image_url?: string;
+    _file?: File;
   }>;
   
   // Step 7 - Footer
@@ -109,7 +124,9 @@ const Onboarding = () => {
     useWhatsApp: false,
     whatsappNumber: '',
     socials: {},
+    socialLinks: [],
     testimonials: [],
+    media: { items: [] },
     footerShowMaps: true,
     footerShowAttribution: true,
     accentColor: '#6E56CF',
@@ -156,11 +173,14 @@ const Onboarding = () => {
             useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
             whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
             avatarUrl: existingProfile.avatar_url || prev.avatarUrl,
+            banner: existingProfile.banner as any || prev.banner,
             aboutTitle: aboutData?.title || prev.aboutTitle,
             aboutDescription: aboutData?.description || prev.aboutDescription,
             accentColor: existingProfile.accent_color || prev.accentColor,
             themeMode: (existingProfile.theme_mode as 'light' | 'dark') || prev.themeMode,
             socials: existingProfile.socials as any || prev.socials,
+            socialLinks: aboutData?.socialLinks || prev.socialLinks,
+            media: existingProfile.media as any || prev.media,
             testimonials: existingProfile.testimonials as any || prev.testimonials,
             footerBusinessName: existingProfile.footer_business_name || prev.footerBusinessName,
             footerEmail: existingProfile.footer_email || prev.footerEmail,
@@ -200,12 +220,6 @@ const Onboarding = () => {
     }
   }, [searchParams]);
 
-  // Auto-save functionality
-  useOnboardingAutoSave(onboardingData.profileId || '', onboardingData, {
-    enabled: hasInitializedRef.current && !!onboardingData.profileId,
-    delay: 2000,
-  });
-
   const updateStep = useCallback((step: number) => {
     setCurrentStep(step);
     const url = new URL(window.location.href);
@@ -230,6 +244,7 @@ const Onboarding = () => {
       'name': 'name',
       'slogan': 'slogan',
       'category': 'category',
+      'banner': 'banner',
       'bookingUrl': 'booking_url',
       'bookingMode': 'booking_mode',
       'useWhatsApp': 'use_whatsapp',
@@ -345,9 +360,14 @@ const Onboarding = () => {
   };
 
   const handleStep3 = async (data: { 
-    name: string; 
-    slogan: string; 
-    category: string; 
+    businessName?: string; 
+    slogan?: string; 
+    category?: string;
+    banner?: {
+      type: 'image';
+      imageUrl?: string;
+      textColor?: string;
+    };
     accentColor?: string;
     themeMode?: 'light' | 'dark';
   }) => {
@@ -357,10 +377,19 @@ const Onboarding = () => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save to database
-    await patchFieldToDatabase('name', data.name);
-    await patchFieldToDatabase('slogan', data.slogan);
-    await patchFieldToDatabase('category', data.category);
+    // Save each field  
+    if (data.businessName) {
+      await patchFieldToDatabase('name', data.businessName);
+    }
+    if (data.slogan) {
+      await patchFieldToDatabase('slogan', data.slogan);
+    }
+    if (data.category) {
+      await patchFieldToDatabase('category', data.category);
+    }
+    if (data.banner) {
+      await patchFieldToDatabase('banner', data.banner);
+    }
     
     if (data.accentColor) {
       await patchFieldToDatabase('accentColor', data.accentColor);
@@ -424,22 +453,27 @@ const Onboarding = () => {
     console.log('🔧 Step 5 data received:', data);
     
     // Upload media files
-    const mediaUrls: string[] = [];
+    const mediaItems = [];
     for (const file of data.mediaFiles) {
       const result = await uploadImage(file, 'media', `${user?.id}/media/${Date.now()}-${file.name}`);
       if (result) {
-        mediaUrls.push(result.url);
+        mediaItems.push({
+          type: 'image' as const,
+          imageUrl: result.url,
+          description: ''
+        });
       }
     }
     
     // Save socials and media to database
     await patchFieldToDatabase('socials', data.socials);
-    await patchFieldToDatabase('media', { items: mediaUrls });
+    await patchFieldToDatabase('media', { items: mediaItems });
     
     // Update local state
     const updatedData = { 
       ...onboardingData, 
       socials: data.socials,
+      media: { items: mediaItems },
       mediaFiles: data.mediaFiles
     };
     setOnboardingData(updatedData);
@@ -465,20 +499,28 @@ const Onboarding = () => {
     console.log('🔧 Step 6 data received:', data);
     
     // Upload testimonial images
-    for (const testimonial of data.testimonials) {
+    const updatedTestimonials = [...data.testimonials];
+    for (let i = 0; i < updatedTestimonials.length; i++) {
+      const testimonial = updatedTestimonials[i];
       if (testimonial._file) {
         const result = await uploadImage(testimonial._file, 'media', `${user?.id}/testimonials/${Date.now()}-${testimonial._file.name}`);
         if (result) {
           testimonial.image_url = result.url;
+          delete testimonial._file;
         }
       }
     }
     
     // Save testimonials to database
-    await patchFieldToDatabase('testimonials', data.testimonials);
+    await patchFieldToDatabase('testimonials', updatedTestimonials);
     
     // Update local state
-    setOnboardingData(prev => ({ ...prev }));
+    const updatedData = { 
+      ...onboardingData, 
+      socialLinks: data.socialLinks,
+      testimonials: updatedTestimonials
+    };
+    setOnboardingData(updatedData);
     
     updateStep(7);
   };
@@ -582,6 +624,58 @@ const Onboarding = () => {
     }
   };
 
+  const handlePreview = async () => {
+    try {
+      if (!onboardingData.profileId) {
+        console.error('❌ No profile ID available for preview');
+        return;
+      }
+
+      // Set preview mode for 15 minutes
+      const previewStartTime = new Date();
+      const previewEndTime = new Date(previewStartTime.getTime() + 15 * 60 * 1000);
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          status: 'published',
+          preview_started_at: previewStartTime.toISOString(),
+          preview_expires_at: previewEndTime.toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', onboardingData.profileId);
+
+      if (error) {
+        console.error('❌ Error setting preview mode:', error);
+        toast({
+          title: "Preview mislukt",
+          description: "Er is een fout opgetreden bij het starten van de preview.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('✅ Preview mode activated for 15 minutes');
+      
+      // Open the public profile in a new tab
+      const publicUrl = `${window.location.origin}/${onboardingData.handle}`;
+      window.open(publicUrl, '_blank');
+
+      toast({
+        title: "Preview gestart",
+        description: "Je pagina is nu 15 minuten zichtbaar. Check de nieuwe tab!",
+      });
+
+    } catch (error) {
+      console.error('❌ Error in handlePreview:', error);
+      toast({
+        title: "Preview mislukt",
+        description: "Er is een fout opgetreden bij het starten van de preview.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
@@ -637,7 +731,9 @@ const Onboarding = () => {
               name: onboardingData.name,
               slogan: onboardingData.slogan,
               category: onboardingData.category,
+              banner: onboardingData.banner,
             }}
+            handle={onboardingData.handle}
           />
         );
 
@@ -663,7 +759,7 @@ const Onboarding = () => {
             onBack={goBack}
             existingData={{
               socials: onboardingData.socials,
-              mediaFiles: [],
+              mediaFiles: onboardingData.mediaFiles || [],
             }}
           />
         );
@@ -673,9 +769,10 @@ const Onboarding = () => {
           <Step5SocialTestimonials 
             onNext={handleStep6} 
             onBack={goBack}
+            handle={onboardingData.handle}
             existingData={{
-              socialLinks: [],
-              testimonials: [],
+              socialLinks: onboardingData.socialLinks || [],
+              testimonials: onboardingData.testimonials || [],
             }}
           />
         );
@@ -706,8 +803,8 @@ const Onboarding = () => {
           <Step7Preview 
             onPublish={handleFinish}
             onSaveDraft={async () => {}}
+            onStartLivePreview={handlePreview}
             onBack={goBack}
-            onStartLivePreview={async () => {}}
             handle={onboardingData.handle || ''}
             canPublish={true}
             isPublishing={isLoading}
@@ -717,6 +814,27 @@ const Onboarding = () => {
               slogan: onboardingData.slogan,
               category: onboardingData.category,
               avatar_url: onboardingData.avatarUrl,
+              banner: onboardingData.banner,
+              aboutTitle: onboardingData.aboutTitle,
+              aboutDescription: onboardingData.aboutDescription,
+              socials: onboardingData.socials,
+              socialLinks: onboardingData.socialLinks,
+              testimonials: onboardingData.testimonials,
+              bookingUrl: onboardingData.bookingUrl,
+              bookingMode: onboardingData.bookingMode,
+              footer: {
+                businessName: onboardingData.footerBusinessName,
+                address: onboardingData.footerAddress,
+                email: onboardingData.footerEmail,
+                phone: onboardingData.footerPhone,
+                hours: onboardingData.footerHours,
+                nextAvailable: onboardingData.footerNextAvailable,
+                cancellationPolicy: onboardingData.footerCancellationPolicy,
+                privacyPolicy: onboardingData.footerPrivacyPolicy,
+                termsOfService: onboardingData.footerTermsOfService,
+                showMaps: onboardingData.footerShowMaps,
+                showAttribution: onboardingData.footerShowAttribution,
+              }
             }}
           />
         );

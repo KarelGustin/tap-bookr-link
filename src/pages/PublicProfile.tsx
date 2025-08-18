@@ -604,7 +604,7 @@ export default function PublicProfile() {
                 >
                   {mediaList.length > 0 ? (
                     mediaList.map((mediaItem: unknown, index: number) => {
-                      const imageUrl = getImageUrl(mediaItem);
+                      const imageUrl = mediaItem && typeof mediaItem === 'object' && 'imageUrl' in mediaItem ? mediaItem.imageUrl as string : null;
                       return (
                         <div key={index} className="flex-shrink-0">
                           <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
