@@ -469,7 +469,7 @@ export default function PublicProfile() {
         )}
 
         {/* Media Gallery Section */}
-        <section className="py-8 px-4" style={{ backgroundColor: '#FDF2F8' }}>
+        <section className="py-8 px-4" style={{ backgroundColor: '#fafafa' }}>
           <div className="max-w-6xl mx-auto">
             <h3 className="text-2xl font-bold text-center mb-6" style={{ color: '#1F2937' }}>
               {t('public.workResults')}
@@ -584,7 +584,7 @@ export default function PublicProfile() {
                   
                   return (
                     <div key={testimonial.id || index} className="flex-shrink-0">
-                      <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden shadow-lg">
+                      <div className="w-80 aspect-[4/5] rounded-xl overflow-hidden">
                         {imageUrl ? (
                           <div className="w-full h-full relative">
                             <img 
@@ -599,8 +599,10 @@ export default function PublicProfile() {
                                 }
                               }}
                             />
-                            <div className="absolute inset-0 bg-black/30" />
-                            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                            {/* Overlay for dimming image */}
+                            <div className="absolute inset-0 bg-black/20" />
+                            {/* Review text area: white background, black text */}
+                            <div className="absolute bottom-0 left-0 right-0 p-6 bg-white bg-opacity-95 text-black rounded-b-xl">
                               <div className="mb-4">
                                 <h4 className="font-semibold text-lg mb-2">{reviewTitle}</h4>
                                 <p className="text-sm opacity-90">{customerName}</p>
@@ -612,11 +614,7 @@ export default function PublicProfile() {
                           </div>
                         ) : (
                           <div 
-                            className="w-full h-full flex flex-col justify-end p-6 text-white"
-                            style={{ 
-                              backgroundColor: testimonial.background_color || 'hsl(var(--primary))',
-                              color: testimonial.text_color || 'white'
-                            }}
+                            className="w-full h-full flex flex-col justify-end p-6 bg-white text-black rounded-xl "
                           >
                             <div className="mb-4">
                               <h4 className="font-semibold text-lg mb-2">{reviewTitle}</h4>
@@ -627,9 +625,8 @@ export default function PublicProfile() {
                             </p>
                           </div>
                         )}
-                        
                         {/* Fallback text-only version */}
-                        <div className="hidden w-full h-full flex flex-col justify-end p-6 text-white bg-gray-800">
+                        <div className="hidden w-full h-full flex flex-col justify-end p-6 bg-white text-black rounded-xl">
                           <div className="mb-4">
                             <h4 className="font-semibold text-lg mb-2">{reviewTitle}</h4>
                             <p className="text-sm opacity-90">{customerName}</p>
@@ -659,8 +656,8 @@ export default function PublicProfile() {
                     size="lg"
                     className="px-8 py-3 text-lg"
                     style={{
-                      backgroundColor: '#EC4899', // Warm pink for beauty industry
-                      color: '#FFFFFF'
+                      backgroundColor: 'hsl(var(--accent))',
+                      color: '#000000'
                     }}
                     onClick={() => {
                       document.getElementById('booking-section')?.scrollIntoView({ 
