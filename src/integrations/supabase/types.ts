@@ -146,6 +146,7 @@ export type Database = {
           grace_period_ends_at: string | null
           handle: string
           id: string
+          is_business: boolean | null
           media: Json
           name: string | null
           onboarding_completed: boolean | null
@@ -192,6 +193,7 @@ export type Database = {
           grace_period_ends_at?: string | null
           handle: string
           id?: string
+          is_business?: boolean | null
           media?: Json
           name?: string | null
           onboarding_completed?: boolean | null
@@ -238,6 +240,7 @@ export type Database = {
           grace_period_ends_at?: string | null
           handle?: string
           id?: string
+          is_business?: boolean | null
           media?: Json
           name?: string | null
           onboarding_completed?: boolean | null

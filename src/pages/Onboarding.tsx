@@ -294,6 +294,8 @@ export default function Onboarding() {
             ...prev,
             handle: existingProfile.handle || prev.handle,
             name: existingProfile.name || prev.name,
+            businessName: existingProfile.name || prev.businessName, // Map name to businessName
+            isBusiness: existingProfile.is_business || prev.isBusiness, // Load isBusiness flag
             slogan: existingProfile.slogan || prev.slogan,
             category: existingProfile.category || prev.category,
             avatar_url: existingProfile.avatar_url || prev.avatar_url,
@@ -1008,6 +1010,7 @@ export default function Onboarding() {
         'footerTermsOfService': 'footer_terms_of_service',
         'footerShowMaps': 'footer_show_maps',
         'footerShowAttribution': 'footer_show_attribution',
+        'is_business': 'is_business',
       };
 
       const dbField = dbFieldMap[field] || field;
@@ -1138,6 +1141,10 @@ export default function Onboarding() {
       console.log('🔧 Patching business name:', data.businessName);
       await patchFieldToDatabase('name', data.businessName);
     }
+    
+    // Patch isBusiness flag to database
+    console.log('🔧 Patching isBusiness flag:', data.isBusiness);
+    await patchFieldToDatabase('is_business', data.isBusiness);
     
     updateStep(2);
   };

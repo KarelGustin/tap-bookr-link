@@ -66,6 +66,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
   const [mediaFiles, setMediaFiles] = useState<File[]>(existingData?.mediaFiles || []);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   const aboutPhotoInputRef = useRef<HTMLInputElement>(null);
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -186,7 +187,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     }
   };
 
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     
     // Check if adding these files would exceed the limit (count existing previews + new files)
@@ -208,27 +209,46 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     const newFiles = files.slice(0, availableSlots);
     
     if (newFiles.length > 0) {
-      const updatedMediaFiles = [...mediaFiles, ...newFiles];
-      setMediaFiles(updatedMediaFiles);
+      setIsUploadingMedia(true);
       
-      // Create previews for new files
-      newFiles.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = () => setMediaPreviews(prev => [...prev, reader.result as string]);
-        reader.readAsDataURL(file);
-      });
-      
-      // Show success message
-      if (newFiles.length < files.length) {
-        toast({
-          title: "Afbeeldingen toegevoegd",
-          description: `${newFiles.length} van ${files.length} afbeeldingen toegevoegd. Maximum van 6 afbeeldingen bereikt.`,
+      try {
+        const updatedMediaFiles = [...mediaFiles, ...newFiles];
+        setMediaFiles(updatedMediaFiles);
+        
+        // Create previews for new files
+        const previewPromises = newFiles.map(file => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
         });
-      } else {
+        
+        // Wait for all previews to be created
+        const newPreviews = await Promise.all(previewPromises);
+        setMediaPreviews(prev => [...prev, ...newPreviews]);
+        
+        // Show success message
+        if (newFiles.length < files.length) {
+          toast({
+            title: "Afbeeldingen toegevoegd",
+            description: `${newFiles.length} van ${files.length} afbeeldingen toegevoegd. Maximum van 6 afbeeldingen bereikt.`,
+          });
+        } else {
+          toast({
+            title: "Afbeeldingen toegevoegd",
+            description: `${newFiles.length} afbeeldingen toegevoegd.`,
+          });
+        }
+      } catch (error) {
+        console.error('Error processing media files:', error);
         toast({
-          title: "Afbeeldingen toegevoegd",
-          description: `${newFiles.length} afbeeldingen toegevoegd.`,
+          title: "Fout bij verwerken",
+          description: "Er is een fout opgetreden bij het verwerken van de afbeeldingen. Probeer het opnieuw.",
+          variant: "destructive",
         });
+      } finally {
+        setIsUploadingMedia(false);
       }
     }
   };
@@ -289,7 +309,8 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
   };
 
   // Users can always proceed from this step, even without media
-  const canGoNext = true;
+  // But block if currently uploading media
+  const canGoNext = !isUploadingMedia;
 
   const socialPlatforms = [
     { key: 'instagram' as const, icon: Instagram, label: 'Instagram', placeholder: '@yourusername' },
@@ -480,21 +501,30 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             const totalMediaCount = mediaPreviews.length;
             return (
               <Button
-            type="button"
-            variant="outline"
-            onClick={() => mediaInputRef.current?.click()}
-                disabled={totalMediaCount >= 6}
-            className={`w-full h-12 border-dashed ${
-                  totalMediaCount >= 6 
-                ? 'opacity-50 cursor-not-allowed bg-gray-100' 
-                : 'hover:bg-gray-50'
-            }`}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-                {totalMediaCount >= 6 
-                  ? `Maximum bereikt (6/6 afbeeldingen)`
-                  : `${t('onboarding.step4.mediaGallery.addMedia')} (${6 - totalMediaCount} ${t('onboarding.step4.mediaGallery.remaining')})`
-                }
+                type="button"
+                variant="outline"
+                onClick={() => mediaInputRef.current?.click()}
+                disabled={totalMediaCount >= 6 || isUploadingMedia}
+                className={`w-full h-12 border-dashed ${
+                  totalMediaCount >= 6 || isUploadingMedia
+                    ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                {isUploadingMedia ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Uploaden...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    {totalMediaCount >= 6 
+                      ? `Maximum bereikt (6/6 afbeeldingen)`
+                      : `${t('onboarding.step4.mediaGallery.addMedia')} (${6 - totalMediaCount} ${t('onboarding.step4.mediaGallery.remaining')})`
+                    }
+                  </>
+                )}
               </Button>
             );
           })()}
@@ -626,10 +656,18 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
         {/* Continue button */}
         <Button 
           onClick={handleSubmit}
+          disabled={!canGoNext}
           className="w-full h-12 text-base rounded-lg"
           size="lg"
         >
-          {(aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) ? "Verder gaan" : "Voltooien"}
+          {isUploadingMedia ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Uploaden...
+            </>
+          ) : (
+            (aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) ? "Verder gaan" : "Voltooien"
+          )}
         </Button>
         
         <p className="text-center text-sm text-muted-foreground">

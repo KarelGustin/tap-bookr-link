@@ -69,7 +69,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('handle, status')
+          .select('handle, status, name')
           .eq('id', existingData.profileId)
           .single();
 
@@ -80,6 +80,12 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
           if (profile.status === 'published') {
             setIsHandleLocked(true);
           }
+        }
+        
+        // Load existing business name from database
+        if (profile?.name) {
+          setBusinessName(profile.name);
+          setIsBusiness(true); // If there's a name, assume it's a business
         }
       } catch (error) {
         console.error('Error fetching user handle:', error);
@@ -301,7 +307,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
           </div>
 
           {/* Business section */}
-          {/* <div className="space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isBusiness"
@@ -332,7 +338,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
                 </p>
               </div>
             )}
-          </div> */}
+          </div>
 
           {/* Important note */}
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
