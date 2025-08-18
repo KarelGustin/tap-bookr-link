@@ -75,7 +75,7 @@ export const useFormValidation = <T extends Record<string, string | number | boo
 
   const getFieldError = useCallback((field: keyof T): string | null => {
     if (!touched.has(field)) return null;
-    return errors[field] || null;
+    return errors[field as string] || null;
   }, [errors, touched]);
 
   const clearErrors = useCallback(() => {
