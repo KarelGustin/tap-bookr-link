@@ -7,13 +7,119 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      invoices: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          due_date: string | null
+          hosted_invoice_url: string | null
+          id: string
+          invoice_pdf_url: string | null
+          paid_at: string | null
+          profile_id: string | null
+          status: string | null
+          stripe_invoice_id: string | null
+          subscription_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_pdf_url?: string | null
+          paid_at?: string | null
+          profile_id?: string | null
+          status?: string | null
+          stripe_invoice_id?: string | null
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          hosted_invoice_url?: string | null
+          id?: string
+          invoice_pdf_url?: string | null
+          paid_at?: string | null
+          profile_id?: string | null
+          status?: string | null
+          stripe_invoice_id?: string | null
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          brand: string | null
+          country: string | null
+          created_at: string | null
+          exp_month: number | null
+          exp_year: number | null
+          id: string
+          is_default: boolean | null
+          last4: string | null
+          profile_id: string | null
+          stripe_payment_method_id: string | null
+          subscription_id: string | null
+          type: string | null
+        }
+        Insert: {
+          brand?: string | null
+          country?: string | null
+          created_at?: string | null
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last4?: string | null
+          profile_id?: string | null
+          stripe_payment_method_id?: string | null
+          subscription_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          brand?: string | null
+          country?: string | null
+          created_at?: string | null
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last4?: string | null
+          profile_id?: string | null
+          stripe_payment_method_id?: string | null
+          subscription_id?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           about: Json
@@ -25,41 +131,41 @@ export type Database = {
           category: string | null
           contact: Json
           created_at: string
+          footer: Json
+          footer_address: string | null
+          footer_business_name: string | null
+          footer_cancellation_policy: string | null
+          footer_email: string | null
+          footer_hours: Json | null
+          footer_next_available: string | null
+          footer_phone: string | null
+          footer_privacy_policy: string | null
+          footer_show_attribution: boolean | null
+          footer_show_maps: boolean | null
+          footer_terms_of_service: string | null
+          grace_period_ends_at: string | null
           handle: string
           id: string
           media: Json
           name: string | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
+          preview_expires_at: string | null
+          preview_started_at: string | null
           slogan: string | null
           socials: Json
           status: string
-          theme_mode: string
-          updated_at: string
-          user_id: string
-          use_whatsapp: boolean | null
-          whatsapp_number: string | null
-          footer: Json
-          preview_expires_at: string | null
-          preview_started_at: string | null
-          footer_business_name: string | null
-          footer_address: string | null
-          footer_email: string | null
-          footer_phone: string | null
-          footer_hours: Json | null
-          footer_next_available: string | null
-          footer_cancellation_policy: string | null
-          footer_privacy_policy: string | null
-          footer_terms_of_service: string | null
-          footer_show_maps: boolean | null
-          footer_show_attribution: boolean | null
-          testimonials: Json | null
-          subscription_id: string | null
           stripe_customer_id: string | null
-          trial_start_date: string | null
-          trial_end_date: string | null
-          grace_period_ends_at: string | null
-          onboarding_completed: boolean | null
-          onboarding_step: number | null
+          subscription_id: string | null
           subscription_status: string | null
+          testimonials: Json | null
+          theme_mode: string
+          trial_end_date: string | null
+          trial_start_date: string | null
+          updated_at: string
+          use_whatsapp: boolean | null
+          user_id: string
+          whatsapp_number: string | null
         }
         Insert: {
           about?: Json
@@ -71,40 +177,41 @@ export type Database = {
           category?: string | null
           contact?: Json
           created_at?: string
+          footer?: Json
+          footer_address?: string | null
+          footer_business_name?: string | null
+          footer_cancellation_policy?: string | null
+          footer_email?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_phone?: string | null
+          footer_privacy_policy?: string | null
+          footer_show_attribution?: boolean | null
+          footer_show_maps?: boolean | null
+          footer_terms_of_service?: string | null
+          grace_period_ends_at?: string | null
           handle: string
           id?: string
           media?: Json
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          preview_expires_at?: string | null
+          preview_started_at?: string | null
           slogan?: string | null
           socials?: Json
           status?: string
-          theme_mode?: string
-          updated_at?: string
-          user_id: string
-          use_whatsapp?: boolean | null
-          whatsapp_number?: string | null
-          footer?: Json
-          preview_expires_at?: string | null
-          preview_started_at?: string | null
-          footer_business_name?: string | null
-          footer_address?: string | null
-          footer_email?: string | null
-          footer_phone?: string | null
-          footer_hours?: Json | null
-          footer_next_available?: string | null
-          footer_cancellation_policy?: string | null
-          footer_privacy_policy?: string | null
-          footer_terms_of_service?: string | null
-          footer_show_maps?: boolean | null
-          footer_show_attribution?: boolean | null
-          testimonials?: Json | null
-          subscription_id?: string | null
           stripe_customer_id?: string | null
-          trial_start_date?: string | null
-          trial_end_date?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_step?: number | null
+          subscription_id?: string | null
           subscription_status?: string | null
+          testimonials?: Json | null
+          theme_mode?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+          use_whatsapp?: boolean | null
+          user_id: string
+          whatsapp_number?: string | null
         }
         Update: {
           about?: Json
@@ -116,165 +223,207 @@ export type Database = {
           category?: string | null
           contact?: Json
           created_at?: string
+          footer?: Json
+          footer_address?: string | null
+          footer_business_name?: string | null
+          footer_cancellation_policy?: string | null
+          footer_email?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_phone?: string | null
+          footer_privacy_policy?: string | null
+          footer_show_attribution?: boolean | null
+          footer_show_maps?: boolean | null
+          footer_terms_of_service?: string | null
+          grace_period_ends_at?: string | null
           handle?: string
           id?: string
           media?: Json
           name?: string | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
+          preview_expires_at?: string | null
+          preview_started_at?: string | null
           slogan?: string | null
           socials?: Json
           status?: string
-          theme_mode?: string
-          updated_at?: string
-          user_id?: string
-          use_whatsapp?: boolean | null
-          whatsapp_number?: string | null
-          footer?: Json
-          preview_expires_at?: string | null
-          preview_started_at?: string | null
-          footer_business_name?: string | null
-          footer_address?: string | null
-          footer_email?: string | null
-          footer_phone?: string | null
-          footer_hours?: Json | null
-          footer_next_available?: string | null
-          footer_cancellation_policy?: string | null
-          footer_privacy_policy?: string | null
-          footer_terms_of_service?: string | null
-          footer_show_maps?: boolean | null
-          footer_show_attribution?: boolean | null
-          testimonials?: Json | null
+          stripe_customer_id?: string | null
           subscription_id?: string | null
-          trial_start_date?: string | null
-          trial_end_date?: string | null
-          onboarding_completed?: boolean | null
-          onboarding_step?: number | null
           subscription_status?: string | null
+          testimonials?: Json | null
+          theme_mode?: string
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string
+          use_whatsapp?: boolean | null
+          user_id?: string
+          whatsapp_number?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
-          id: string
-          profile_id: string
-          stripe_subscription_id: string | null
-          stripe_customer_id: string | null
-          status: string | null
-          current_period_start: string | null
-          current_period_end: string | null
           cancel_at_period_end: boolean | null
           created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          profile_id: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          trial_start: string | null
           updated_at: string | null
         }
         Insert: {
-          id?: string
-          profile_id: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          status?: string | null
-          current_period_start?: string | null
-          current_period_end?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          profile_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string | null
         }
         Update: {
-          id?: string
-          profile_id?: string
-          stripe_subscription_id?: string | null
-          stripe_customer_id?: string | null
-          status?: string | null
-          current_period_start?: string | null
-          current_period_end?: string | null
           cancel_at_period_end?: boolean | null
           created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          profile_id?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
           updated_at?: string | null
         }
-        Relationships: []
-      }
-      payment_methods: {
-        Row: {
-          id: string
-          profile_id: string | null
-          stripe_payment_method_id: string | null
-          type: string | null
-          last4: string | null
-          brand: string | null
-          exp_month: number | null
-          exp_year: number | null
-          country: string | null
-          is_default: boolean | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          profile_id?: string | null
-          stripe_payment_method_id?: string | null
-          type?: string | null
-          last4?: string | null
-          brand?: string | null
-          exp_month?: number | null
-          exp_year?: number | null
-          country?: string | null
-          is_default?: boolean | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          profile_id?: string | null
-          stripe_payment_method_id?: string | null
-          type?: string | null
-          last4?: string | null
-          brand?: string | null
-          exp_year?: number | null
-          exp_month?: number | null
-          country?: string | null
-          is_default?: boolean | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      invoices: {
-        Row: {
-          id: string
-          profile_id: string
-          stripe_invoice_id: string | null
-          amount: number | null
-          currency: string | null
-          status: string | null
-          due_date: string | null
-          paid_at: string | null
-          created_at: string | null
-        }
-        Insert: {
-          id?: string
-          profile_id: string
-          stripe_invoice_id?: string | null
-          amount?: number | null
-          currency?: string | null
-          status?: string | null
-          due_date?: string | null
-          paid_at?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          profile_id?: string
-          stripe_invoice_id?: string | null
-          amount?: number | null
-          currency?: string | null
-          status?: string | null
-          due_date?: string | null
-          paid_at?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          about: Json | null
+          accent_color: string | null
+          avatar_url: string | null
+          banner: Json | null
+          booking_mode: string | null
+          booking_url: string | null
+          category: string | null
+          created_at: string | null
+          footer_business_name: string | null
+          footer_cancellation_policy: string | null
+          footer_hours: Json | null
+          footer_next_available: string | null
+          footer_privacy_policy: string | null
+          footer_show_attribution: boolean | null
+          footer_show_maps: boolean | null
+          footer_terms_of_service: string | null
+          handle: string | null
+          id: string | null
+          media: Json | null
+          name: string | null
+          slogan: string | null
+          socials: Json | null
+          status: string | null
+          testimonials: Json | null
+          theme_mode: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          about?: Json | null
+          accent_color?: string | null
+          avatar_url?: string | null
+          banner?: Json | null
+          booking_mode?: string | null
+          booking_url?: string | null
+          category?: string | null
+          created_at?: string | null
+          footer_business_name?: string | null
+          footer_cancellation_policy?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_privacy_policy?: string | null
+          footer_show_attribution?: boolean | null
+          footer_show_maps?: boolean | null
+          footer_terms_of_service?: string | null
+          handle?: string | null
+          id?: string | null
+          media?: Json | null
+          name?: string | null
+          slogan?: string | null
+          socials?: Json | null
+          status?: string | null
+          testimonials?: Json | null
+          theme_mode?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          about?: Json | null
+          accent_color?: string | null
+          avatar_url?: string | null
+          banner?: Json | null
+          booking_mode?: string | null
+          booking_url?: string | null
+          category?: string | null
+          created_at?: string | null
+          footer_business_name?: string | null
+          footer_cancellation_policy?: string | null
+          footer_hours?: Json | null
+          footer_next_available?: string | null
+          footer_privacy_policy?: string | null
+          footer_show_attribution?: boolean | null
+          footer_show_maps?: boolean | null
+          footer_terms_of_service?: string | null
+          handle?: string | null
+          id?: string | null
+          media?: Json | null
+          name?: string | null
+          slogan?: string | null
+          socials?: Json | null
+          status?: string | null
+          testimonials?: Json | null
+          theme_mode?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      is_handle_available: {
+        Args: { in_handle: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
