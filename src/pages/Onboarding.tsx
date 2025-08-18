@@ -12,13 +12,14 @@ import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
 import { Step1Handle } from '@/components/onboarding/steps/Step1Handle';
 import { Step2Booking } from '@/components/onboarding/steps/Step2Booking';
 import { Step3Branding } from '@/components/onboarding/steps/Step3Branding';
-import { Step4Extras } from '@/components/onboarding/steps/Step4Extras';
 import { Step4PersonalImage } from '@/components/onboarding/steps/Step4PersonalImage';
+import { Step4Extras } from '@/components/onboarding/steps/Step4Extras';
 import { Step5SocialTestimonials } from '@/components/onboarding/steps/Step5SocialTestimonials';
 import { Step6Footer } from '@/components/onboarding/steps/Step6Footer';
 import { Step7Preview } from '@/components/onboarding/steps/Step7Preview';
 import { Json } from '@/integrations/supabase/types';
 import StripeService from '@/services/stripeService';
+import { useImageUpload } from '@/hooks/use-image-upload';
 
 interface BusinessHours {
   monday: { open: string; close: string; closed: boolean };
@@ -45,26 +46,27 @@ interface OnboardingData {
   // Step 3 - Enhanced Branding
   name?: string;
   slogan?: string;
-  avatarFile?: File;
-  avatarUrl?: string;
   category?: string;
   accentColor?: string;
   themeMode?: 'light' | 'dark';
   
-  // Step 4 - Media/Extras
-  bannerType?: 'image' | 'video';
-  bannerFile?: File;
-  bannerUrl?: string;
-  socialProofs?: Array<{
-    id: string;
-    type: 'featured_in' | 'client_logo' | 'certification';
-    imageUrl?: string;
-    imageFile?: File;
-    title?: string;
-    subtitle?: string;
-  }>;
+  // Step 4 - Personal Image & About
+  avatarFile?: File;
+  avatarUrl?: string;
+  aboutTitle?: string;
+  aboutDescription?: string;
   
-  // Social Testimonials (Step 5)
+  // Step 5 - Media & Social
+  socials?: {
+    instagram?: string;
+    facebook?: string;
+    linkedin?: string;
+    youtube?: string;
+    whatsapp?: string;
+  };
+  mediaFiles?: File[];
+  
+  // Step 6 - Testimonials
   testimonials?: Array<{
     id: string;
     name: string;
@@ -76,7 +78,7 @@ interface OnboardingData {
     verified?: boolean;
   }>;
   
-  // Footer (Step 6)
+  // Step 7 - Footer
   footerBusinessName?: string;
   footerEmail?: string;
   footerPhone?: string;
@@ -89,18 +91,6 @@ interface OnboardingData {
   footerShowMaps?: boolean;
   footerShowAttribution?: boolean;
   
-  // Social links
-  socials?: {
-    website?: string;
-    instagram?: string;
-    facebook?: string;
-    linkedin?: string;
-    twitter?: string;
-    youtube?: string;
-    tiktok?: string;
-    whatsapp?: string;
-  };
-  
   // Internal tracking
   profileId?: string;
 }
@@ -110,6 +100,7 @@ const Onboarding = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { uploadImage } = useImageUpload();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     handle: '',
@@ -117,10 +108,8 @@ const Onboarding = () => {
     bookingMode: 'embed',
     useWhatsApp: false,
     whatsappNumber: '',
-    bannerType: 'image',
     socials: {},
     testimonials: [],
-    socialProofs: [],
     footerShowMaps: true,
     footerShowAttribution: true,
     accentColor: '#6E56CF',
@@ -151,6 +140,9 @@ const Onboarding = () => {
         }
 
         if (existingProfile) {
+          // Extract about data
+          const aboutData = existingProfile.about as any;
+          
           setOnboardingData(prev => ({
             ...prev,
             profileId: existingProfile.id,
@@ -164,12 +156,17 @@ const Onboarding = () => {
             useWhatsApp: existingProfile.use_whatsapp || prev.useWhatsApp,
             whatsappNumber: existingProfile.whatsapp_number || prev.whatsappNumber,
             avatarUrl: existingProfile.avatar_url || prev.avatarUrl,
+            aboutTitle: aboutData?.title || prev.aboutTitle,
+            aboutDescription: aboutData?.description || prev.aboutDescription,
             accentColor: existingProfile.accent_color || prev.accentColor,
             themeMode: (existingProfile.theme_mode as 'light' | 'dark') || prev.themeMode,
+            socials: existingProfile.socials as any || prev.socials,
+            testimonials: existingProfile.testimonials as any || prev.testimonials,
             footerBusinessName: existingProfile.footer_business_name || prev.footerBusinessName,
             footerEmail: existingProfile.footer_email || prev.footerEmail,
             footerPhone: existingProfile.footer_phone || prev.footerPhone,
             footerAddress: existingProfile.footer_address || prev.footerAddress,
+            footerHours: existingProfile.footer_hours as any || prev.footerHours,
             footerNextAvailable: existingProfile.footer_next_available || prev.footerNextAvailable,
             footerCancellationPolicy: existingProfile.footer_cancellation_policy || prev.footerCancellationPolicy,
             footerPrivacyPolicy: existingProfile.footer_privacy_policy || prev.footerPrivacyPolicy,
@@ -326,7 +323,6 @@ const Onboarding = () => {
     whatsappNumber?: string;
   }) => {
     console.log('🔧 Step 2 data received:', data);
-    console.log('🔧 Step 2 data received:', data);
     
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
@@ -348,38 +344,74 @@ const Onboarding = () => {
     updateStep(3);
   };
 
-  const handleStep3 = async (data: {
-    businessName?: string;
-    slogan?: string;
-    category?: string;
-    banner?: { 
-      type: 'image'; 
-      imageUrl?: string; 
-      textColor?: string; 
-    };
+  const handleStep3 = async (data: { 
+    name: string; 
+    slogan: string; 
+    category: string; 
+    accentColor?: string;
+    themeMode?: 'light' | 'dark';
   }) => {
     console.log('🔧 Step 3 data received:', data);
     
-    const updatedData = { ...onboardingData, name: data.businessName, slogan: data.slogan, category: data.category };
+    // Update local state
+    const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save each field
-    if (data.businessName !== undefined) {
-      await patchFieldToDatabase('name', data.businessName);
+    // Save to database
+    await patchFieldToDatabase('name', data.name);
+    await patchFieldToDatabase('slogan', data.slogan);
+    await patchFieldToDatabase('category', data.category);
+    
+    if (data.accentColor) {
+      await patchFieldToDatabase('accentColor', data.accentColor);
     }
-    if (data.slogan !== undefined) {
-      await patchFieldToDatabase('slogan', data.slogan);
-    }
-    if (data.category !== undefined) {
-      await patchFieldToDatabase('category', data.category);
+    if (data.themeMode) {
+      await patchFieldToDatabase('themeMode', data.themeMode);
     }
     
     updateStep(4);
   };
 
   const handleStep4 = async (data: {
-    aboutAlignment?: 'center' | 'left';
-    aboutPhotoFile?: File;
+    avatarFile?: File;
+    aboutTitle?: string;
+    aboutDescription?: string;
+  }) => {
+    console.log('🔧 Step 4 data received:', data);
+    
+    let avatarUrl = onboardingData.avatarUrl;
+    
+    // Upload avatar if provided
+    if (data.avatarFile) {
+      console.log('🔧 Uploading avatar...');
+      const result = await uploadImage(data.avatarFile, 'avatars', `${user?.id}/avatar.${data.avatarFile.name.split('.').pop()}`);
+      if (result) {
+        avatarUrl = result.url;
+        await patchFieldToDatabase('avatar_url', avatarUrl);
+      }
+    }
+    
+    // Save about data to database
+    const aboutData = {
+      title: data.aboutTitle,
+      description: data.aboutDescription
+    };
+    await patchFieldToDatabase('about', aboutData);
+    
+    // Update local state
+    const updatedData = { 
+      ...onboardingData, 
+      avatarFile: data.avatarFile,
+      avatarUrl,
+      aboutTitle: data.aboutTitle,
+      aboutDescription: data.aboutDescription
+    };
+    setOnboardingData(updatedData);
+    
+    updateStep(5);
+  };
+
+  const handleStep5 = async (data: {
     socials: {
       instagram?: string;
       facebook?: string;
@@ -389,15 +421,33 @@ const Onboarding = () => {
     };
     mediaFiles: File[];
   }) => {
-    console.log('🔧 Step 4 data received:', data);
+    console.log('🔧 Step 5 data received:', data);
     
-    const updatedData = { ...onboardingData, socials: data.socials };
+    // Upload media files
+    const mediaUrls: string[] = [];
+    for (const file of data.mediaFiles) {
+      const result = await uploadImage(file, 'media', `${user?.id}/media/${Date.now()}-${file.name}`);
+      if (result) {
+        mediaUrls.push(result.url);
+      }
+    }
+    
+    // Save socials and media to database
+    await patchFieldToDatabase('socials', data.socials);
+    await patchFieldToDatabase('media', { items: mediaUrls });
+    
+    // Update local state
+    const updatedData = { 
+      ...onboardingData, 
+      socials: data.socials,
+      mediaFiles: data.mediaFiles
+    };
     setOnboardingData(updatedData);
     
-    updateStep(5);
+    updateStep(6);
   };
 
-  const handleStep5 = async (data: {
+  const handleStep6 = async (data: {
     socialLinks: Array<{
       id: string;
       title: string;
@@ -412,14 +462,28 @@ const Onboarding = () => {
       _file?: File;
     }>;
   }) => {
-    console.log('🔧 Step 5 data received:', data);
+    console.log('🔧 Step 6 data received:', data);
     
+    // Upload testimonial images
+    for (const testimonial of data.testimonials) {
+      if (testimonial._file) {
+        const result = await uploadImage(testimonial._file, 'media', `${user?.id}/testimonials/${Date.now()}-${testimonial._file.name}`);
+        if (result) {
+          testimonial.image_url = result.url;
+        }
+      }
+    }
+    
+    // Save testimonials to database
+    await patchFieldToDatabase('testimonials', data.testimonials);
+    
+    // Update local state
     setOnboardingData(prev => ({ ...prev }));
     
-    updateStep(6);
+    updateStep(7);
   };
 
-  const handleStep6 = async (data: {
+  const handleStep7 = async (data: {
     footerBusinessName?: string;
     footerEmail?: string;
     footerPhone?: string;
@@ -442,7 +506,7 @@ const Onboarding = () => {
       whatsapp?: string;
     };
   }) => {
-    console.log('🔧 Step 6 data received:', data);
+    console.log('🔧 Step 7 data received:', data);
     
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
@@ -479,7 +543,7 @@ const Onboarding = () => {
       await patchFieldToDatabase('footerShowAttribution', data.footerShowAttribution);
     }
     
-    updateStep(7);
+    updateStep(8);
   };
 
   const handleFinish = async () => {
@@ -492,6 +556,7 @@ const Onboarding = () => {
         .update({ 
           onboarding_completed: true,
           onboarding_step: 8,
+          status: 'published',
           updated_at: new Date().toISOString()
         })
         .eq('id', onboardingData.profileId);
@@ -578,8 +643,23 @@ const Onboarding = () => {
 
       case 4:
         return (
-          <Step4Extras 
+          <Step4PersonalImage 
             onNext={handleStep4} 
+            onBack={goBack}
+            handle={onboardingData.handle}
+            existingData={{
+              avatarFile: onboardingData.avatarFile,
+              aboutTitle: onboardingData.aboutTitle,
+              aboutDescription: onboardingData.aboutDescription,
+              avatar_url: onboardingData.avatarUrl,
+            }}
+          />
+        );
+
+      case 5:
+        return (
+          <Step4Extras 
+            onNext={handleStep5} 
             onBack={goBack}
             existingData={{
               socials: onboardingData.socials,
@@ -588,10 +668,10 @@ const Onboarding = () => {
           />
         );
 
-      case 5:
+      case 6:
         return (
           <Step5SocialTestimonials 
-            onNext={handleStep5} 
+            onNext={handleStep6} 
             onBack={goBack}
             existingData={{
               socialLinks: [],
@@ -600,10 +680,10 @@ const Onboarding = () => {
           />
         );
 
-      case 6:
+      case 7:
         return (
           <Step6Footer 
-            onNext={handleStep6} 
+            onNext={handleStep7} 
             onBack={goBack}
             existingData={{
               footerBusinessName: onboardingData.footerBusinessName,
@@ -621,7 +701,7 @@ const Onboarding = () => {
           />
         );
 
-      case 7:
+      case 8:
         return (
           <Step7Preview 
             onPublish={handleFinish}
@@ -648,6 +728,7 @@ const Onboarding = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <OnboardingProgress currentStep={currentStep} totalSteps={8} />
       {renderStep()}
     </div>
   );

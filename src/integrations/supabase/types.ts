@@ -140,6 +140,7 @@ export type Database = {
           accent_color: string | null
           avatar_url: string | null
           banner: Json
+          banner_url: string | null
           booking_mode: string
           booking_url: string | null
           category: string | null
@@ -187,6 +188,7 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           banner?: Json
+          banner_url?: string | null
           booking_mode?: string
           booking_url?: string | null
           category?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           banner?: Json
+          banner_url?: string | null
           booking_mode?: string
           booking_url?: string | null
           category?: string | null

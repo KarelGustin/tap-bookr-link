@@ -322,67 +322,39 @@ export default function PublicProfile() {
 
   // Extract media array from various possible structures
   const rawMedia: unknown = profile.media;
-  const extractMediaArray = (rawMedia: unknown): unknown[] => {
+  const extractMediaArray = (rawMedia: unknown): string[] => {
     if (!rawMedia) return [];
     
-    // If it's already an array, return it
-    if (Array.isArray(rawMedia)) return rawMedia;
+    // If it's already an array of strings, return it
+    if (Array.isArray(rawMedia)) {
+      return rawMedia.filter(item => typeof item === 'string');
+    }
     
     // If it's an object, look for common media properties
     if (typeof rawMedia === 'object' && rawMedia !== null) {
       const mediaObj = rawMedia as Record<string, unknown>;
       
-      // Check for items array
+      // Check for items array (new structure)
       if (mediaObj.items && Array.isArray(mediaObj.items)) {
-        return mediaObj.items;
+        return mediaObj.items.filter(item => typeof item === 'string');
       }
       
       // Check for media array
       if (mediaObj.media && Array.isArray(mediaObj.media)) {
-        return mediaObj.media;
+        return mediaObj.media.filter(item => typeof item === 'string');
       }
       
       // Check for files array
       if (mediaObj.files && Array.isArray(mediaObj.files)) {
-        return mediaObj.files;
+        return mediaObj.files.filter(item => typeof item === 'string');
       }
-      
-      // If no array found, return the object itself as a single item
-      return [mediaObj];
     }
     
     return [];
   };
 
   // Get media list and limit to maximum 6 items
-  const mediaList: unknown[] = extractMediaArray(rawMedia).slice(0, 6);
-
-  // Get image URL from various possible media item structures
-  const getImageUrl = (mediaItem: unknown): string | null => {
-    if (!mediaItem) return null;
-    
-    if (typeof mediaItem === 'string') {
-      return mediaItem;
-    }
-    
-    if (typeof mediaItem === 'object' && mediaItem !== null) {
-      const item = mediaItem as Record<string, unknown>;
-      
-      // Check for common URL properties
-      if (item.url && typeof item.url === 'string') return item.url;
-      if (item.imageUrl && typeof item.imageUrl === 'string') return item.imageUrl;
-      if (item.image_url && typeof item.image_url === 'string') return item.image_url;
-      if (item.file_url && typeof item.file_url === 'string') return item.file_url;
-      
-      // Check for file object
-      if (item.file && typeof item.file === 'object' && item.file !== null) {
-        const file = item.file as Record<string, unknown>;
-        if (file.url && typeof file.url === 'string') return file.url;
-      }
-    }
-    
-    return null;
-  };
+  const mediaList: string[] = extractMediaArray(rawMedia).slice(0, 6);
 
   
   return (
