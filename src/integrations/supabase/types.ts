@@ -344,6 +344,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_subscription_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_handle_available: {
         Args: { in_handle: string }
         Returns: boolean

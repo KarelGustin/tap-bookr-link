@@ -143,7 +143,7 @@ async function handleSubscriptionCreated(subscription: StripeSubscriptionPayload
 
   // Create subscription record
   const { error: subError } = await supabase
-    .from('subscriptions') // Verwijder 'private.'
+    .from('subscriptions')
     .insert({
       profile_id: profileId,
       stripe_subscription_id: subscription.id,
@@ -189,7 +189,7 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
 
   // Update subscription record
   const { error } = await supabase
-    .from('private.subscriptions') // Privé schema
+    .from('subscriptions')
     .update({
       status: subscription.status,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
@@ -216,8 +216,7 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
     .from('profiles')
     .update({
       subscription_status: subscription.status,
-      stripe_customer_id: subscription.customer, // Keep stripe_customer_id updated
-      subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer,
       onboarding_completed: subscription.status === 'active' ? true : undefined,
       onboarding_step: subscription.status === 'active' ? 8 : undefined,
       status: profileStatus,
@@ -240,7 +239,7 @@ async function handleSubscriptionDeleted(subscription: StripeSubscriptionPayload
 
   // Update subscription record
   const { error: subError } = await supabase
-    .from('private.subscriptions') // Privé schema
+    .from('subscriptions')
     .update({
       status: 'canceled',
       updated_at: new Date().toISOString(),
@@ -257,11 +256,6 @@ async function handleSubscriptionDeleted(subscription: StripeSubscriptionPayload
     .update({
       subscription_status: 'canceled',
       status: 'draft',
-      // Clear subscription-related fields
-      subscription_id: null,
-      stripe_customer_id: null,
-      trial_start_date: null,
-      trial_end_date: null,
       grace_period_ends_at: null,
       updated_at: new Date().toISOString(),
     })
@@ -284,7 +278,7 @@ async function handleInvoicePaymentSucceeded(invoice: StripeInvoicePayload, supa
 
   // Get subscription to find profile_id
   const { data: subscription, error: subError } = await supabase
-    .from('private.subscriptions') // Privé schema
+    .from('subscriptions')
     .select('profile_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single()
@@ -337,7 +331,7 @@ async function handleInvoicePaymentFailed(invoice: StripeInvoicePayload, supabas
 
   // Get subscription to find profile_id
   const { data: subscription, error: subError } = await supabase
-    .from('private.subscriptions') // Privé schema
+    .from('subscriptions')
     .select('profile_id')
     .eq('stripe_subscription_id', subscriptionId)
     .single()

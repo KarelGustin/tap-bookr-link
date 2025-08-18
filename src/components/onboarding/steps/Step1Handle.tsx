@@ -110,23 +110,31 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     setHandleStatus(prev => ({ ...prev, checking: true }));
 
     try {
-      // Check of handle al bestaat in database
-      const { data: existingProfile, error } = await supabase
-        .from('profiles')
-        .select('id, handle, user_id')
-        .eq('handle', handleToCheck.toLowerCase())
-        .single();
+      // Use the database function for consistent handle checking
+      const { data: isAvailable, error } = await supabase
+        .rpc('is_handle_available', { in_handle: handleToCheck.toLowerCase() });
 
-      if (error && error.code === 'PGRST116') {
-        // Handle is beschikbaar
+      if (error) {
+        console.error('Error checking handle availability:', error);
+        setHandleStatus(prev => ({ ...prev, checking: false }));
+        return;
+      }
+
+      if (isAvailable) {
         setHandleStatus({
           available: true,
           checking: false,
           suggestions: [],
         });
-      } else if (existingProfile) {
-        // Handle is al in gebruik
-        if (existingProfile.user_id === user?.id) {
+      } else {
+        // Check if it's the user's own handle
+        const { data: existingProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, handle, user_id')
+          .eq('handle', handleToCheck.toLowerCase())
+          .maybeSingle();
+
+        if (!profileError && existingProfile && existingProfile.user_id === user?.id) {
           // Dit is de eigen handle van de gebruiker
           setHandleStatus({
             available: true,
@@ -134,7 +142,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
             suggestions: [],
           });
         } else {
-          // Handle is door iemand anders in gebruik
+          // Handle is door iemand anders in gebruik, genereer suggesties
           const suggestions = [
             `${handleToCheck}-nl`,
             `${handleToCheck}-amsterdam`,
@@ -201,7 +209,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
 
     onNext({
       handle: handle.toLowerCase(),
-      businessName: businessName.trim(),
+      businessName: businessName.trim() || undefined,
       isBusiness,
     });
   };

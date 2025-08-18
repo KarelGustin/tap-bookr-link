@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useOnboardingAutoSave } from '@/hooks/use-onboarding-auto-save';
 import { ArrowLeft } from 'lucide-react';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
 import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
@@ -156,6 +157,12 @@ export default function Onboarding() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Auto-save hook for persistent data storage
+  useOnboardingAutoSave(onboardingData.profileId, onboardingData as any, {
+    enabled: !!onboardingData.profileId && !!user?.id,
+    delay: 1500
+  });
 
   // Helper function to clean testimonials data by removing _file property
   const cleanTestimonialsData = (testimonials: OnboardingData['testimonials']) => {
