@@ -107,3 +107,16 @@ FFBE0B, FB5607, FF006E, 8338EC, 3A86FF, 000000, FFFFFF
     @apply bg-background text-foreground;
   }
 }
+
+/* Theme color variables - clean beauty industry colors */
+:root {
+  --color-primary: #EC4899;      /* Warm pink for beauty industry */
+  --color-secondary: #F9A8D4;    /* Soft pink secondary */
+  --color-accent: #BE185D;       /* Deep rose accent */
+  --color-background: #FDF2F8;   /* Very light pink background */
+  --color-text: #1F2937;         /* Dark gray text for readability */
+  --color-surface: #FFFFFF;      /* Clean white surface */
+  --color-border: #FCE7F3;       /* Light pink border */
+  --color-muted: #FDF2F8;       /* Very light pink muted */
+  --color-card: #FFFFFF;         /* Clean white card */
+}

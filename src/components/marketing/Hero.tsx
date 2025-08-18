@@ -38,7 +38,7 @@ export const Hero = () => {
     return () => clearTimeout(t);
   }, [handle]);
 
-  const previewUrl = `https://tapbookr.com/test`;
+  const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
     <section className="relative min-h-screen overflow-hidden bg-secondary py-4">
@@ -167,7 +167,7 @@ export const Hero = () => {
                   <div className="relative w-full h-full overflow-hidden">
                     <iframe
                       key={debouncedHandle}
-                      src="https://tapbookr.com/bla"
+                      src="https://tapbookr.com/tapbookr"
                       className="w-full h-full"
                       title="Live Mobile Preview"
                       style={{ 

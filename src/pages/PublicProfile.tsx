@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import NotFound from './NotFound';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+
 type Profile = Database['public']['Tables']['profiles']['Row'] & {
   testimonials?: Testimonial[];
   footer_business_name?: string;
@@ -86,6 +87,8 @@ export default function PublicProfile() {
     }
   }, [handle]);
 
+
+
   const loadProfile = async () => {
     try {
       if (!handle) {
@@ -150,7 +153,7 @@ export default function PublicProfile() {
     return <NotFound />;
   }
 
-  // Extract banner configuration - simplified
+  // Extract banner configuration - simplified with beauty industry colors
   const bannerConfig: BannerSection = {
     background_image: (() => {
       if (profile.banner && typeof profile.banner === 'object') {
@@ -160,22 +163,10 @@ export default function PublicProfile() {
       return undefined;
     })(),
     profile_image: profile.avatar_url,
-    title: profile.name || 'Welkom', // ← Direct uit database kolom
-    subtitle: profile.slogan || 'Maak kennis met ons', // ← Direct uit database kolom
-    background_color: (() => {
-      if (profile.banner && typeof profile.banner === 'object') {
-        const banner = profile.banner as Record<string, unknown>;
-        return (banner.color || banner.backgroundColor) as string;
-      }
-      return '#6E56CF';
-    })(),
-    text_color: (() => {
-      if (profile.banner && typeof profile.banner === 'object') {
-        const banner = profile.banner as Record<string, unknown>;
-        return (banner.textColor || banner.color) as string;
-      }
-      return '#FFFFFF';
-    })()
+    title: profile.name || 'Welkom',
+    subtitle: profile.slogan || 'Maak kennis met ons',
+    background_color: '#EC4899', // Warm pink for beauty industry
+    text_color: '#FFFFFF'        // White text for contrast
   };
 
   // Extract footer data
@@ -346,9 +337,9 @@ export default function PublicProfile() {
         </section>
 
         {/* About Section */}
-        <section className="py-16 px-4 bg-white relative" style={{ zIndex: 3 }}>
+        <section className="py-16 px-4 relative" style={{ zIndex: 3, backgroundColor: '#FFFFFF' }}>
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
+            <h2 className="text-3xl font-bold text-center mb-12" style={{ color: '#1F2937' }}>
               {t('public.about', { name: footerData.businessName || profile.name || 'jouw bedrijf' })}
             </h2>
             
@@ -446,11 +437,11 @@ export default function PublicProfile() {
           </div>
         </section>
 
-        {/* Social Links Section */}
+                {/* Social Links Section */}
         {profile.socials && Array.isArray(profile.socials) && profile.socials.length > 0 && (
-          <section className="py-8 px-4">
+          <section className="py-8 px-4" style={{ backgroundColor: '#FFFFFF' }}>
             <div className="max-w-4xl mx-auto text-center">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Social Media</h3>
+              <h3 className="text-2xl font-bold mb-6" style={{ color: '#1F2937' }}>Social Media</h3>
               <div className="flex flex-wrap justify-center gap-4">
                 {(profile.socials as SocialLink[]).map((social: SocialLink, index: number) => {
                   if (typeof social === 'object' && social !== null && 'url' in social && social.url) {
@@ -460,7 +451,11 @@ export default function PublicProfile() {
                         href={social.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-6 py-3 bg-primary text-black rounded-lg hover:bg-primary/90 transition-colors"
+                        className="inline-flex items-center px-6 py-3 rounded-lg transition-colors"
+                        style={{
+                          backgroundColor: '#EC4899', // Warm pink for beauty industry
+                          color: '#FFFFFF'
+                        }}
                       >
                         <span className="font-medium">{social.title || social.platform || 'Social'}</span>
                       </a>
@@ -474,9 +469,9 @@ export default function PublicProfile() {
         )}
 
         {/* Media Gallery Section */}
-        <section className="py-8 px-4">
+        <section className="py-8 px-4" style={{ backgroundColor: '#FDF2F8' }}>
           <div className="max-w-6xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            <h3 className="text-2xl font-bold text-center mb-6" style={{ color: '#1F2937' }}>
               {t('public.workResults')}
             </h3>
             
@@ -525,7 +520,7 @@ export default function PublicProfile() {
         <section className="w-full" id="booking-section">
           <div className="w-full">
             <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center px-4">
-              {profile.booking_url && !profile.use_whatsapp ? t('Boek nu een afspraak') : t('Neem contact op')}
+              {profile.booking_url && !profile.use_whatsapp ? t('') : t('Neem contact op')}
             </h3>
             
             {/* WhatsApp CTA */}
@@ -653,7 +648,7 @@ export default function PublicProfile() {
         )}
 
         {/* Footer Section */}
-        <footer className="bg-gray-900 text-white mt-16">
+        <footer className="text-white mt-16" style={{ backgroundColor: '#111827' }}>
           <div className="max-w-6xl mx-auto px-4 py-12">
             
             {/* Primary Actions */}
@@ -662,7 +657,11 @@ export default function PublicProfile() {
                 {profile.booking_url && !profile.use_whatsapp ? (
                   <Button 
                     size="lg"
-                    className="bg-primary hover:bg-primary/90 text-black px-8 py-3 text-lg"
+                    className="px-8 py-3 text-lg"
+                    style={{
+                      backgroundColor: '#EC4899', // Warm pink for beauty industry
+                      color: '#FFFFFF'
+                    }}
                     onClick={() => {
                       document.getElementById('booking-section')?.scrollIntoView({ 
                         behavior: 'smooth' 
@@ -674,7 +673,11 @@ export default function PublicProfile() {
                 ) : profile.whatsapp_number && (
                   <Button 
                     size="lg"
-                    className="bg-green-500 hover:bg-green-600 text-white px-8 py-3 text-lg"
+                    className="px-8 py-3 text-lg"
+                    style={{
+                      backgroundColor: '#10B981', // Keep WhatsApp green
+                      color: 'white'
+                    }}
                     onClick={() => {
                       document.getElementById('booking-section')?.scrollIntoView({ 
                         behavior: 'smooth' 
@@ -704,61 +707,63 @@ export default function PublicProfile() {
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               {/* Business Details */}
               <div className="space-y-4">
-                {footerData.businessName && (
-                  <h3 className="text-xl font-semibold">{footerData.businessName}</h3>
-                )}
-                
-                {footerData.address && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-5 h-5 text-gray-400 mt-0.5">📍</div>
-                    <p className="text-gray-300">{footerData.address}</p>
-                  </div>
-                )}
-                
-                {footerData.phone && (
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 text-gray-400">📞</div>
-                    <a 
-                      href={`tel:${footerData.phone}`}
-                      className="text-gray-300 hover:text-white transition-colors"
-                    >
-                      {footerData.phone}
-                    </a>
-                  </div>
-                )}
-                
-                {footerData.email && (
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 text-gray-400">✉️</div>
-                    <a 
-                      href={`mailto:${footerData.email}`}
-                      className="text-gray-300 hover:text-white transition-colors"
-                    >
-                      {footerData.email}
-                    </a>
-                  </div>
-                )}
-                
-                {footerData.hours && (
-                  <div className="flex items-start space-x-3">
-                    <div className="w-5 h-5 text-gray-400 mt-0.5">🕒</div>
-                    <p className="text-gray-300">
-                      {Object.entries(footerData.hours)
-                        .filter(([_, day]) => !day.closed)
-                        .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)} ${time.open}-${time.close}`)
-                        .join(', ')}
-                    </p>
-                  </div>
-                )}
-                
-                {footerData.nextAvailable && (
-                  <div className="flex items-center space-x-3">
-                    <div className="w-5 h-5 text-gray-400">🎯</div>
-                    <p className="text-gray-300">
-                      Volgende beschikbaar: <span className="font-medium">{footerData.nextAvailable}</span>
-                    </p>
-                  </div>
-                )}
+                                 {footerData.businessName && (
+                   <h3 className="text-xl font-semibold" style={{ color: '#FFFFFF' }}>{footerData.businessName}</h3>
+                 )}
+                 
+                 {footerData.address && (
+                   <div className="flex items-start space-x-3">
+                     <div className="w-5 h-5 mt-0.5" style={{ color: '#FFFFFF' }}>📍</div>
+                     <p style={{ color: '#FFFFFF' }}>{footerData.address}</p>
+                   </div>
+                 )}
+                 
+                 {footerData.phone && (
+                   <div className="flex items-center space-x-3">
+                     <div className="w-5 h-5" style={{ color: '#FFFFFF' }}>📞</div>
+                     <a 
+                       href={`tel:${footerData.phone}`}
+                       className="transition-colors"
+                       style={{ color: '#FFFFFF' }}
+                     >
+                       {footerData.phone}
+                     </a>
+                   </div>
+                 )}
+                 
+                 {footerData.email && (
+                   <div className="flex items-center space-x-3">
+                     <div className="w-5 h-5" style={{ color: '#FFFFFF' }}>✉️</div>
+                     <a 
+                       href={`mailto:${footerData.email}`}
+                       className="transition-colors"
+                       style={{ color: '#FFFFFF' }}
+                     >
+                       {footerData.email}
+                     </a>
+                   </div>
+                 )}
+                 
+                 {footerData.hours && (
+                   <div className="flex items-start space-x-3">
+                     <div className="w-5 h-5 mt-0.5" style={{ color: '#FFFFFF' }}>🕒</div>
+                     <p style={{ color: '#FFFFFF' }}>
+                       {Object.entries(footerData.hours)
+                         .filter(([_, day]) => !day.closed)
+                         .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)} ${time.open}-${time.close}`)
+                         .join(', ')}
+                     </p>
+                   </div>
+                 )}
+                 
+                 {footerData.nextAvailable && (
+                   <div className="flex items-center space-x-3">
+                     <div className="w-5 h-5" style={{ color: '#FFFFFF' }}>🎯</div>
+                     <p style={{ color: '#FFFFFF' }}>
+                       Volgende beschikbaar: <span className="font-medium">{footerData.nextAvailable}</span>
+                     </p>
+                   </div>
+                 )}
               </div>
 
               {/* Google Maps */}

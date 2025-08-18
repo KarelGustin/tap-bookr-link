@@ -290,6 +290,8 @@ export const Step7Preview = ({
             </div>
           </div>
 
+
+
           {/* Page Summary */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Pagina Samenvatting</h3>

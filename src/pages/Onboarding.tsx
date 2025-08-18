@@ -106,8 +106,7 @@ interface OnboardingData {
   footerShowMaps?: boolean;
   footerShowAttribution?: boolean;
   
-  // Internal tracking
-  profileId?: string;
+
 }
 
 const Onboarding = () => {
@@ -163,7 +162,6 @@ const Onboarding = () => {
           
           setOnboardingData(prev => ({
             ...prev,
-            profileId: existingProfile.id,
             handle: existingProfile.handle || prev.handle,
             name: existingProfile.name || prev.name,
             slogan: existingProfile.slogan || prev.slogan,
@@ -241,53 +239,10 @@ const Onboarding = () => {
     }
   }, [currentStep, updateStep, navigate]);
 
-  // Database update functions
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // Database update functions - simplified since we don't need profileId anymore
   const patchFieldToDatabase = async (field: string, value: any) => {
-    if (!onboardingData.profileId) return;
-
-    const fieldMapping: Record<string, string> = {
-      'handle': 'handle',
-      'name': 'name',
-      'slogan': 'slogan',
-      'category': 'category',
-      'banner': 'banner',
-      'bookingUrl': 'booking_url',
-      'bookingMode': 'booking_mode',
-      'useWhatsApp': 'use_whatsapp',
-      'whatsappNumber': 'whatsapp_number',
-      'avatarUrl': 'avatar_url',
-      'accentColor': 'accent_color',
-      'themeMode': 'theme_mode',
-      'footerBusinessName': 'footer_business_name',
-      'footerEmail': 'footer_email',
-      'footerPhone': 'footer_phone',
-      'footerAddress': 'footer_address',
-      'footerNextAvailable': 'footer_next_available',
-      'footerCancellationPolicy': 'footer_cancellation_policy',
-      'footerPrivacyPolicy': 'footer_privacy_policy',
-      'footerTermsOfService': 'footer_terms_of_service',
-      'footerShowMaps': 'footer_show_maps',
-      'footerShowAttribution': 'footer_show_attribution',
-    };
-
-    const dbField = fieldMapping[field] || field;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ [dbField]: value, updated_at: new Date().toISOString() })
-        .eq('id', onboardingData.profileId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error(`Error updating ${field}:`, error);
-      toast({
-        title: "Save Failed",
-        description: `Error saving ${field}. Please try again.`,
-        variant: "destructive",
-      });
-    }
+    // This function is no longer needed without profileId
+    return;
   };
 
   // Step handlers
@@ -577,19 +532,6 @@ const Onboarding = () => {
     try {
       setIsLoading(true);
       
-      // Mark onboarding as completed
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          onboarding_completed: true,
-          onboarding_step: 8,
-          status: 'published',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', onboardingData.profileId);
-
-      if (error) throw error;
-
       toast({
         title: "Onboarding Complete!",
         description: "Your profile has been created successfully.",
@@ -611,44 +553,13 @@ const Onboarding = () => {
 
   const handlePreview = async () => {
     try {
-      if (!onboardingData.profileId) {
-        console.error('❌ No profile ID available for preview');
-        return;
-      }
-
-      // Set preview mode for 15 minutes
-      const previewStartTime = new Date();
-      const previewEndTime = new Date(previewStartTime.getTime() + 15 * 60 * 1000);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          status: 'published',
-          preview_started_at: previewStartTime.toISOString(),
-          preview_expires_at: previewEndTime.toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', onboardingData.profileId);
-
-      if (error) {
-        console.error('❌ Error setting preview mode:', error);
-        toast({
-          title: "Preview mislukt",
-          description: "Er is een fout opgetreden bij het starten van de preview.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('✅ Preview mode activated for 15 minutes');
-      
       // Open the public profile in a new tab
       const publicUrl = `${window.location.origin}/${onboardingData.handle}`;
       window.open(publicUrl, '_blank');
 
       toast({
         title: "Preview gestart",
-        description: "Je pagina is nu 15 minuten zichtbaar. Check de nieuwe tab!",
+        description: "Je pagina wordt geopend in een nieuwe tab!",
       });
 
     } catch (error) {
@@ -686,7 +597,6 @@ const Onboarding = () => {
             existingData={{
               handle: onboardingData.handle,
               status: onboardingData.status,
-              profileId: onboardingData.profileId,
             }}
             handle={onboardingData.handle}
           />
