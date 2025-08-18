@@ -2334,8 +2334,6 @@ export default function Onboarding() {
                   onBack={() => navigate('/')}
                   existingData={{
                     handle: onboardingData.handle,
-                    businessName: onboardingData.businessName,
-                    isBusiness: onboardingData.isBusiness,
                     status: onboardingData.status,
                     profileId: onboardingData.profileId,
                   }}

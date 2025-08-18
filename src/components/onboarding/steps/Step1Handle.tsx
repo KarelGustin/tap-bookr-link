@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,15 +11,11 @@ import { useAuth } from '@/contexts/AuthContext';
 interface Step1HandleProps {
   onNext: (data: { 
     handle: string; 
-    businessName?: string; 
-    isBusiness: boolean;
   }) => void;
   onBack: () => void;
   handle?: string;
   existingData?: {
     handle?: string;
-    businessName?: string;
-    isBusiness: boolean;
     status?: string;
     profileId?: string;
   };
@@ -37,8 +32,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
   const { user } = useAuth();
   const [userHandle, setUserHandle] = useState<string>('');
   const [handle, setHandle] = useState(existingData?.handle || '');
-  const [businessName, setBusinessName] = useState(existingData?.businessName || '');
-  const [isBusiness, setIsBusiness] = useState(existingData?.isBusiness || false);
   const [useExistingHandle, setUseExistingHandle] = useState(false);
   const [isHandleLocked, setIsHandleLocked] = useState(false);
   const [handleStatus, setHandleStatus] = useState<HandleStatus>({
@@ -71,7 +64,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('handle, status, name')
+          .select('handle, status')
           .eq('id', existingData.profileId)
           .single();
 
@@ -82,12 +75,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
           if (profile.status === 'published') {
             setIsHandleLocked(true);
           }
-        }
-        
-        // Load existing business name from database
-        if (profile?.name) {
-          setBusinessName(profile.name);
-          setIsBusiness(true); // If there's a name, assume it's a business
         }
       } catch (error) {
         console.error('Error fetching user handle:', error);
@@ -167,17 +154,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     setHandle(cleanValue);
   };
 
-  const handleBusinessNameChange = (value: string) => {
-    setBusinessName(value);
-  };
-
-  const handleBusinessToggle = (checked: boolean) => {
-    setIsBusiness(checked);
-    if (!checked) {
-      setBusinessName('');
-    }
-  };
-
   const handleChooseExistingHandle = () => {
     setUseExistingHandle(true);
     setHandle(userHandle);
@@ -197,11 +173,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
 
   const canGoNext = () => {
     if (useExistingHandle && userHandle) return true;
-    
-    const handleValid = handle.length >= 3 && handleStatus.available;
-    const businessNameValid = !isBusiness || (businessName && businessName.trim().length >= 2);
-    
-    return handleValid && businessNameValid;
+    return handle.length >= 3 && handleStatus.available;
   };
 
   const handleNext = () => {
@@ -209,8 +181,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
 
     onNext({
       handle: handle.toLowerCase(),
-      businessName: businessName.trim() || undefined,
-      isBusiness,
     });
   };
 
@@ -325,40 +295,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
             <p className="text-sm text-muted-foreground">
               Alleen kleine letters, cijfers en streepjes. Minimaal 3 karakters.
             </p>
-          </div>
-
-          {/* Business section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isBusiness"
-                checked={isBusiness}
-                onCheckedChange={handleBusinessToggle}
-              />
-              <Label htmlFor="isBusiness" className="text-base font-medium">
-                Dit is een bedrijf
-              </Label>
-            </div>
-
-            {isBusiness && (
-              <div className="space-y-2">
-                <Label htmlFor="businessName" className="text-base font-medium">
-                  Bedrijfsnaam
-                </Label>
-                <Input
-                  id="businessName"
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => handleBusinessNameChange(e.target.value)}
-                  placeholder="Jouw Bedrijfsnaam"
-                  className="rounded-lg h-12"
-                  maxLength={60}
-                />
-                <p className="text-sm text-muted-foreground">
-                  De naam van je bedrijf zoals klanten deze moeten kennen
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Important note */}
