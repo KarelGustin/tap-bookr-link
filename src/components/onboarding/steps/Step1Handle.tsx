@@ -219,8 +219,18 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     return handle.length >= 3 && handleStatus.available;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!canGoNext()) return;
+
+    // Cancel any pending auto-save
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Immediately save handle to database before proceeding
+    if (handle.length >= 3 && !isHandleLocked && existingData?.profileId) {
+      await saveHandleToDatabase(handle);
+    }
 
     onNext({
       handle: handle.toLowerCase(),
@@ -370,7 +380,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
             Terug
           </Button>
           <Button 
-            onClick={handleNext} 
+            onClick={handleNext}
             disabled={!canGoNext()}
             className="rounded-lg"
           >

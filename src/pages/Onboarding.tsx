@@ -292,34 +292,9 @@ const Onboarding = () => {
       const updatedData = { ...onboardingData, ...data };
       setOnboardingData(updatedData);
       
-      // Only save to database if handle is different from current one
-      const currentHandle = onboardingData.handle;
-      if (currentHandle !== data.handle) {
-        if (onboardingData.profileId) {
-          await patchFieldToDatabase('handle', data.handle);
-          console.log('✅ Handle updated in database:', data.handle);
-        } else {
-          // If for some reason profileId is missing, fetch the profile
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('user_id', user?.id)
-            .single();
-            
-          if (profile) {
-            setOnboardingData(prev => ({ ...prev, profileId: profile.id }));
-            await patchFieldToDatabase('handle', data.handle);
-          } else {
-            console.error('No profile found for user:', error);
-            toast({
-              title: "Profile Error",
-              description: "Could not find your profile. Please try refreshing the page.",
-              variant: "destructive",
-            });
-            return;
-          }
-        }
-      }
+      // Note: Handle is already saved in Step1Handle component before this function is called
+      // So we don't need to save it again here to avoid duplicate database calls
+      console.log('✅ Handle data processed, proceeding to next step');
       
       // Go to next step
       updateStep(2);
@@ -328,7 +303,7 @@ const Onboarding = () => {
       console.error('Error in handleStep1:', error);
       toast({
         title: "Error",
-        description: "Failed to save handle. Please try again.",
+        description: "Failed to process handle. Please try again.",
         variant: "destructive",
       });
     }
