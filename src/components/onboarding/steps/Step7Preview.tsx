@@ -169,12 +169,16 @@ export const Step7Preview = ({
       // Get profile ID from the database using the handle
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, booking_url, whatsapp_number')
         .eq('handle', profileData.handle)
         .single();
       
       if (error || !profile?.id) {
         throw new Error('Profile niet gevonden');
+      }
+
+      if (!profile.booking_url && !profile.whatsapp_number) {
+        throw new Error('Om live te gaan moet je een whatsapp nummer invoeren of je boekings-URL toevoegen');
       }
 
       // Redirect to Stripe checkout
