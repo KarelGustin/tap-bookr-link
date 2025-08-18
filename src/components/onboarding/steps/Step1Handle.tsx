@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface Step1HandleProps {
   onNext: (data: { 
@@ -30,10 +31,12 @@ interface HandleStatus {
 export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }: Step1HandleProps) => {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [userHandle, setUserHandle] = useState<string>('');
   const [handle, setHandle] = useState(existingData?.handle || '');
   const [useExistingHandle, setUseExistingHandle] = useState(false);
   const [isHandleLocked, setIsHandleLocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [handleStatus, setHandleStatus] = useState<HandleStatus>({
     available: false,
     checking: false,
@@ -41,6 +44,7 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
   });
 
   const handleInputRef = useRef<HTMLInputElement>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check handle availability with debouncing
   useEffect(() => {
@@ -149,9 +153,48 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     }
   };
 
+  // Real-time save to database with debouncing
+  const saveHandleToDatabase = useCallback(async (handleToSave: string) => {
+    if (!user || !existingData?.profileId || handleToSave.length < 3) return;
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ handle: handleToSave.toLowerCase() })
+        .eq('id', existingData.profileId);
+      
+      if (error) {
+        console.error('❌ Failed to save handle:', error);
+        toast({
+          title: "Opslaan mislukt",
+          description: "Handle kon niet worden opgeslagen. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+      } else {
+        console.log('✅ Handle saved to database:', handleToSave);
+      }
+    } catch (error) {
+      console.error('❌ Error saving handle:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user, existingData?.profileId, toast]);
+
   const handleInputChange = (value: string) => {
     const cleanValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
     setHandle(cleanValue);
+    
+    // Debounced save to database
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    if (cleanValue.length >= 3 && !isHandleLocked) {
+      saveTimeoutRef.current = setTimeout(() => {
+        saveHandleToDatabase(cleanValue);
+      }, 1500); // Save after 1.5 seconds of no typing
+    }
   };
 
   const handleChooseExistingHandle = () => {
@@ -183,6 +226,15 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
       handle: handle.toLowerCase(),
     });
   };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <OnboardingLayout
@@ -262,6 +314,12 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
                   <>
                     <Check className="w-4 h-4 text-green-600" />
                     <span className="text-green-600">Beschikbaar</span>
+                    {isSaving && (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-gray-400 ml-2" />
+                        <span className="text-gray-500 text-xs">Opslaan...</span>
+                      </>
+                    )}
                   </>
                 ) : handleStatus.suggestions.length > 0 ? (
                   <>

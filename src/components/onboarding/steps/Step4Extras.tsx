@@ -36,14 +36,8 @@ interface Step4ExtrasProps {
     };
     mediaFiles?: File[];
     whatsappNumber?: string;
-    media?: {
-      items: Array<{
-        id: string;
-        url: string;
-        type: string;
-        order: number;
-      }>;
-    };
+    // Support different media formats from DB - flexible typing
+    media?: any;
     // Add fields from Step4PersonalImage
     aboutTitle?: string;
     aboutDescription?: string;
@@ -176,6 +170,23 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingData?.socials]);
+
+  // Sync media previews with existingData changes
+  useEffect(() => {
+    const rawMedia = existingData?.media as unknown;
+    const urls = extractMediaUrls(rawMedia);
+    
+    console.log('🔧 Media sync - Raw media:', rawMedia);
+    console.log('🔧 Media sync - Extracted URLs:', urls);
+    
+    if (urls.length > 0) {
+      setMediaPreviews(urls);
+    } else {
+      // Reset to empty if no media in existingData
+      setMediaPreviews([]);
+      setMediaFiles([]);
+    }
+  }, [existingData?.media]);
 
   const handleAboutPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

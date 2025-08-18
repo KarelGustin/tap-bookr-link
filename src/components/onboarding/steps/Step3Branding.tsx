@@ -44,26 +44,19 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // Update previews when existing data changes
+  // Update all fields when existing data changes
   useEffect(() => {
+    console.log('🔧 Step3Branding - Syncing with existingData:', existingData);
+    
     if (existingData?.banner?.imageUrl) {
       setBannerPreview(existingData.banner.imageUrl);
-      console.log('Updated banner preview with existing data:', existingData.banner.imageUrl);
     }
     
-    // Also update other fields when existing data changes
-    if (existingData?.name) {
-      setBusinessName(existingData.name);
-    }
-    if (existingData?.slogan) {
-      setSlogan(existingData.slogan);
-    }
-    if (existingData?.category) {
-      setCategory(existingData.category);
-    }
-    if (existingData?.banner?.textColor) {
-      setBannerTextColor(existingData.banner.textColor);
-    }
+    // Update all fields from existingData
+    setBusinessName(existingData?.name || '');
+    setSlogan(existingData?.slogan || '');
+    setCategory(existingData?.category || '');
+    setBannerTextColor(existingData?.banner?.textColor || '#ffffff');
   }, [existingData]);
 
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -288,33 +288,36 @@ const Onboarding = () => {
     console.log('🔧 Step 1 data received:', data);
     
     try {
-      // Profile should already exist since it's created automatically on signup
-      // Just update the handle
+      // Update local state first
       const updatedData = { ...onboardingData, ...data };
       setOnboardingData(updatedData);
       
-      // Update the profile with the new handle
-      if (onboardingData.profileId) {
-        await patchFieldToDatabase('handle', data.handle);
-      } else {
-        // If for some reason profileId is missing, fetch the profile
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('user_id', user?.id)
-          .single();
-          
-        if (profile) {
-          setOnboardingData(prev => ({ ...prev, profileId: profile.id }));
+      // Only save to database if handle is different from current one
+      const currentHandle = onboardingData.handle;
+      if (currentHandle !== data.handle) {
+        if (onboardingData.profileId) {
           await patchFieldToDatabase('handle', data.handle);
+          console.log('✅ Handle updated in database:', data.handle);
         } else {
-          console.error('No profile found for user:', error);
-          toast({
-            title: "Profile Error",
-            description: "Could not find your profile. Please try refreshing the page.",
-            variant: "destructive",
-          });
-          return;
+          // If for some reason profileId is missing, fetch the profile
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('user_id', user?.id)
+            .single();
+            
+          if (profile) {
+            setOnboardingData(prev => ({ ...prev, profileId: profile.id }));
+            await patchFieldToDatabase('handle', data.handle);
+          } else {
+            console.error('No profile found for user:', error);
+            toast({
+              title: "Profile Error",
+              description: "Could not find your profile. Please try refreshing the page.",
+              variant: "destructive",
+            });
+            return;
+          }
         }
       }
       
@@ -757,9 +760,14 @@ const Onboarding = () => {
           <Step4Extras 
             onNext={handleStep5} 
             onBack={goBack}
+            handle={onboardingData.handle}
             existingData={{
               socials: onboardingData.socials,
               mediaFiles: onboardingData.mediaFiles || [],
+              media: onboardingData.media,
+              aboutTitle: onboardingData.aboutTitle,
+              aboutDescription: onboardingData.aboutDescription,
+              avatar_url: onboardingData.avatarUrl,
             }}
           />
         );
