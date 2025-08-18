@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeFilename } from '@/lib/utils';
 
 interface UploadResult {
   url: string;
@@ -30,15 +31,18 @@ export const useImageUpload = () => {
     setIsUploading(true);
 
     try {
-      // Generate a unique filename if no path provided
-      const fileExtension = file.name.split('.').pop();
-      const fileName = path || `${user.id}/${Date.now()}.${fileExtension}`;
+      // Sanitize the filename to prevent InvalidKey errors
+      const sanitizedName = sanitizeFilename(file.name);
+      const fileExtension = sanitizedName.split('.').pop();
+      const fileName = path || `${user.id}/${Date.now()}_${sanitizedName}`;
 
       console.log('🔧 Uploading image:', {
         bucket,
         fileName,
         fileSize: file.size,
-        fileType: file.type
+        fileType: file.type,
+        originalName: file.name,
+        sanitizedName
       });
 
       // Upload file to Supabase Storage

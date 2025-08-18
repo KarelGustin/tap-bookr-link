@@ -455,7 +455,7 @@ const Onboarding = () => {
     // Upload media files
     const mediaItems = [];
     for (const file of data.mediaFiles) {
-      const result = await uploadImage(file, 'media', `${user?.id}/media/${Date.now()}-${file.name}`);
+      const result = await uploadImage(file, 'media');
       if (result) {
         mediaItems.push({
           type: 'image' as const,
@@ -503,7 +503,7 @@ const Onboarding = () => {
     for (let i = 0; i < updatedTestimonials.length; i++) {
       const testimonial = updatedTestimonials[i];
       if (testimonial._file) {
-        const result = await uploadImage(testimonial._file, 'media', `${user?.id}/testimonials/${Date.now()}-${testimonial._file.name}`);
+        const result = await uploadImage(testimonial._file, 'media');
         if (result) {
           testimonial.image_url = result.url;
           delete testimonial._file;
