@@ -98,6 +98,11 @@ export default function Dashboard() {
       url.searchParams.delete('success');
       url.searchParams.delete('subscription');
       window.history.replaceState({}, '', url.toString());
+      
+      // Reload page data after successful payment
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     }
   }, [success, subscriptionStatus, toast]);
 

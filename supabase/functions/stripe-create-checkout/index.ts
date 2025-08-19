@@ -98,8 +98,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/dashboard?canceled=true`,
+      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true&subscription=active`,
+      cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?step=7&cancelled=true`,
       customer_email: req.headers.get('x-user-email') || undefined,
       // Ensure the created subscription carries the profile_id as metadata
       subscription_data: {

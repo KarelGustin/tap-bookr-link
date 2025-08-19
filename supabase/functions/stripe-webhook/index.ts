@@ -184,76 +184,63 @@ async function handleSubscriptionCreated(
   supabase: ReturnType<typeof createClient>
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const profileId = subscription.metadata?.profile_id
+    console.log(`[WEBHOOK] Processing subscription created: ${subscription.id}`);
     
-    if (!profileId) {
-      const errorMsg = 'No profile_id in subscription metadata'
-      console.error('❌', errorMsg, {
-        subscriptionId: subscription.id,
-        metadata: subscription.metadata
-      })
-      return { success: false, message: errorMsg }
+    // Find the profile by customer ID
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, user_id')
+      .eq('stripe_customer_id', subscription.customer)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('[WEBHOOK] Profile not found for customer:', subscription.customer, profileError);
+      return { success: false, message: `Profile not found for customer ${subscription.customer}` };
     }
 
-    console.log(`🔧 Processing subscription created for profile ${profileId}`)
+    console.log(`[WEBHOOK] Found profile: ${profile.id} for user: ${profile.user_id}`);
 
     // Create subscription record
-    const { data: subData, error: subError } = await supabase
+    const { error: insertError } = await supabase
       .from('subscriptions')
       .insert({
-        profile_id: profileId,
         stripe_subscription_id: subscription.id,
+        profile_id: profile.id,
         stripe_customer_id: subscription.customer,
         status: subscription.status,
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
         trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
         trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-      })
-      .select()
-      .single()
+        cancel_at_period_end: subscription.cancel_at_period_end
+      });
 
-    if (subError) {
-      console.error('❌ Error creating subscription record:', {
-        error: subError,
-        profileId,
-        subscriptionId: subscription.id
-      })
-      return { success: false, message: `Subscription creation failed: ${subError.message}` }
+    if (insertError) {
+      console.error('[WEBHOOK] Error creating subscription:', insertError);
+      return { success: false, message: `Error creating subscription: ${insertError.message}` };
     }
 
-    console.log('✅ Subscription record created:', subData.id)
-
-    // Update profile status to published and active
-    const { error: profileError } = await supabase
+    // Update profile with subscription details
+    const { error: updateError } = await supabase
       .from('profiles')
       .update({
+        subscription_status: 'active',
         status: 'published',
-        subscription_id: subData.id,
-        subscription_status: subscription.status,
-        stripe_customer_id: subscription.customer,
-        trial_start_date: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-        trial_end_date: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-        updated_at: new Date().toISOString(),
+        onboarding_completed: true,
+        subscription_id: subscription.id
       })
-      .eq('id', profileId)
+      .eq('id', profile.id);
 
-    if (profileError) {
-      console.error('❌ Error updating profile status:', {
-        error: profileError,
-        profileId,
-        subscriptionId: subscription.id
-      })
-      return { success: false, message: `Profile update failed: ${profileError.message}` }
+    if (updateError) {
+      console.error('[WEBHOOK] Error updating profile:', updateError);
+      return { success: false, message: `Error updating profile: ${updateError.message}` };
     }
 
-    console.log(`✅ Profile ${profileId} is now published with active subscription`)
-    return { success: true, message: `Profile ${profileId} published successfully` }
-
+    console.log(`[WEBHOOK] Successfully created subscription and updated profile`);
+    return { success: true, message: 'Subscription created successfully' };
   } catch (error) {
-    console.error('❌ Unexpected error in handleSubscriptionCreated:', error)
-    return { success: false, message: `Unexpected error: ${error.message}` }
+    console.error('[WEBHOOK] Error in handleSubscriptionCreated:', error);
+    return { success: false, message: `Error processing subscription: ${error}` };
   }
 }
 

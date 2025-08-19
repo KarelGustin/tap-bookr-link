@@ -37,7 +37,7 @@ export const ProtectedRoute = ({
 		if (requireActiveSubscription && !subscriptionLoading) {
 			if (!allowed) {
 				// Geen geldig abonnement of niet published: terug naar onboarding preview
-				navigate('/onboarding?step=7', { replace: true });
+				navigate('/onboarding?step=7&subscription_required=true', { replace: true });
 				return;
 			}
 		}
