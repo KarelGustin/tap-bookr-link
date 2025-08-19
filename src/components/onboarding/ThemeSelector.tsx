@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { THEME_PALETTES, applyThemeToDOM, type ThemeConfig } from '@/lib/themePalettes';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,17 +21,17 @@ export default function ThemeSelector({
 
   useEffect(() => {
     setSelectedTheme(currentTheme);
-    if (isPreview) {
-      applyThemeToDOM(currentTheme);
-    }
   }, [currentTheme, isPreview]);
+
+  const themes = {
+    'elegant-rose': { displayName: 'Elegant Rose', description: 'Warm en uitnodigend', businessType: 'Beauty & Wellness', colors: { primary: '#E11D48', secondary: '#F97316', accent: '#F59E0B', background: '#FEF2F2', text: '#1F2937' }},
+    'ocean-blue': { displayName: 'Ocean Blue', description: 'Professioneel en betrouwbaar', businessType: 'Business & Finance', colors: { primary: '#2563EB', secondary: '#0891B2', accent: '#059669', background: '#EFF6FF', text: '#1F2937' }},
+    'nature-green': { displayName: 'Nature Green', description: 'Fris en natuurlijk', businessType: 'Health & Eco', colors: { primary: '#16A34A', secondary: '#65A30D', accent: '#CA8A04', background: '#F0FDF4', text: '#1F2937' }},
+    'luxury-purple': { displayName: 'Luxury Purple', description: 'Exclusief en premium', businessType: 'Luxury & Premium', colors: { primary: '#9333EA', secondary: '#C026D3', accent: '#DC2626', background: '#FAF5FF', text: '#1F2937' }},
+  };
 
   const handleThemeSelect = async (themeName: string) => {
     setSelectedTheme(themeName);
-    
-    if (isPreview) {
-      applyThemeToDOM(themeName);
-    }
 
     if (onThemeChange) {
       onThemeChange(themeName);
@@ -44,7 +43,7 @@ export default function ThemeSelector({
       try {
         const { error } = await supabase
           .from('profiles')
-          .update({ theme_palette: themeName })
+          .update({ accent_color: themes[themeName as keyof typeof themes]?.colors.primary || '#6E56CF' })
           .eq('id', profileId);
 
         if (error) {
@@ -53,7 +52,7 @@ export default function ThemeSelector({
 
         toast({
           title: "Kleurenschema bijgewerkt",
-          description: `Je hebt gekozen voor het ${THEME_PALETTES[themeName].displayName} thema.`,
+          description: `Je hebt gekozen voor het ${themes[themeName as keyof typeof themes]?.displayName} thema.`,
         });
       } catch (error) {
         console.error('Error updating theme:', error);
@@ -81,7 +80,7 @@ export default function ThemeSelector({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(THEME_PALETTES).map(([key, theme]) => (
+        {Object.entries(themes).map(([key, theme]) => (
           <button
             key={key}
             onClick={() => handleThemeSelect(key)}
@@ -141,13 +140,13 @@ export default function ThemeSelector({
       </div>
 
       {/* Current theme info */}
-      {selectedTheme && (
+      {selectedTheme && themes[selectedTheme as keyof typeof themes] && (
         <div className="mt-6 p-4 rounded-lg bg-gray-50 border">
           <h4 className="font-medium text-gray-900 mb-2">
-            Geselecteerd thema: {THEME_PALETTES[selectedTheme].displayName}
+            Geselecteerd thema: {themes[selectedTheme as keyof typeof themes].displayName}
           </h4>
           <p className="text-sm text-gray-600">
-            {THEME_PALETTES[selectedTheme].description}
+            {themes[selectedTheme as keyof typeof themes].description}
           </p>
         </div>
       )}
