@@ -90,13 +90,34 @@ export class StripeService {
    */
   static async redirectToCheckout(params: StripeCheckoutParams): Promise<void> {
     try {
-      const { url } = await this.createCheckoutSession(params)
-      window.location.href = url
+      // ✅ Gebruik de nieuwe API route in plaats van de Edge Function
+      const response = await fetch('/api/stripe-create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          profileId: params.profileId,
+          successUrl: params.successUrl,
+          cancelUrl: params.cancelUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const { url } = await response.json();
+      
+      // Redirect naar Stripe checkout
+      window.location.href = url;
+      
     } catch (error) {
-      console.error('Error redirecting to checkout:', error)
-      throw error
+      console.error('Error creating checkout session:', error);
+      throw error;
     }
-  }
+  };
 
   /**
    * Redirect to Stripe customer portal
