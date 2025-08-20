@@ -61,23 +61,21 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: 'subscription', // ✅ Belangrijk: subscription mode
+      mode: 'subscription',
       success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
       cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?step=7`,
       
-      // ✅ Metadata voor profile_id
+      // Metadata voor profile_id
       metadata: {
         profile_id: profileId,
       },
       
-      // ✅ Subscription metadata
+      // Subscription metadata
       subscription_data: {
         metadata: {
           profile_id: profileId,
         },
       },
-      
-      customer_creation: 'always',
     })
 
     console.log('🔧 Checkout session created successfully:', session.id)

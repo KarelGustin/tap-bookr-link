@@ -224,10 +224,11 @@ async function handleSubscriptionCreated(
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        subscription_status: 'active',
-        status: 'published',
+        subscription_status: subscription.status,
+        status: subscription.status === 'active' ? 'published' : 'draft',
         onboarding_completed: true,
-        subscription_id: subscription.id
+        subscription_id: subscription.id,
+        updated_at: new Date().toISOString()
       })
       .eq('id', profile.id);
 
@@ -271,23 +272,27 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
 
   // Update profile status based on subscription status
   let profileStatus = 'draft'
+  let subscriptionStatus = subscription.status
+  
   if (subscription.status === 'active') {
     profileStatus = 'published'
   } else if (['past_due', 'unpaid'].includes(subscription.status)) {
-    // Profile will go offline after 3 days grace period
+    // Keep published during grace period
     profileStatus = 'published'
+  } else {
+    // For canceled, incomplete, etc. - go to draft
+    profileStatus = 'draft'
+    subscriptionStatus = 'inactive'
   }
 
   await supabase
     .from('profiles')
     .update({
-      subscription_status: subscription.status,
-      stripe_customer_id: subscription.customer,
-      onboarding_completed: subscription.status === 'active' ? true : undefined,
-      onboarding_step: subscription.status === 'active' ? 8 : undefined,
+      subscription_status: subscriptionStatus,
       status: profileStatus,
+      updated_at: new Date().toISOString()
     })
-    .eq('id', profileId)
+    .eq('stripe_customer_id', subscription.customer)
 
   console.log(`Subscription updated for profile ${profileId}, status: ${subscription.status}`)
   return { success: true, message: 'Subscription updated' }
@@ -322,12 +327,12 @@ async function handleSubscriptionDeleted(subscription: StripeSubscriptionPayload
   const { error: profileError } = await supabase
     .from('profiles')
     .update({
-      subscription_status: 'canceled',
+      subscription_status: 'inactive',
       status: 'draft',
       grace_period_ends_at: null,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', profileId)
+    .eq('stripe_customer_id', subscription.customer)
 
   if (profileError) {
     console.error('Error updating profile status:', profileError)
@@ -464,12 +469,15 @@ async function handleCheckoutSessionCompleted(session: StripeCheckoutSessionPayl
 
   console.log(`🔧 Processing checkout session completed for profile ${profileId}`)
 
-  // Update profile with customer ID from checkout session
+  // Update profile with customer ID and set to published after payment
   if (session.customer) {
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
         stripe_customer_id: session.customer,
+        subscription_status: 'active',
+        status: 'published',
+        onboarding_completed: true,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profileId)
