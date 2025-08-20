@@ -65,6 +65,13 @@ serve(async (req) => {
       success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
       cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?step=7`,
       
+      // Add discount coupon for first month €1
+      discounts: [
+        {
+          coupon: 'PRY6QV9M',
+        },
+      ],
+      
       // Metadata voor profile_id
       metadata: {
         profile_id: profileId,
