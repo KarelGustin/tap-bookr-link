@@ -29,47 +29,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // First, try to get the existing session
-    const getInitialSession = async () => {
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('🔧 Auth state change:', event, session?.user?.email);
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false); // Always stop loading on any auth state change
+        }
+      }
+    );
+
+    // Then get initial session
+    const initializeAuth = async () => {
       try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('Error getting initial session:', error);
         }
         
         if (mounted) {
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          // Don't set loading to false here - wait for auth state change
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
         }
       } catch (error) {
-        console.error('Error in getInitialSession:', error);
+        console.error('Error in initializeAuth:', error);
         if (mounted) {
           setLoading(false);
         }
       }
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔧 Auth state change:', event, session?.user?.email);
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          // Set loading to false for all relevant events
-          if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
-            setLoading(false);
-          }
-        }
-      }
-    );
-
-    // Get initial session
-    getInitialSession();
+    initializeAuth();
 
     return () => {
       mounted = false;

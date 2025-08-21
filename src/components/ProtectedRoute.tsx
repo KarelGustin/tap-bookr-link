@@ -22,37 +22,46 @@ export const ProtectedRoute = ({
 
 	useEffect(() => {
 		if (!user) return;
+		
+		// Wait for all loading states to complete
+		if (onboardingLoading || subscriptionLoading) return;
 
-		// Onboarding guard
-		if (!onboardingLoading) {
-			if (requireOnboarding && !onboardingCompleted) {
-				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
-				return;
-			}
-			// Remove the aggressive auto-redirect to dashboard
-			// Let users stay where they are, especially on onboarding page
+		const currentPath = window.location.pathname;
+
+		// Onboarding guard - redirect incomplete onboarding users
+		if (requireOnboarding && !onboardingCompleted) {
+			navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
+			return;
 		}
 
-		// Subscription guard (for dashboard-like pages)
-		if (requireActiveSubscription && !subscriptionLoading) {
-			if (!allowed) {
-				// Geen geldig abonnement of niet published: terug naar onboarding preview
-				navigate('/onboarding?step=7&subscription_required=true', { replace: true });
-				return;
-			}
+		// Subscription guard - redirect users without active subscription away from protected areas
+		if (requireActiveSubscription && !allowed) {
+			navigate('/onboarding?step=7&subscription_required=true', { replace: true });
+			return;
 		}
 
-		// Auto-redirect to dashboard if user has active subscription and is not on dashboard
-		if (!subscriptionLoading && !onboardingLoading && onboardingCompleted && allowed) {
-			const currentPath = window.location.pathname;
-			// Redirect from onboarding, login, or root to dashboard
-			if (currentPath === '/onboarding' || currentPath === '/login' || currentPath === '/') {
+		// Smart redirect logic for completed users with active subscriptions
+		if (onboardingCompleted && allowed) {
+			// Redirect from login, root, or onboarding to dashboard
+			if (currentPath === '/login' || currentPath === '/' || currentPath === '/onboarding') {
 				console.log('🔧 Auto-redirecting to dashboard - user has active subscription');
 				navigate('/dashboard', { replace: true });
 				return;
 			}
+		} else if (onboardingCompleted && !allowed) {
+			// User completed onboarding but no active subscription - send to preview/payment
+			if (currentPath === '/login' || currentPath === '/') {
+				navigate('/onboarding?step=7', { replace: true });
+				return;
+			}
+		} else if (!onboardingCompleted) {
+			// User needs to complete onboarding
+			if (currentPath === '/login' || currentPath === '/') {
+				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
+				return;
+			}
 		}
-	}, [user, onboardingLoading, onboardingCompleted, requireOnboarding, subscriptionLoading, requireActiveSubscription, allowed, navigate]);
+	}, [user, onboardingLoading, onboardingCompleted, currentStep, subscriptionLoading, allowed, requireOnboarding, requireActiveSubscription, navigate]);
 
 	// Toon loading state
 	
