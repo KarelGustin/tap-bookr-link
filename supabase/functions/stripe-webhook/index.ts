@@ -200,6 +200,11 @@ async function handleSubscriptionCreated(
 
     console.log(`[WEBHOOK] Found profile: ${profile.id} for user: ${profile.user_id}`);
 
+    // Map Stripe status to allowed database values
+    const allowedStatus = ['active', 'past_due', 'canceled', 'unpaid'].includes(subscription.status) 
+      ? subscription.status 
+      : 'unpaid'; // Default for incomplete, trialing, etc.
+
     // Create subscription record
     const { error: insertError } = await supabase
       .from('subscriptions')
@@ -207,7 +212,7 @@ async function handleSubscriptionCreated(
         stripe_subscription_id: subscription.id,
         profile_id: profile.id,
         stripe_customer_id: subscription.customer,
-        status: subscription.status,
+        status: allowedStatus,
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
@@ -221,11 +226,14 @@ async function handleSubscriptionCreated(
     }
 
     // Update profile with subscription details
+    const profileStatus = ['active', 'trialing'].includes(subscription.status) ? 'published' : 'draft';
+    const profileSubscriptionStatus = ['active', 'trialing'].includes(subscription.status) ? 'active' : 'inactive';
+    
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        subscription_status: subscription.status,
-        status: subscription.status === 'active' ? 'published' : 'draft',
+        subscription_status: profileSubscriptionStatus,
+        status: profileStatus,
         onboarding_completed: true,
         subscription_id: subscription.id,
         updated_at: new Date().toISOString()
@@ -247,18 +255,30 @@ async function handleSubscriptionCreated(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload, supabase: ReturnType<typeof createClient>): Promise<{ success: boolean; message: string }> {
-  const profileId = subscription.metadata?.profile_id
+  console.log(`[WEBHOOK] Processing subscription updated: ${subscription.id}`);
   
-  if (!profileId) {
-    console.error('No profile_id in subscription metadata')
-    return { success: false, message: 'No profile_id in subscription metadata' }
+  // Find profile by customer ID first (more reliable than metadata)
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, user_id')
+    .eq('stripe_customer_id', subscription.customer)
+    .single();
+
+  if (profileError || !profile) {
+    console.error('[WEBHOOK] Profile not found for customer:', subscription.customer, profileError);
+    return { success: false, message: `Profile not found for customer ${subscription.customer}` };
   }
+
+  // Map Stripe status to allowed database values
+  const allowedStatus = ['active', 'past_due', 'canceled', 'unpaid'].includes(subscription.status) 
+    ? subscription.status 
+    : 'unpaid';
 
   // Update subscription record
   const { error } = await supabase
     .from('subscriptions')
     .update({
-      status: subscription.status,
+      status: allowedStatus,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       cancel_at_period_end: subscription.cancel_at_period_end,
@@ -266,36 +286,43 @@ async function handleSubscriptionUpdated(subscription: StripeSubscriptionPayload
     .eq('stripe_subscription_id', subscription.id)
 
   if (error) {
-    console.error('Error updating subscription record:', error)
+    console.error('[WEBHOOK] Error updating subscription record:', error)
     return { success: false, message: `Error updating subscription record: ${error.message}` }
   }
 
   // Update profile status based on subscription status
   let profileStatus = 'draft'
-  let subscriptionStatus = subscription.status
+  let profileSubscriptionStatus = 'inactive'
   
-  if (subscription.status === 'active') {
+  if (['active', 'trialing'].includes(subscription.status)) {
     profileStatus = 'published'
+    profileSubscriptionStatus = 'active'
   } else if (['past_due', 'unpaid'].includes(subscription.status)) {
     // Keep published during grace period
     profileStatus = 'published'
+    profileSubscriptionStatus = 'past_due'
   } else {
     // For canceled, incomplete, etc. - go to draft
     profileStatus = 'draft'
-    subscriptionStatus = 'inactive'
+    profileSubscriptionStatus = 'inactive'
   }
 
-  await supabase
+  const { error: profileUpdateError } = await supabase
     .from('profiles')
     .update({
-      subscription_status: subscriptionStatus,
+      subscription_status: profileSubscriptionStatus,
       status: profileStatus,
       updated_at: new Date().toISOString()
     })
-    .eq('stripe_customer_id', subscription.customer)
+    .eq('id', profile.id)
 
-  console.log(`Subscription updated for profile ${profileId}, status: ${subscription.status}`)
-  return { success: true, message: 'Subscription updated' }
+  if (profileUpdateError) {
+    console.error('[WEBHOOK] Error updating profile:', profileUpdateError);
+    return { success: false, message: `Error updating profile: ${profileUpdateError.message}` };
+  }
+
+  console.log(`[WEBHOOK] Subscription updated for profile ${profile.id}, status: ${subscription.status} -> profile status: ${profileStatus}`)
+  return { success: true, message: 'Subscription updated successfully' }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
