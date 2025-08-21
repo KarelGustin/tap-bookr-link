@@ -240,6 +240,7 @@ const Onboarding = () => {
   }, [currentStep, updateStep, navigate]);
 
   // Database update functions - simplified since we don't need profileId anymore
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patchFieldToDatabase = async (field: string, value: any) => {
     // This function is no longer needed without profileId
     return;
