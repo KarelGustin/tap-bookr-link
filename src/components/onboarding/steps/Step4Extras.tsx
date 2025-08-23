@@ -189,18 +189,26 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     }
   }, [existingData?.media]);
 
-  const handleAboutPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAboutPhotoFile(file);
-      const reader = new FileReader();
-      reader.onload = () => setAboutPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+    // Only accept image files
+    const picked = Array.from(e.target.files || []);
+    const imageFiles = picked.filter(f => f.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      toast({
+        title: "Geen geldige afbeeldingen",
+        description: "Selecteer één of meerdere afbeeldingsbestanden.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (imageFiles.length < picked.length) {
+      toast({
+        title: "Sommige bestanden overgeslagen",
+        description: "Alleen afbeeldingen worden ondersteund. Niet-afbeeldingen zijn overgeslagen.",
+      });
+    }
     
     // Check if adding these files would exceed the limit (count existing previews + new files)
     const currentCount = mediaPreviews.length;
@@ -218,7 +226,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     }
     
     // Only take the files that fit within the limit
-    const newFiles = files.slice(0, availableSlots);
+    const newFiles = imageFiles.slice(0, availableSlots);
     
     if (newFiles.length > 0) {
       setIsUploadingMedia(true);
@@ -241,10 +249,10 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
         setMediaPreviews(prev => [...prev, ...newPreviews]);
         
         // Show success message
-        if (newFiles.length < files.length) {
+        if (newFiles.length < imageFiles.length) {
           toast({
             title: "Afbeeldingen toegevoegd",
-            description: `${newFiles.length} van ${files.length} afbeeldingen toegevoegd. Maximum van 6 afbeeldingen bereikt.`,
+            description: `${newFiles.length} van ${imageFiles.length} afbeeldingen toegevoegd. Maximum van 6 afbeeldingen bereikt.`,
           });
         } else {
           toast({

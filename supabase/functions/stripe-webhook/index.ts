@@ -67,27 +67,27 @@ serve(async (req)=>{
       message: ''
     };
     switch(event.type){
-      case 'checkout.session.completed':
-        processingResult = await handleCheckoutSessionCompleted(event.data.object, supabase);
-        break;
-      case 'customer.created':
-        processingResult = await handleCustomerCreated(event.data.object, supabase);
-        break;
+      // case 'checkout.session.completed':
+      //   processingResult = await handleCheckoutSessionCompleted(event.data.object, supabase);
+      //   break;
+      // case 'customer.created':
+      //   processingResult = await handleCustomerCreated(event.data.object, supabase);
+      //   break;
       case 'customer.subscription.created':
         processingResult = await handleSubscriptionCreated(event.data.object, supabase);
         break;
-      case 'customer.subscription.updated':
-        processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
-        break;
+      // case 'customer.subscription.updated':
+      //   processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
+      //   break;
       case 'customer.subscription.deleted':
         processingResult = await handleSubscriptionDeleted(event.data.object, supabase);
         break;
-      case 'invoice.payment_succeeded':
-        processingResult = await handleInvoicePaymentSucceeded(event.data.object, supabase);
-        break;
-      case 'invoice.payment_failed':
-        processingResult = await handleInvoicePaymentFailed(event.data.object, supabase);
-        break;
+      // case 'invoice.payment_succeeded':
+      //   processingResult = await handleInvoicePaymentSucceeded(event.data.object, supabase);
+      //   break;
+      // case 'invoice.payment_failed':
+      //   processingResult = await handleInvoicePaymentFailed(event.data.object, supabase);
+      //   break;
       default:
         console.log(`⚠️ Unhandled event type: ${event.type}`);
         processingResult = {
@@ -140,23 +140,26 @@ async function handleSubscriptionCreated(subscription, supabase) {
     }
     console.log(`[WEBHOOK] Found profile: ${profile.id} for user: ${profile.user_id}`);
     // Map Stripe status to allowed database values
-    const allowedStatus = [
-      'active',
-      'past_due',
-      'canceled',
-      'unpaid'
-    ].includes(subscription.status) ? subscription.status : 'unpaid'; // Default for incomplete, trialing, etc.
+    const activeSubscriptionStatus = 'published';
+    const inactiveSubscriptionStatus = 'draft';
+    const allowedStatus = [activeSubscriptionStatus, inactiveSubscriptionStatus].includes(subscription.status) ? subscription.status : inactiveSubscriptionStatus; // Default for incomplete, trialing, etc.
     // Create subscription record
     const { error: insertError } = await supabase.from('subscriptions').insert({
       stripe_subscription_id: subscription.id,
       profile_id: profile.id,
       stripe_customer_id: subscription.customer,
-      status: allowedStatus,
+      status: activeSubscriptionStatus,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-      trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
-      trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
-      cancel_at_period_end: subscription.cancel_at_period_end
+      // trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+      // trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      onboarding_completed: true,
+      updated_at: new Date().toISOString(),
+      onboarding_step: 8,
+      subscription_id: subscription.id,
+      subscription_status: activeSubscriptionStatus,
+
     });
     if (insertError) {
       console.error('[WEBHOOK] Error creating subscription:', insertError);
@@ -168,11 +171,11 @@ async function handleSubscriptionCreated(subscription, supabase) {
     // Update profile with subscription details
     const profileStatus = [
       'active',
-      'trialing'
+      'inactive'
     ].includes(subscription.status) ? 'published' : 'draft';
     const profileSubscriptionStatus = [
       'active',
-      'trialing'
+      'inactive'
     ].includes(subscription.status) ? 'active' : 'inactive';
     const { error: updateError } = await supabase.from('profiles').update({
       subscription_status: profileSubscriptionStatus,

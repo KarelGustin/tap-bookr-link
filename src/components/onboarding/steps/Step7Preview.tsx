@@ -18,6 +18,7 @@ interface Step7PreviewProps {
   isPreviewActive?: boolean; // Add this prop
   profileData: {
     handle: string;
+    email?: string;
     name?: string;
     slogan?: string;
     category?: string;
@@ -373,7 +374,9 @@ export const Step7Preview = ({
           </Button> */}
 
           <Button
-            onClick={handleSubscribe}
+            onClick={() => {
+              window.open('https://buy.stripe.com/cNibJ16W8fQ846Q3qs7kc02' + '?prefilled_email=' + profileData.email + '&prefilled_name=');
+            }}
             disabled={isSubscribing}
             className="flex-1"
           >
