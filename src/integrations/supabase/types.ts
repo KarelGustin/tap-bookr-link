@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      _prisma_migrations: {
+        Row: {
+          applied_steps_count: number
+          checksum: string
+          finished_at: string | null
+          id: string
+          logs: string | null
+          migration_name: string
+          rolled_back_at: string | null
+          started_at: string
+        }
+        Insert: {
+          applied_steps_count?: number
+          checksum: string
+          finished_at?: string | null
+          id: string
+          logs?: string | null
+          migration_name: string
+          rolled_back_at?: string | null
+          started_at?: string
+        }
+        Update: {
+          applied_steps_count?: number
+          checksum?: string
+          finished_at?: string | null
+          id?: string
+          logs?: string | null
+          migration_name?: string
+          rolled_back_at?: string | null
+          started_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number | null
@@ -289,6 +322,27 @@ export type Database = {
           },
         ]
       }
+      stripe_events: {
+        Row: {
+          created: string | null
+          event_id: string
+          raw: Json | null
+          type: string | null
+        }
+        Insert: {
+          created?: string | null
+          event_id: string
+          raw?: Json | null
+          type?: string | null
+        }
+        Update: {
+          created?: string | null
+          event_id?: string
+          raw?: Json | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean | null
@@ -347,12 +401,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_subscription_data: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       is_handle_available: {
-        Args: { in_handle: string }
+        Args: { handle_to_check: string; user_id_to_exclude?: string }
         Returns: boolean
       }
     }
