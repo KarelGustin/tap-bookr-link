@@ -281,7 +281,7 @@ export const Step7Preview = ({
               </Button>
               <Button
                 variant="outline"
-                onClick={() => window.location.href = `https://tapbookr.com/${handle}`}
+                onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
                 disabled={!isLivePreviewActive}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -388,7 +388,7 @@ export const Step7Preview = ({
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
               <h4 className="font-medium text-blue-900 mb-2">
-                Eerste maand €1, daarna €9 per maand!
+                Eerste maand €1, daarna €7 per maand!
               </h4>
               <p className="text-sm text-blue-700 mb-3">
                 Je pagina blijft live en je kunt alle functies gebruiken. Annuleer op elk moment.

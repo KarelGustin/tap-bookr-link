@@ -35,6 +35,9 @@ import {
   X
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/ui/language-selector';
+import { Sidebar as DashboardSidebar } from '@/features/dashboard/components/Sidebar'
+import { Header as DashboardHeader } from '@/features/dashboard/components/Header'
+import { SectionCard } from '@/features/dashboard/components/SectionCard'
 import { useLanguage } from '@/contexts/LanguageContext';
 
 // Strong, shared types (top-level)
@@ -68,7 +71,7 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState('design');
+  const [activeSection, setActiveSection] = useState<'design' | 'subscription'>('design');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [bookingUrl, setBookingUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -1470,130 +1473,21 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" />
       )}
 
-      {/* Left Sidebar */}
-      <div 
-        id="sidebar"
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-100 border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-      >
-        <div className="p-4 lg:p-6">
-          {/* Mobile Close Button */}
-          <div className="flex items-center justify-between mb-6 lg:hidden">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">
-                  {profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              <span className="font-semibold text-gray-900">
-                {profile?.name || user.email || 'User'}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
-            >
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </div>
-
-          {/* Desktop User Account */}
-          <div className="hidden lg:flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">
-                  {profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              <span className="font-semibold text-gray-900">
-                {profile?.name || user.email || 'User'}
-              </span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-gray-500" />
-          </div>
-          
-          {/* Navigation Menu */}
-          <nav className="space-y-1">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Dashboard</h3>
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              </div>
-              <div className="space-y-1">
-                <button
-                  onClick={() => {
-                    setActiveSection('design');
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'design' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <Palette className="w-4 h-4 mr-3" />
-                  Design
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveSection('subscription');
-                    setSidebarOpen(false);
-                  }}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'subscription' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <BarChart3 className="w-4 h-4 mr-3" />
-                  Abonnement
-                </button>
-              </div>
-            </div>
-          </nav>
-          
-          {/* User Actions */}
-          <div className="mt-auto pt-6 border-t border-gray-200">
-            <div className="space-y-2">
-              <button
-                onClick={() => {
-                  signOut();
-                  navigate('/');
-                }}
-                className="w-full flex items-center px-3 py-2 text-sm rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
-              >
-                <LogOut className="w-4 h-4 mr-3" />
-                Uitloggen
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Left Sidebar (refactored) */}
+      <DashboardSidebar
+        profileName={profile?.name || user.email || 'User'}
+        userInitial={profile?.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'U'}
+        activeSection={activeSection}
+        onChangeSection={(s) => setActiveSection(s)}
+        onSignOut={() => { signOut(); navigate('/') }}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 lg:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden"
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
-              <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-            </div>
-            <div className="flex items-center space-x-2 lg:space-x-3">
-              <LanguageSelector />
-            </div>
-          </div>
-        </header>
+        {/* Header (refactored) */}
+        <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} title={t('dashboard.title')} />
 
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-6">

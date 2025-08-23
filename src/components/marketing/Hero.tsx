@@ -92,18 +92,18 @@ export const Hero = () => {
         {/* Hero Content */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 min-h-[calc(100vh-120px)]">
           {/* Left Content */}
-          <div className="flex-1 space-y-4 sm:space-y-6 text-left max-w-2xl px-2">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
+          <div className="flex-1 space-y-4 sm:space-y-6 text-center max-w-3xl px-2 ">
+            <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
               Je "€1000" Website,<br></br> in 10 Minuten voor €1.
             </h1>
             
             <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Lanceer vandaag nog een website om ook onbekende klanten te bereiken en te laten zien wat je doet. Claim je handle, koppel WhatsApp of je boekingssysteem, en begin binnen minuten met het ontvangen van boekingen.
+              Lanceer vandaag nog een website, in 10 minuten. Je maakt je website in 7 makkelijke stappen. 
             </p>
             
             {/* Social Proof */}
             <div className="flex items-center gap-4 text-sm text-white/80">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 justify-center mx-auto">
                 <span className="text-yellow-400">★★★★★</span>
                 <span>Vertrouwd door 2.000+ bedrijven</span>
               </div>
@@ -113,9 +113,9 @@ export const Hero = () => {
               </div> */}
             </div>
             
-            <div className="space-y-3 max-w-lg pt-4">
+            <div className="space-y-3 max-w-lg pt-4 mx-auto">
               <div className="bg-white rounded-lg p-1">
-                <div className="flex items-center">
+                <div className="flex items-center justify-center mx-auto">
                   <span className="px-3 py-2 sm:px-4 sm:py-3 text-gray-500 font-medium text-base sm:text-lg">
                     TapBookr.com/
                   </span>
