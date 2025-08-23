@@ -103,7 +103,10 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     try {
       // Use the database function for consistent handle checking
       const { data: isAvailable, error } = await supabase
-        .rpc('is_handle_available', { in_handle: handleToCheck.toLowerCase() });
+        .rpc('is_handle_available', { 
+          handle_to_check: handleToCheck.toLowerCase(),
+          user_id_to_exclude: user?.id || null
+        });
 
       if (error) {
         console.error('Error checking handle availability:', error);
@@ -230,6 +233,22 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     // Immediately save handle to database before proceeding
     if (handle.length >= 3 && !isHandleLocked && existingData?.profileId) {
       await saveHandleToDatabase(handle);
+      
+      // Also update the onboarding step to 2
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarding_step: 2 })
+          .eq('id', existingData.profileId);
+        
+        if (error) {
+          console.error('Failed to update onboarding step:', error);
+        } else {
+          console.log('✅ Updated onboarding step to 2');
+        }
+      } catch (error) {
+        console.error('Error updating onboarding step:', error);
+      }
     }
 
     onNext({

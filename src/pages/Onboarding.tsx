@@ -136,7 +136,9 @@ const Onboarding = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const hasInitializedRef = useRef(false);
 
-  // Load existing profile data
+  // Load existing profile data and store profileId
+  const [profileId, setProfileId] = useState<string | null>(null);
+  
   useEffect(() => {
     const loadExistingProfile = async () => {
       if (!user?.id || hasInitializedRef.current) return;
@@ -156,6 +158,9 @@ const Onboarding = () => {
         }
 
         if (existingProfile) {
+          // Store the profile ID for use in child components
+          setProfileId(existingProfile.id);
+          
           // Extract about data
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const aboutData = existingProfile.about as any;
@@ -239,11 +244,63 @@ const Onboarding = () => {
     }
   }, [currentStep, updateStep, navigate]);
 
-  // Database update functions - simplified since we don't need profileId anymore
+  // Database update functions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patchFieldToDatabase = async (field: string, value: any) => {
-    // This function is no longer needed without profileId
-    return;
+    if (!user?.id || !profileId) return;
+    
+    try {
+      // Map the field names to database column names
+      const fieldMappings: Record<string, string> = {
+        bookingUrl: 'booking_url',
+        bookingMode: 'booking_mode',
+        useWhatsApp: 'use_whatsapp',
+        whatsappNumber: 'whatsapp_number',
+        name: 'name',
+        slogan: 'slogan',
+        category: 'category',
+        banner: 'banner',
+        accentColor: 'accent_color',
+        themeMode: 'theme_mode',
+        avatar_url: 'avatar_url',
+        about: 'about',
+        socials: 'socials',
+        media: 'media',
+        testimonials: 'testimonials',
+        footerBusinessName: 'footer_business_name',
+        footerEmail: 'footer_email',
+        footerPhone: 'footer_phone',
+        footerAddress: 'footer_address',
+        footerHours: 'footer_hours',
+        footerNextAvailable: 'footer_next_available',
+        footerCancellationPolicy: 'footer_cancellation_policy',
+        footerPrivacyPolicy: 'footer_privacy_policy',
+        footerTermsOfService: 'footer_terms_of_service',
+        footerShowMaps: 'footer_show_maps',
+        footerShowAttribution: 'footer_show_attribution',
+      };
+      
+      const dbFieldName = fieldMappings[field] || field;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ [dbFieldName]: value })
+        .eq('id', profileId);
+      
+      if (error) {
+        console.error(`Error updating ${field}:`, error);
+        throw error;
+      }
+      
+      console.log(`✅ Successfully updated ${field}`);
+    } catch (error) {
+      console.error(`❌ Failed to update ${field}:`, error);
+      toast({
+        title: "Opslaan mislukt",
+        description: `Kon ${field} niet opslaan. Probeer het opnieuw.`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Step handlers
@@ -598,6 +655,7 @@ const Onboarding = () => {
             existingData={{
               handle: onboardingData.handle,
               status: onboardingData.status,
+              profileId: profileId || undefined
             }}
             handle={onboardingData.handle}
           />
