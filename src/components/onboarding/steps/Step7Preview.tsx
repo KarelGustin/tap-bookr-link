@@ -82,6 +82,7 @@ export const Step7Preview = ({
   const [livePreviewTimeLeft, setLivePreviewTimeLeft] = useState(15 * 60); // 15 minutes in seconds
   const [previewKey, setPreviewKey] = useState(0);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [planType, setPlanType] = useState<'monthly' | 'yearly'>('yearly');
 
   // Initialize local state based on the prop
   useEffect(() => {
@@ -182,7 +183,24 @@ export const Step7Preview = ({
         throw new Error('Om live te gaan moet je een whatsapp nummer invoeren of je boekings-URL toevoegen');
       }
 
-      // Redirect to Stripe checkout
+      // Prefer Stripe Payment Links when configured; fallback to Edge Function checkout
+      const monthlyLink = import.meta.env.VITE_STRIPE_LINK_MONTHLY as string | undefined;
+      const yearlyLink = import.meta.env.VITE_STRIPE_LINK_YEARLY as string | undefined;
+      const baseLink = planType === 'yearly' ? yearlyLink : monthlyLink;
+
+      if (baseLink) {
+        // Prefill email and pass client_reference_id for webhook linkage
+        const { data: auth } = await supabase.auth.getUser();
+        const email = auth?.user?.email;
+        const params = new URLSearchParams();
+        params.set('client_reference_id', profile.id);
+        if (email) params.set('prefilled_email', email);
+        const url = `${baseLink}${baseLink.includes('?') ? '&' : '?'}${params.toString()}`;
+        window.location.href = url;
+        return;
+      }
+
+      // Fallback: use Edge Function (applies coupon automatically)
       await StripeService.redirectToCheckout({
         profileId: profile.id,
         successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
@@ -363,26 +381,39 @@ export const Step7Preview = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-6">
-          {/* <Button
-            variant="outline"
-            onClick={onSaveDraft}
-            className="flex-1"
-          >
-            Opslaan als Concept
-          </Button> */}
+        {/* Plan Toggle + Action Buttons */}
+        <div className="flex flex-col gap-3 pt-6">
+          <div className="grid grid-cols-2 rounded-lg border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setPlanType('monthly')}
+              className={`py-2 text-sm font-medium ${planType === 'monthly' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Maandelijks
+            </button>
+            <button
+              type="button"
+              onClick={() => setPlanType('yearly')}
+              className={`py-2 text-sm font-medium ${planType === 'yearly' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Jaarlijks
+            </button>
+          </div>
 
-          <Button
-            onClick={() => {
-              window.open('https://buy.stripe.com/cNibJ16W8fQ846Q3qs7kc02' + '?prefilled_email=' + profileData.email + '&prefilled_name=');
-            }}
-            disabled={isSubscribing}
-            className="flex-1"
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            {isSubscribing ? 'Bezig...' : 'Ga live voor €1 eerste maand!'}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Button
+              onClick={handleSubscribe}
+              disabled={isSubscribing}
+              className="flex-1"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              {isSubscribing
+                ? 'Bezig...'
+                : planType === 'yearly'
+                  ? 'Een jaar lang live voor €89'
+                  : 'Ga live voor €1'}
+            </Button>
+          </div>
         </div>
 
         {/* Subscription Info */}

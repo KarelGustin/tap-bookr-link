@@ -21,8 +21,9 @@ serve(async (req)=>{
       console.error('❌ No Stripe signature found in headers');
       throw new Error('No Stripe signature found');
     }
-    const body = await req.text();
-    console.log('📨 Received webhook body length:', body.length);
+    // lees raw body als bytes
+    const rawBody = new Uint8Array(await req.arrayBuffer());
+    console.log('📨 Received webhook body length:', rawBody.byteLength);
     // @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
@@ -39,7 +40,12 @@ serve(async (req)=>{
         throw new Error('Stripe secret key not configured');
       }
       const stripe = new Stripe(stripeSecretKey);
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      // async verificatie met bytes
+      event = await stripe.webhooks.constructEventAsync(
+        rawBody,
+        signature,
+        webhookSecret
+      );
       console.log('✅ Webhook signature verified successfully');
     } catch (err) {
       console.error('❌ Webhook signature verification failed:', err.message);
@@ -67,18 +73,18 @@ serve(async (req)=>{
       message: ''
     };
     switch(event.type){
-      // case 'checkout.session.completed':
-      //   processingResult = await handleCheckoutSessionCompleted(event.data.object, supabase);
-      //   break;
+      case 'checkout.session.completed':
+        processingResult = await handleCheckoutSessionCompleted(event.data.object, supabase);
+        break;
       // case 'customer.created':
       //   processingResult = await handleCustomerCreated(event.data.object, supabase);
       //   break;
       case 'customer.subscription.created':
         processingResult = await handleSubscriptionCreated(event.data.object, supabase);
         break;
-      // case 'customer.subscription.updated':
-      //   processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
-      //   break;
+      case 'customer.subscription.updated':
+        processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
+        break;
       case 'customer.subscription.deleted':
         processingResult = await handleSubscriptionDeleted(event.data.object, supabase);
         break;
@@ -130,7 +136,11 @@ async function handleSubscriptionCreated(subscription, supabase) {
   try {
     console.log(`[WEBHOOK] Processing subscription created: ${subscription.id}`);
     // Find the profile by customer ID
-    const { data: profile, error: profileError } = await supabase.from('profiles').select('id, user_id').eq('stripe_customer_id', subscription.customer).single();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, user_id')
+      .eq('stripe_customer_id', subscription.customer)
+      .single();
     if (profileError || !profile) {
       console.error('[WEBHOOK] Profile not found for customer:', subscription.customer, profileError);
       return {
@@ -139,16 +149,16 @@ async function handleSubscriptionCreated(subscription, supabase) {
       };
     }
     console.log(`[WEBHOOK] Found profile: ${profile.id} for user: ${profile.user_id}`);
-    // Map Stripe status to allowed database values
-    const activeSubscriptionStatus = 'published';
-    const inactiveSubscriptionStatus = 'draft';
-    const allowedStatus = [activeSubscriptionStatus, inactiveSubscriptionStatus].includes(subscription.status) ? subscription.status : inactiveSubscriptionStatus; // Default for incomplete, trialing, etc.
+    // Normalize subscription status for our DB
+    const normalizedSubscriptionStatus = ['active', 'trialing', 'past_due', 'canceled', 'unpaid'].includes(subscription.status)
+      ? subscription.status
+      : 'unpaid';
     // Create subscription record
     const { error: insertError } = await supabase.from('subscriptions').insert({
       stripe_subscription_id: subscription.id,
       profile_id: profile.id,
       stripe_customer_id: subscription.customer,
-      status: activeSubscriptionStatus,
+      status: normalizedSubscriptionStatus,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
       // trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
@@ -158,8 +168,7 @@ async function handleSubscriptionCreated(subscription, supabase) {
       updated_at: new Date().toISOString(),
       onboarding_step: 8,
       subscription_id: subscription.id,
-      subscription_status: activeSubscriptionStatus,
-
+      subscription_status: normalizedSubscriptionStatus,
     });
     if (insertError) {
       console.error('[WEBHOOK] Error creating subscription:', insertError);
@@ -169,19 +178,15 @@ async function handleSubscriptionCreated(subscription, supabase) {
       };
     }
     // Update profile with subscription details
-    const profileStatus = [
-      'active',
-      'inactive'
-    ].includes(subscription.status) ? 'published' : 'draft';
-    const profileSubscriptionStatus = [
-      'active',
-      'inactive'
-    ].includes(subscription.status) ? 'active' : 'inactive';
+    const isActive = ['active', 'trialing'].includes(subscription.status);
+    const profileStatus = isActive ? 'published' : 'draft';
+    const profileSubscriptionStatus = isActive ? 'active' : 'inactive';
     const { error: updateError } = await supabase.from('profiles').update({
       subscription_status: profileSubscriptionStatus,
       status: profileStatus,
       onboarding_completed: true,
       subscription_id: subscription.id,
+      onboarding_step: 8,
       updated_at: new Date().toISOString()
     }).eq('id', profile.id);
     if (updateError) {
@@ -204,7 +209,6 @@ async function handleSubscriptionCreated(subscription, supabase) {
     };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionUpdated(subscription, supabase) {
   console.log(`[WEBHOOK] Processing subscription updated: ${subscription.id}`);
   // Find profile by customer ID first (more reliable than metadata)
@@ -276,17 +280,8 @@ async function handleSubscriptionUpdated(subscription, supabase) {
     message: 'Subscription updated successfully'
   };
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionDeleted(subscription, supabase) {
-  const profileId = subscription.metadata?.profile_id;
-  if (!profileId) {
-    console.error('No profile_id in subscription metadata');
-    return {
-      success: false,
-      message: 'No profile_id in subscription metadata'
-    };
-  }
-  console.log(`🔧 Processing subscription deleted for profile ${profileId}`);
+  console.log(`🔧 Processing subscription deleted for subscription ${subscription.id}`);
   // Update subscription record
   const { error: subError } = await supabase.from('subscriptions').update({
     status: 'canceled',
@@ -304,6 +299,8 @@ async function handleSubscriptionDeleted(subscription, supabase) {
     subscription_status: 'inactive',
     status: 'draft',
     grace_period_ends_at: null,
+    onboarding_completed: true,
+    onboarding_step: 8,
     updated_at: new Date().toISOString()
   }).eq('stripe_customer_id', subscription.customer);
   if (profileError) {
@@ -313,14 +310,13 @@ async function handleSubscriptionDeleted(subscription, supabase) {
       message: `Error updating profile status: ${profileError.message}`
     };
   } else {
-    console.log(`✅ Profile ${profileId} set to draft and subscription data cleared`);
+    console.log(`✅ Profile for customer ${subscription.customer} set to draft and subscription data cleared`);
     return {
       success: true,
       message: 'Subscription deleted'
     };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleInvoicePaymentSucceeded(invoice, supabase) {
   const subscriptionId = invoice.subscription;
   if (!subscriptionId) return {
@@ -373,7 +369,6 @@ async function handleInvoicePaymentSucceeded(invoice, supabase) {
     };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleInvoicePaymentFailed(invoice, supabase) {
   const subscriptionId = invoice.subscription;
   if (!subscriptionId) return {
@@ -428,34 +423,50 @@ async function handleInvoicePaymentFailed(invoice, supabase) {
     };
   }
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCheckoutSessionCompleted(session, supabase) {
-  const profileId = session.metadata?.profile_id;
-  if (!profileId) {
-    console.error('No profile_id in checkout session metadata');
+  const profileIdFromMetadata = session.metadata?.profile_id || null;
+  const profileIdFromClientRef = session.client_reference_id || null;
+  const profileId = profileIdFromMetadata || profileIdFromClientRef;
+  if (!profileId && !session.customer) {
+    console.error('No profile_id or customer available to link checkout session');
     return {
       success: false,
-      message: 'No profile_id in checkout session metadata'
+      message: 'No profile_id or customer available in checkout session'
     };
   }
-  console.log(`🔧 Processing checkout session completed for profile ${profileId}`);
+  console.log(`🔧 Processing checkout session completed. profileId=${profileId || 'unknown'} customer=${session.customer || 'unknown'}`);
   // Update profile with customer ID and set to published after payment
   if (session.customer) {
-    const { error: profileError } = await supabase.from('profiles').update({
-      stripe_customer_id: session.customer,
-      subscription_status: 'active',
-      status: 'published',
-      onboarding_completed: true,
-      updated_at: new Date().toISOString()
-    }).eq('id', profileId);
+    // Try to update by explicit profile id if present, otherwise by customer id
+    let profileError = null;
+    if (profileId) {
+      const result = await supabase.from('profiles').update({
+        stripe_customer_id: session.customer,
+        subscription_status: 'active',
+        status: 'published',
+        onboarding_completed: true,
+        onboarding_step: 8,
+        updated_at: new Date().toISOString()
+      }).eq('id', profileId);
+      profileError = result.error;
+    } else {
+      const result = await supabase.from('profiles').update({
+        subscription_status: 'active',
+        status: 'published',
+        onboarding_completed: true,
+        onboarding_step: 8,
+        updated_at: new Date().toISOString()
+      }).eq('stripe_customer_id', session.customer);
+      profileError = result.error;
+    }
     if (profileError) {
       console.error('Error updating profile with customer ID:', profileError);
       return {
         success: false,
-        message: `Error updating profile with customer ID: ${profileError.message}`
+        message: `Error updating profile with customer ID: ${typeof profileError === 'object' && profileError && 'message' in profileError ? (profileError as { message?: string }).message : String(profileError)}`
       };
     } else {
-      console.log(`✅ Profile ${profileId} updated with customer ID from checkout`);
+      console.log(`✅ Profile updated with checkout completion`);
     }
   }
   // If there's a subscription in the checkout session, process it
@@ -488,10 +499,11 @@ async function handleCheckoutSessionCompleted(session, supabase) {
       };
       await handleSubscriptionCreated(subscriptionPayload, supabase);
     } catch (error) {
+      const message = (error && typeof error === 'object' && 'message' in error) ? (error as { message?: string }).message : String(error);
       console.error('Error processing subscription from checkout session:', error);
       return {
         success: false,
-        message: `Error processing subscription from checkout session: ${error.message}`
+        message: `Error processing subscription from checkout session: ${message}`
       };
     }
   }
@@ -500,7 +512,6 @@ async function handleCheckoutSessionCompleted(session, supabase) {
     message: 'Checkout session processed'
   };
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCustomerCreated(customer, supabase) {
   const profileId = customer.metadata?.profile_id;
   if (!profileId) {
