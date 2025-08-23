@@ -33,11 +33,6 @@ export const useOnboardingStatus = () => {
         if (profile) {
           setOnboardingCompleted(profile.onboarding_completed || false);
           setCurrentStep(profile.onboarding_step || 1);
-          
-          // Als onboarding niet is voltooid, redirect naar onboarding
-          if (!profile.onboarding_completed) {
-            navigate(`/onboarding?step=${profile.onboarding_step || 1}`);
-          }
         }
       } catch (error) {
         console.error('Error checking onboarding status:', error);

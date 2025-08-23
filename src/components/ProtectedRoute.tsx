@@ -40,26 +40,29 @@ export const ProtectedRoute = ({
 			return;
 		}
 
-		// Smart redirect logic for completed users with active subscriptions
-		if (onboardingCompleted && allowed) {
-			// Redirect from login, root, or onboarding to dashboard
-			if (currentPath === '/login' || currentPath === '/' || currentPath === '/onboarding') {
+		// Main flow logic - handle root route and smart redirects
+		if (currentPath === '/' || currentPath === '/login') {
+			if (!onboardingCompleted) {
+				// User needs to complete onboarding first
+				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
+				return;
+			} else if (onboardingCompleted && allowed) {
+				// User has completed onboarding AND has active subscription → Dashboard
 				console.log('🔧 Auto-redirecting to dashboard - user has active subscription');
 				navigate('/dashboard', { replace: true });
 				return;
-			}
-		} else if (onboardingCompleted && !allowed) {
-			// User completed onboarding but no active subscription - send to preview/payment
-			if (currentPath === '/login' || currentPath === '/') {
+			} else if (onboardingCompleted && !allowed) {
+				// User completed onboarding but NO active subscription → Payment step
 				navigate('/onboarding?step=7', { replace: true });
 				return;
 			}
-		} else if (!onboardingCompleted) {
-			// User needs to complete onboarding
-			if (currentPath === '/login' || currentPath === '/') {
-				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
-				return;
-			}
+		}
+
+		// Handle onboarding page redirect for users with active subscription
+		if (currentPath === '/onboarding' && onboardingCompleted && allowed) {
+			console.log('🔧 Auto-redirecting to dashboard - user already has subscription');
+			navigate('/dashboard', { replace: true });
+			return;
 		}
 	}, [user, onboardingLoading, onboardingCompleted, currentStep, subscriptionLoading, allowed, requireOnboarding, requireActiveSubscription, navigate]);
 
