@@ -208,6 +208,49 @@ const Onboarding = () => {
           if (existingProfile.onboarding_step && existingProfile.onboarding_step > 1) {
             setCurrentStep(existingProfile.onboarding_step);
           }
+        } else {
+          // No profile exists, create one automatically
+          console.log('🔧 No profile found, creating new profile for user:', user.id);
+          
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: user.id,
+              handle: null,
+              name: null,
+              is_business: true,
+              onboarding_completed: false,
+              onboarding_step: 1,
+              subscription_status: 'inactive',
+              status: 'draft',
+              theme_mode: 'light',
+              accent_color: '#6E56CF',
+              booking_mode: 'embed',
+              about: {},
+              media: { items: [] },
+              socials: {},
+              contact: {},
+              banner: {},
+              footer: {},
+              testimonials: [],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('❌ Failed to create profile:', createError);
+            toast({
+              title: "Profiel aanmaken mislukt",
+              description: "Er is een fout opgetreden bij het aanmaken van je profiel. Probeer het opnieuw.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          console.log('✅ New profile created:', newProfile.id);
+          setProfileId(newProfile.id);
         }
         
         hasInitializedRef.current = true;
@@ -219,7 +262,7 @@ const Onboarding = () => {
     };
 
     loadExistingProfile();
-  }, [user?.id]);
+  }, [user?.id, toast]);
 
   // Update step based on URL parameter
   useEffect(() => {
@@ -246,7 +289,7 @@ const Onboarding = () => {
 
   // Database update functions
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const patchFieldToDatabase = async (field: string, value: any) => {
+  const patchFieldToDatabase = async (field: string, value: any, step?: number) => {
     if (!user?.id || !profileId) return;
     
     try {
@@ -282,9 +325,21 @@ const Onboarding = () => {
       
       const dbFieldName = fieldMappings[field] || field;
       
+      // Prepare update data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updateData: any = { 
+        [dbFieldName]: value,
+        updated_at: new Date().toISOString()
+      };
+      
+      // Add onboarding step if provided
+      if (step) {
+        updateData.onboarding_step = step;
+      }
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ [dbFieldName]: value })
+        .update(updateData)
         .eq('id', profileId);
       
       if (error) {
@@ -292,7 +347,7 @@ const Onboarding = () => {
         throw error;
       }
       
-      console.log(`✅ Successfully updated ${field}`);
+      console.log(`✅ Successfully updated ${field}${step ? ` and onboarding_step to ${step}` : ''}`);
     } catch (error) {
       console.error(`❌ Failed to update ${field}:`, error);
       toast({
@@ -340,60 +395,55 @@ const Onboarding = () => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save each field
+    // Save each field with step update
     if (data.bookingUrl !== undefined) {
-      await patchFieldToDatabase('bookingUrl', data.bookingUrl);
+      await patchFieldToDatabase('bookingUrl', data.bookingUrl, 3);
     }
     if (data.bookingMode !== undefined) {
-      await patchFieldToDatabase('bookingMode', data.bookingMode);
+      await patchFieldToDatabase('bookingMode', data.bookingMode, 3);
     }
     if (data.useWhatsApp !== undefined) {
-      await patchFieldToDatabase('useWhatsApp', data.useWhatsApp);
+      await patchFieldToDatabase('useWhatsApp', data.useWhatsApp, 3);
     }
     if (data.whatsappNumber !== undefined) {
-      await patchFieldToDatabase('whatsappNumber', data.whatsappNumber);
+      await patchFieldToDatabase('whatsappNumber', data.whatsappNumber, 3);
     }
     
     updateStep(3);
   };
 
-  const handleStep3 = async (data: { 
-    businessName?: string; 
-    slogan?: string; 
+  const handleStep3 = async (data: {
+    name?: string;
+    slogan?: string;
     category?: string;
-    banner?: {
-      type: 'image';
-      imageUrl?: string;
-      textColor?: string;
-    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    banner?: any;
     accentColor?: string;
     themeMode?: 'light' | 'dark';
   }) => {
     console.log('🔧 Step 3 data received:', data);
     
-    // Update local state
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Save each field  
-    if (data.businessName !== undefined) {
-      await patchFieldToDatabase('name', data.businessName);
+    // Save each field with step update
+    if (data.name !== undefined) {
+      await patchFieldToDatabase('name', data.name, 4);
     }
     if (data.slogan !== undefined) {
-      await patchFieldToDatabase('slogan', data.slogan);
+      await patchFieldToDatabase('slogan', data.slogan, 4);
     }
     if (data.category !== undefined) {
-      await patchFieldToDatabase('category', data.category);
+      await patchFieldToDatabase('category', data.category, 4);
     }
-    if (data.banner) {
-      await patchFieldToDatabase('banner', data.banner);
+    if (data.banner !== undefined) {
+      await patchFieldToDatabase('banner', data.banner, 4);
     }
-    
-    if (data.accentColor) {
-      await patchFieldToDatabase('accentColor', data.accentColor);
+    if (data.accentColor !== undefined) {
+      await patchFieldToDatabase('accentColor', data.accentColor, 4);
     }
-    if (data.themeMode) {
-      await patchFieldToDatabase('themeMode', data.themeMode);
+    if (data.themeMode !== undefined) {
+      await patchFieldToDatabase('themeMode', data.themeMode, 4);
     }
     
     updateStep(4);
@@ -401,124 +451,111 @@ const Onboarding = () => {
 
   const handleStep4 = async (data: {
     avatarFile?: File;
+    avatarUrl?: string;
     aboutTitle?: string;
     aboutDescription?: string;
   }) => {
     console.log('🔧 Step 4 data received:', data);
     
-    let avatarUrl = onboardingData.avatarUrl;
-    
-    // Upload avatar if provided
-    if (data.avatarFile) {
-      console.log('🔧 Uploading avatar...');
-      const result = await uploadImage(data.avatarFile, 'avatars', `${user?.id}/avatar.${data.avatarFile.name.split('.').pop()}`);
-      if (result) {
-        avatarUrl = result.url;
-        await patchFieldToDatabase('avatar_url', avatarUrl);
-      }
-    }
-    
-    // Save about data to database
-    const aboutData = {
-      title: data.aboutTitle,
-      description: data.aboutDescription
-    };
-    await patchFieldToDatabase('about', aboutData);
-    
-    // Update local state
-    const updatedData = { 
-      ...onboardingData, 
-      avatarFile: data.avatarFile,
-      avatarUrl,
-      aboutTitle: data.aboutTitle,
-      aboutDescription: data.aboutDescription
-    };
+    const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
+    
+    // Save each field with step update
+    if (data.avatarUrl !== undefined) {
+      await patchFieldToDatabase('avatar_url', data.avatarUrl, 5);
+    }
+    if (data.aboutTitle !== undefined || data.aboutDescription !== undefined) {
+      const aboutData = {
+        title: data.aboutTitle || onboardingData.aboutTitle || '',
+        description: data.aboutDescription || onboardingData.aboutDescription || '',
+        alignment: 'center',
+        socialLinks: onboardingData.socialLinks || [],
+      };
+      await patchFieldToDatabase('about', aboutData, 5);
+    }
     
     updateStep(5);
   };
 
   const handleStep5 = async (data: {
-    socials: {
-      instagram?: string;
-      facebook?: string;
-      linkedin?: string;
-      youtube?: string;
-      whatsapp?: string;
-    };
-    mediaFiles: File[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    socials?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    media?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    testimonials?: any;
   }) => {
     console.log('🔧 Step 5 data received:', data);
     
-    // Upload media files
-    const mediaItems = [];
-    for (const file of data.mediaFiles) {
-      const result = await uploadImage(file, 'media');
-      if (result) {
-        mediaItems.push({
-          type: 'image' as const,
-          imageUrl: result.url,
-          description: ''
-        });
-      }
-    }
-    
-    // Save socials and media to database
-    await patchFieldToDatabase('socials', data.socials);
-    await patchFieldToDatabase('media', { items: mediaItems });
-    
-    // Update local state
-    const updatedData = { 
-      ...onboardingData, 
-      socials: data.socials,
-      media: { items: mediaItems },
-      mediaFiles: data.mediaFiles
-    };
+    const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
+    
+    // Save each field with step update
+    if (data.socials !== undefined) {
+      await patchFieldToDatabase('socials', data.socials, 6);
+    }
+    if (data.media !== undefined) {
+      await patchFieldToDatabase('media', data.media, 6);
+    }
+    if (data.testimonials !== undefined) {
+      await patchFieldToDatabase('testimonials', data.testimonials, 6);
+    }
     
     updateStep(6);
   };
 
   const handleStep6 = async (data: {
-    socialLinks: Array<{
-      id: string;
-      title: string;
-      platform?: string;
-      url: string;
-    }>;
-    testimonials: Array<{
-      customer_name: string;
-      review_title: string;
-      review_text: string;
-      image_url?: string;
-      _file?: File;
-    }>;
+    footerBusinessName?: string;
+    footerEmail?: string;
+    footerPhone?: string;
+    footerAddress?: string;
+    footerHours?: BusinessHours;
+    footerNextAvailable?: string;
+    footerCancellationPolicy?: string;
+    footerPrivacyPolicy?: string;
+    footerTermsOfService?: string;
+    footerShowMaps?: boolean;
+    footerShowAttribution?: boolean;
   }) => {
     console.log('🔧 Step 6 data received:', data);
     
-    // Upload testimonial images
-    const updatedTestimonials = [...data.testimonials];
-    for (let i = 0; i < updatedTestimonials.length; i++) {
-      const testimonial = updatedTestimonials[i];
-      if (testimonial._file) {
-        const result = await uploadImage(testimonial._file, 'media');
-        if (result) {
-          testimonial.image_url = result.url;
-          delete testimonial._file;
-        }
-      }
-    }
-    
-    // Save testimonials to database
-    await patchFieldToDatabase('testimonials', updatedTestimonials);
-    
-    // Update local state
-    const updatedData = { 
-      ...onboardingData, 
-      socialLinks: data.socialLinks,
-      testimonials: updatedTestimonials
-    };
+    const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
+    
+    // Save each field with step update
+    if (data.footerBusinessName !== undefined) {
+      await patchFieldToDatabase('footerBusinessName', data.footerBusinessName, 7);
+    }
+    if (data.footerEmail !== undefined) {
+      await patchFieldToDatabase('footerEmail', data.footerEmail, 7);
+    }
+    if (data.footerPhone !== undefined) {
+      await patchFieldToDatabase('footerPhone', data.footerPhone, 7);
+    }
+    if (data.footerAddress !== undefined) {
+      await patchFieldToDatabase('footerAddress', data.footerAddress, 7);
+    }
+    if (data.footerHours !== undefined) {
+      await patchFieldToDatabase('footerHours', data.footerHours, 7);
+    }
+    if (data.footerNextAvailable !== undefined) {
+      await patchFieldToDatabase('footerNextAvailable', data.footerNextAvailable, 7);
+    }
+    if (data.footerCancellationPolicy !== undefined) {
+      await patchFieldToDatabase('footerCancellationPolicy', data.footerCancellationPolicy, 7);
+    }
+    if (data.footerPrivacyPolicy !== undefined) {
+      await patchFieldToDatabase('footerPrivacyPolicy', data.footerPrivacyPolicy, 7);
+    }
+    if (data.footerTermsOfService !== undefined) {
+      await patchFieldToDatabase('footerTermsOfService', data.footerTermsOfService, 7);
+    }
+    if (data.footerShowMaps !== undefined) {
+      await patchFieldToDatabase('footerShowMaps', data.footerShowMaps, 7);
+    }
+    if (data.footerShowAttribution !== undefined) {
+      await patchFieldToDatabase('footerShowAttribution', data.footerShowAttribution, 7);
+    }
     
     updateStep(7);
   };
@@ -726,7 +763,7 @@ const Onboarding = () => {
       case 6:
         return (
           <Step5SocialTestimonials 
-            onNext={handleStep6} 
+            onNext={handleStep5}  // Changed from handleStep6
             onBack={goBack}
             handle={onboardingData.handle}
             existingData={{
@@ -739,7 +776,7 @@ const Onboarding = () => {
       case 7:
         return (
           <Step6Footer 
-            onNext={handleStep7} 
+            onNext={handleStep6}  // Changed from handleStep7
             onBack={goBack}
             existingData={{
               footerBusinessName: onboardingData.footerBusinessName,
