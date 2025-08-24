@@ -25,13 +25,9 @@ serve(async (req) => {
     }
 
     // Get environment variables
-    // @ts-expect-error -- Deno runtime environment
-    const priceId = Deno.env.get('STRIPE_PRICE_ID')
+    // Use the specific price ID provided by the user
+    const priceId = 'price_1RyGZDFR5NTFUA4SSuJ0yKEw'
     console.log('🔧 Price ID:', priceId)
-    
-    if (!priceId) {
-      throw new Error('STRIPE_PRICE_ID is not configured')
-    }
 
     // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')

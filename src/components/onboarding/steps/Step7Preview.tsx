@@ -15,7 +15,7 @@ interface Step7PreviewProps {
   handle: string;
   canPublish: boolean;
   isPublishing: boolean;
-  isPreviewActive?: boolean; // Add this prop
+  isPreviewActive?: boolean;
   profileData: {
     handle: string;
     email?: string;
@@ -73,7 +73,7 @@ export const Step7Preview = ({
   handle, 
   canPublish, 
   isPublishing,
-  isPreviewActive, // Destructure the new prop
+  isPreviewActive,
   profileData 
 }: Step7PreviewProps) => {
   const { t } = useLanguage();
@@ -82,35 +82,17 @@ export const Step7Preview = ({
   const [livePreviewTimeLeft, setLivePreviewTimeLeft] = useState(15 * 60); // 15 minutes in seconds
   const [previewKey, setPreviewKey] = useState(0);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [planType, setPlanType] = useState<'monthly' | 'yearly'>('yearly');
+  const [isStartingPreview, setIsStartingPreview] = useState(false);
 
   // Initialize local state based on the prop
   useEffect(() => {
     if (isPreviewActive !== undefined) {
       setIsLivePreviewActive(isPreviewActive);
-      // If preview is active, reset time left to 15 minutes
       if (isPreviewActive) {
         setLivePreviewTimeLeft(15 * 60);
       }
     }
   }, [isPreviewActive]);
-
-  // Check if profile is already in preview mode
-  useEffect(() => {
-    // This would typically come from the database status
-    // For now, we'll check if the profile has a recent preview timestamp
-    const checkPreviewStatus = async () => {
-      try {
-        // You could make an API call here to check the current preview status
-        // For now, we'll just use the local state
-        console.log('🔧 Checking preview status...');
-      } catch (error) {
-        console.error('🔧 Error checking preview status:', error);
-      }
-    };
-    
-    checkPreviewStatus();
-  }, []);
 
   // Start live preview countdown
   useEffect(() => {
@@ -136,6 +118,7 @@ export const Step7Preview = ({
   };
 
   const startLivePreview = async () => {
+    setIsStartingPreview(true);
     try {
       console.log('🔧 Starting live preview from Step7Preview...');
       
@@ -152,7 +135,13 @@ export const Step7Preview = ({
       
     } catch (error) {
       console.error('🔧 Failed to start live preview:', error);
-      // Don't update local state if the API call failed
+      toast({
+        title: "Fout",
+        description: "Kon live preview niet starten. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsStartingPreview(false);
     }
   };
 
@@ -183,24 +172,7 @@ export const Step7Preview = ({
         throw new Error('Om live te gaan moet je een whatsapp nummer invoeren of je boekings-URL toevoegen');
       }
 
-      // Prefer Stripe Payment Links when configured; fallback to Edge Function checkout
-      const monthlyLink = import.meta.env.VITE_STRIPE_LINK_MONTHLY as string | undefined;
-      const yearlyLink = import.meta.env.VITE_STRIPE_LINK_YEARLY as string | undefined;
-      const baseLink = planType === 'yearly' ? yearlyLink : monthlyLink;
-
-      if (baseLink) {
-        // Prefill email and pass client_reference_id for webhook linkage
-        const { data: auth } = await supabase.auth.getUser();
-        const email = auth?.user?.email;
-        const params = new URLSearchParams();
-        params.set('client_reference_id', profile.id);
-        if (email) params.set('prefilled_email', email);
-        const url = `${baseLink}${baseLink.includes('?') ? '&' : '?'}${params.toString()}`;
-        window.location.href = url;
-        return;
-      }
-
-      // Fallback: use Edge Function (applies coupon automatically)
+      // Use StripeService to redirect to checkout
       await StripeService.redirectToCheckout({
         profileId: profile.id,
         successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
@@ -210,7 +182,7 @@ export const Step7Preview = ({
       console.error('Error starting subscription:', error);
       toast({
         title: "Fout",
-        description: "Er is een fout opgetreden bij het starten van je abonnement. Probeer het opnieuw.",
+        description: error instanceof Error ? error.message : "Er is een fout opgetreden bij het starten van je abonnement. Probeer het opnieuw.",
         variant: "destructive",
       });
     } finally {
@@ -271,7 +243,7 @@ export const Step7Preview = ({
               {isLivePreviewActive ? (
                 <iframe
                   key={previewKey}
-                  src={`${window.location.origin}/${handle}`}
+                  src={`https://tapbookr.com/${handle}`}
                   className="w-full h-96 border-0"
                   title="Live Page Preview"
                 />
@@ -292,11 +264,11 @@ export const Step7Preview = ({
             <div className="flex flex-col gap-3">
               <Button
                 onClick={startLivePreview}
-                disabled={isLivePreviewActive}
+                disabled={isLivePreviewActive || isStartingPreview}
                 className="flex-1"
               >
                 <Clock className="w-4 h-4 mr-2" />
-                Start 15 min. Live Preview
+                {isStartingPreview ? 'Bezig met starten...' : 'Start 15 min. Live Preview'}
               </Button>
               <Button
                 variant="outline"
@@ -308,8 +280,6 @@ export const Step7Preview = ({
               </Button>
             </div>
           </div>
-
-
 
           {/* Page Summary */}
           <div className="space-y-4">
@@ -381,39 +351,17 @@ export const Step7Preview = ({
           </div>
         </div>
 
-        {/* Plan Toggle + Action Buttons */}
+        {/* Subscribe Button - Only Monthly */}
         <div className="flex flex-col gap-3 pt-6">
-          <div className="grid grid-cols-2 rounded-lg border overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setPlanType('monthly')}
-              className={`py-2 text-sm font-medium ${planType === 'monthly' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
-            >
-              Maandelijks
-            </button>
-            <button
-              type="button"
-              onClick={() => setPlanType('yearly')}
-              className={`py-2 text-sm font-medium ${planType === 'yearly' ? 'bg-gray-900 text-white' : 'bg-white text-gray-700'}`}
-            >
-              Jaarlijks
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button
-              onClick={handleSubscribe}
-              disabled={isSubscribing}
-              className="flex-1"
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              {isSubscribing
-                ? 'Bezig...'
-                : planType === 'yearly'
-                  ? 'Een jaar lang live voor €89'
-                  : 'Ga live voor €1'}
-            </Button>
-          </div>
+          <Button
+            onClick={handleSubscribe}
+            disabled={isSubscribing}
+            className="w-full"
+            size="lg"
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            {isSubscribing ? 'Bezig met abonnement...' : 'Ga live voor €7 per maand (eerste maand €1)'}
+          </Button>
         </div>
 
         {/* Subscription Info */}

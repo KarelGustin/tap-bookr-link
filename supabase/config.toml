@@ -18,5 +18,8 @@ verify_jwt = false
 [functions.debug-subscription]
 verify_jwt = true
 
+[functions.start-live-preview]
+verify_jwt = true
+
 [functions.fix-subscription-status]
 verify_jwt = true

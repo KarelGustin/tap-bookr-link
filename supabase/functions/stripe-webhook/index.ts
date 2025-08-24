@@ -153,9 +153,9 @@ async function handleSubscriptionCreated(subscription, supabase) {
     // Normalize subscription status
     const normalizedSubscriptionStatus = subscription.status === 'active' || subscription.status === 'trialing' ? 'active' : 'inactive';
 
-    // Upsert subscription (idempotent on stripe_subscription_id)
-    const { error: upsertError } = await supabase
-      .from('profiles')
+    // Insert/update subscription record in subscriptions table
+    const { error: subscriptionError } = await supabase
+      .from('subscriptions')
       .upsert({
         stripe_subscription_id: subscription.id,
         profile_id: profile.id,
@@ -164,18 +164,16 @@ async function handleSubscriptionCreated(subscription, supabase) {
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end,
-        onboarding_completed: true,
+        trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+        trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
         updated_at: new Date().toISOString(),
-        onboarding_step: 8,
-        subscription_id: subscription.id,
-        subscription_status: normalizedSubscriptionStatus,
       }, { onConflict: 'stripe_subscription_id' });
 
-    if (upsertError) {
-      console.error('[WEBHOOK] Error upserting subscription:', upsertError);
+    if (subscriptionError) {
+      console.error('[WEBHOOK] Error upserting subscription:', subscriptionError);
       return {
         success: false,
-        message: `Error upserting subscription: ${upsertError.message}`
+        message: `Error upserting subscription: ${subscriptionError.message}`
       };
     }
 

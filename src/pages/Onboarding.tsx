@@ -209,48 +209,68 @@ const Onboarding = () => {
             setCurrentStep(existingProfile.onboarding_step);
           }
         } else {
-          // No profile exists, create one automatically
-          console.log('🔧 No profile found, creating new profile for user:', user.id);
+          // No profile exists, but trigger should have created one
+          console.log('🔧 No profile found after trigger should have created it, checking again...');
           
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              user_id: user.id,
-              handle: null,
-              name: null,
-              is_business: true,
-              onboarding_completed: false,
-              onboarding_step: 1,
-              subscription_status: 'inactive',
-              status: 'draft',
-              theme_mode: 'light',
-              accent_color: '#6E56CF',
-              booking_mode: 'embed',
-              about: {},
-              media: { items: [] },
-              socials: {},
-              contact: {},
-              banner: {},
-              footer: {},
-              testimonials: [],
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
+          // Wait a bit and try again in case the trigger is slow
+          setTimeout(async () => {
+            const { data: retryProfile, error: retryError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
+            
+            if (retryProfile) {
+              console.log('✅ Profile found on retry:', retryProfile.id);
+              setProfileId(retryProfile.id);
+              setOnboardingData(prev => ({
+                ...prev,
+                handle: retryProfile.handle || prev.handle,
+              }));
+            } else {
+              console.error('❌ Still no profile found after trigger, manual creation needed');
+              // Manual fallback creation
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  user_id: user.id,
+                  handle: null,
+                  name: null,
+                  is_business: true,
+                  onboarding_completed: false,
+                  onboarding_step: 1,
+                  subscription_status: 'inactive',
+                  status: 'draft',
+                  theme_mode: 'light',
+                  accent_color: '#6E56CF',
+                  booking_mode: 'embed',
+                  about: {},
+                  media: { items: [] },
+                  socials: {},
+                  contact: {},
+                  banner: {},
+                  footer: {},
+                  testimonials: [],
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                })
+                .select()
+                .single();
 
-          if (createError) {
-            console.error('❌ Failed to create profile:', createError);
-            toast({
-              title: "Profiel aanmaken mislukt",
-              description: "Er is een fout opgetreden bij het aanmaken van je profiel. Probeer het opnieuw.",
-              variant: "destructive",
-            });
-            return;
-          }
+              if (createError) {
+                console.error('❌ Failed to create profile manually:', createError);
+                toast({
+                  title: "Profiel aanmaken mislukt",
+                  description: "Er is een fout opgetreden bij het aanmaken van je profiel. Probeer het opnieuw.",
+                  variant: "destructive",
+                });
+                return;
+              }
 
-          console.log('✅ New profile created:', newProfile.id);
-          setProfileId(newProfile.id);
+              console.log('✅ Manual profile created:', newProfile.id);
+              setProfileId(newProfile.id);
+            }
+          }, 1000);
         }
         
         hasInitializedRef.current = true;
@@ -392,27 +412,30 @@ const Onboarding = () => {
   }) => {
     console.log('🔧 Step 2 data received:', data);
     
-    const updatedData = { ...onboardingData, ...data };
-    setOnboardingData(updatedData);
-    
-    // Save each field with step update
-    if (data.bookingUrl !== undefined) {
-      await patchFieldToDatabase('bookingUrl', data.bookingUrl, 3);
-    }
-    if (data.bookingMode !== undefined) {
-      await patchFieldToDatabase('bookingMode', data.bookingMode, 3);
-    }
-    if (data.useWhatsApp !== undefined) {
-      await patchFieldToDatabase('useWhatsApp', data.useWhatsApp, 3);
-    }
-    if (data.whatsappNumber !== undefined) {
-      await patchFieldToDatabase('whatsappNumber', data.whatsappNumber, 3);
-    }
-    
-    updateStep(3);
+        const updatedData = { ...onboardingData, ...data };
+        setOnboardingData(updatedData);
+        
+        setIsLoading(true);
+        
+        // Save each field with step update
+        if (data.bookingUrl !== undefined) {
+          await patchFieldToDatabase('bookingUrl', data.bookingUrl, 3);
+        }
+        if (data.bookingMode !== undefined) {
+          await patchFieldToDatabase('bookingMode', data.bookingMode, 3);
+        }
+        if (data.useWhatsApp !== undefined) {
+          await patchFieldToDatabase('useWhatsApp', data.useWhatsApp, 3);
+        }
+        if (data.whatsappNumber !== undefined) {
+          await patchFieldToDatabase('whatsappNumber', data.whatsappNumber, 3);
+        }
+        
+        setIsLoading(false);
+        updateStep(3);
   };
 
-  const handleStep3 = async (data: {
+    const handleStep3 = async (data: {
     name?: string;
     slogan?: string;
     category?: string;
@@ -423,6 +446,7 @@ const Onboarding = () => {
   }) => {
     console.log('🔧 Step 3 data received:', data);
     
+    setIsLoading(true);
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
@@ -446,6 +470,7 @@ const Onboarding = () => {
       await patchFieldToDatabase('themeMode', data.themeMode, 4);
     }
     
+    setIsLoading(false);
     updateStep(4);
   };
 
@@ -457,6 +482,7 @@ const Onboarding = () => {
   }) => {
     console.log('🔧 Step 4 data received:', data);
     
+    setIsLoading(true);
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
@@ -474,6 +500,7 @@ const Onboarding = () => {
       await patchFieldToDatabase('about', aboutData, 5);
     }
     
+    setIsLoading(false);
     updateStep(5);
   };
 
@@ -487,6 +514,7 @@ const Onboarding = () => {
   }) => {
     console.log('🔧 Step 5 data received:', data);
     
+    setIsLoading(true);
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
@@ -501,6 +529,7 @@ const Onboarding = () => {
       await patchFieldToDatabase('testimonials', data.testimonials, 6);
     }
     
+    setIsLoading(false);
     updateStep(6);
   };
 
@@ -519,6 +548,7 @@ const Onboarding = () => {
   }) => {
     console.log('🔧 Step 6 data received:', data);
     
+    setIsLoading(true);
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
@@ -557,6 +587,7 @@ const Onboarding = () => {
       await patchFieldToDatabase('footerShowAttribution', data.footerShowAttribution, 7);
     }
     
+    setIsLoading(false);
     updateStep(7);
   };
 
@@ -647,21 +678,35 @@ const Onboarding = () => {
   };
 
   const handlePreview = async () => {
+    if (!profileId) {
+      toast({
+        title: "Fout",
+        description: "Profiel niet gevonden. Probeer de pagina te verversen.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Open the public profile in a new tab
-      const publicUrl = `${window.location.origin}/${onboardingData.handle}`;
-      window.open(publicUrl, '_blank');
+      // Call the start-live-preview edge function
+      const { error } = await supabase.functions.invoke('start-live-preview', {
+        body: { profileId }
+      });
+
+      if (error) {
+        throw error;
+      }
 
       toast({
-        title: "Preview gestart",
-        description: "Je pagina wordt geopend in een nieuwe tab!",
+        title: "Live preview gestart!",
+        description: "Je pagina is nu live en zichtbaar voor 15 minuten.",
       });
 
     } catch (error) {
       console.error('❌ Error in handlePreview:', error);
       toast({
         title: "Preview mislukt",
-        description: "Er is een fout opgetreden bij het starten van de preview.",
+        description: "Er is een fout opgetreden bij het starten van de live preview.",
         variant: "destructive",
       });
     }
