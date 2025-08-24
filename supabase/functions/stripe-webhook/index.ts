@@ -155,7 +155,7 @@ async function handleSubscriptionCreated(subscription, supabase) {
 
     // Upsert subscription (idempotent on stripe_subscription_id)
     const { error: upsertError } = await supabase
-      .from('subscriptions')
+      .from('profiles')
       .upsert({
         stripe_subscription_id: subscription.id,
         profile_id: profile.id,
