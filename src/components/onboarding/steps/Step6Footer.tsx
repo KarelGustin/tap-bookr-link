@@ -302,6 +302,8 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
       title="Vul Je Bedrijfsprofiel Aan"
       subtitle="Voeg je bedrijfsinformatie en beleid toe om vertrouwen op te bouwen en klanten te voorzien van alles wat ze moeten weten."
       handle={handle}
+      canGoNext={canGoNext()}
+      canGoBack={true}
     >
       {/* Business Information */}
       <Card>
@@ -626,35 +628,6 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
         </CardContent>
       </Card>
 
-      {/* Preview Mode Info */}
-      <Card className="bg-green-50 border-green-200">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-2">
-            <h4 className="font-medium text-green-900">Live Voorvertoningsmodus</h4>
-            <p className="text-sm text-green-800">
-              Door op "Live Preview Inschakelen" te klikken wordt je pagina tijdelijk voor 15 minuten gepubliceerd, 
-              zodat je de echte iframe kunt testen en precies kunt zien hoe klanten je pagina zullen ervaren.
-            </p>
-            <p className="text-xs text-green-700 mt-2">
-              ⚡ Je pagina keert automatisch terug naar conceptmodus na 15 minuten
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Navigation */}
-      <div className="flex justify-between pt-6">
-        <Button variant="outline" onClick={onBack} className="rounded-lg">
-          Terug
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={!canGoNext()}
-          className="rounded-lg"
-        >
-          Bekijk 15 min. Live preview
-        </Button>
-      </div>
     </OnboardingLayout>
   );
 };
