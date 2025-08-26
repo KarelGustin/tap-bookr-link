@@ -602,6 +602,46 @@ const Onboarding = () => {
     updateStep(6);
   };
 
+  const handleTestimonialsStep = async (data: {
+    socialLinks: Array<{
+      id: string;
+      title: string;
+      platform?: string;
+      url: string;
+    }>;
+    testimonials: Array<{
+      customer_name: string;
+      review_title: string;
+      review_text: string;
+      image_url?: string;
+      _file?: File;
+    }>;
+  }) => {
+    console.log('🔧 Testimonials step data received:', data);
+    
+    setIsLoading(true);
+    const updatedData = { ...onboardingData, ...data };
+    setOnboardingData(updatedData);
+    
+    // Save testimonials and social links with step update
+    if (data.testimonials !== undefined) {
+      await patchFieldToDatabase('testimonials', data.testimonials, 7);
+    }
+    if (data.socialLinks !== undefined) {
+      // Save social links to about section
+      const aboutData = {
+        title: onboardingData.aboutTitle || '',
+        description: onboardingData.aboutDescription || '',
+        alignment: 'center',
+        socialLinks: data.socialLinks,
+      };
+      await patchFieldToDatabase('about', aboutData, 7);
+    }
+    
+    setIsLoading(false);
+    updateStep(7);
+  };
+
   const handleStep6 = async (data: {
     footerBusinessName?: string;
     footerEmail?: string;
@@ -877,7 +917,7 @@ const Onboarding = () => {
       case 6:
         return (
           <Step5SocialTestimonials 
-            onNext={handleStep5}  // Changed from handleStep6
+            onNext={handleTestimonialsStep}
             onBack={goBack}
             handle={onboardingData.handle}
             existingData={{
