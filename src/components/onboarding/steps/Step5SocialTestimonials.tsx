@@ -529,7 +529,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
                     <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
                       {testimonial.image_url ? (
                         <img src={testimonial.image_url} alt="Customer photo" className="w-full h-full object-cover" />
-                      ) : testimonial._file ? (
+                      ) : testimonial._file && testimonial._file instanceof File ? (
                         <img src={URL.createObjectURL(testimonial._file)} alt="Customer photo preview" className="w-full h-full object-cover" />
                       ) : (
                         <User className="w-6 h-6 text-muted-foreground" />
