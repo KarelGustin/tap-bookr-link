@@ -192,7 +192,7 @@ export type Database = {
           footer_show_maps: boolean | null
           footer_terms_of_service: string | null
           grace_period_ends_at: string | null
-          handle: string
+          handle: string | null
           id: string
           is_business: boolean | null
           media: Json
@@ -240,7 +240,7 @@ export type Database = {
           footer_show_maps?: boolean | null
           footer_terms_of_service?: string | null
           grace_period_ends_at?: string | null
-          handle: string
+          handle?: string | null
           id?: string
           is_business?: boolean | null
           media?: Json
@@ -288,7 +288,7 @@ export type Database = {
           footer_show_maps?: boolean | null
           footer_terms_of_service?: string | null
           grace_period_ends_at?: string | null
-          handle?: string
+          handle?: string | null
           id?: string
           is_business?: boolean | null
           media?: Json
