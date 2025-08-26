@@ -182,6 +182,8 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     
     if (urls.length > 0) {
       setMediaPreviews(urls);
+      // Clear mediaFiles when we have URLs from database
+      setMediaFiles([]);
     } else {
       // Reset to empty if no media in existingData
       setMediaPreviews([]);
@@ -274,8 +276,9 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
   };
 
   const removeMedia = (index: number) => {
-    // Revoke the URL for the removed preview if it's a local file
     const removedPreview = mediaPreviews[index];
+    
+    // Revoke the URL for the removed preview if it's a local file
     if (removedPreview && removedPreview.startsWith('blob:')) {
       URL.revokeObjectURL(removedPreview);
     }
@@ -283,6 +286,14 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
     // Remove from both arrays
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
     setMediaPreviews(prev => prev.filter((_, i) => i !== index));
+    
+    // Show feedback for database images
+    if (removedPreview?.includes('supabase')) {
+      toast({
+        title: "Afbeelding verwijderd",
+        description: "De afbeelding wordt definitief verwijderd wanneer je deze stap opslaat.",
+      });
+    }
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
@@ -483,7 +494,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
               <div className="grid grid-cols-3 gap-2">
                 {mediaPreviews.map((preview, index) => (
                   <div
-                    key={index}
+                    key={`preview-${index}-${preview}`}
                     className={`relative group cursor-move ${
                       draggedIndex === index ? 'opacity-50 scale-95' : ''
                     }`}
@@ -497,6 +508,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
                       src={preview} 
                       alt={`${t('onboarding.step4.mediaGallery.mediaAlt')} ${index + 1}`} 
                       className="w-full aspect-square object-cover rounded-lg"
+                      loading="lazy"
                     />
                     <div className="absolute top-1 left-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
                       {index + 1}
@@ -504,6 +516,14 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
                     <div className="absolute top-1 right-1 bg-black/70 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                       <GripVertical className="w-3 h-3" />
                     </div>
+                    
+                    {/* Saved indicator for database images */}
+                    {preview.includes('supabase') && (
+                      <div className="absolute bottom-1 left-1 bg-green-500/90 text-white text-xs px-2 py-0.5 rounded">
+                        Opgeslagen
+                      </div>
+                    )}
+                    
                     <button
                       onClick={() => removeMedia(index)}
                       className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
