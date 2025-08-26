@@ -507,6 +507,7 @@ const Onboarding = () => {
   const handleStep5 = async (data: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     socials?: any;
+    mediaFiles?: File[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     media?: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -518,12 +519,54 @@ const Onboarding = () => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
+    // Handle media file uploads
+    let mediaData = data.media;
+    if (data.mediaFiles && data.mediaFiles.length > 0) {
+      console.log('🔧 Uploading media files:', data.mediaFiles.length);
+      
+      try {
+        const uploadPromises = data.mediaFiles.map(async (file, index) => {
+          const uploadResult = await uploadImage(file, 'media', `profiles/${profileId}/media/${Date.now()}-${index}`);
+          if (uploadResult) {
+            return {
+              type: 'image',
+              imageUrl: uploadResult.url,
+              description: '',
+            };
+          }
+          return null;
+        });
+
+        const uploadResults = await Promise.all(uploadPromises);
+        const successfulUploads = uploadResults.filter(result => result !== null);
+        
+        if (successfulUploads.length > 0) {
+          mediaData = {
+            items: successfulUploads
+          };
+          console.log('✅ Successfully uploaded media files:', successfulUploads.length);
+          
+          toast({
+            title: "Media opgeslagen",
+            description: `${successfulUploads.length} afbeeldingen succesvol geüpload.`,
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error uploading media files:', error);
+        toast({
+          title: "Upload mislukt",
+          description: "Fout bij het uploaden van media bestanden. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+      }
+    }
+    
     // Save each field with step update
     if (data.socials !== undefined) {
       await patchFieldToDatabase('socials', data.socials, 6);
     }
-    if (data.media !== undefined) {
-      await patchFieldToDatabase('media', data.media, 6);
+    if (mediaData !== undefined) {
+      await patchFieldToDatabase('media', mediaData, 6);
     }
     if (data.testimonials !== undefined) {
       await patchFieldToDatabase('testimonials', data.testimonials, 6);
