@@ -486,9 +486,35 @@ const Onboarding = () => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
+    // Handle avatar file upload
+    let avatarUrl = data.avatarUrl;
+    if (data.avatarFile && user?.id) {
+      console.log('🔧 Uploading avatar file:', data.avatarFile.name);
+      
+      try {
+        const uploadResult = await uploadImage(data.avatarFile, 'avatars', `${user.id}/avatar/${Date.now()}`);
+        if (uploadResult) {
+          avatarUrl = uploadResult.url;
+          console.log('✅ Successfully uploaded avatar:', avatarUrl);
+          
+          toast({
+            title: "Avatar opgeslagen",
+            description: "Je profielfoto is succesvol geüpload.",
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error uploading avatar:', error);
+        toast({
+          title: "Upload mislukt",
+          description: "Fout bij het uploaden van je profielfoto. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+      }
+    }
+    
     // Save each field with step update
-    if (data.avatarUrl !== undefined) {
-      await patchFieldToDatabase('avatar_url', data.avatarUrl, 5);
+    if (avatarUrl !== undefined) {
+      await patchFieldToDatabase('avatar_url', avatarUrl, 5);
     }
     if (data.aboutTitle !== undefined || data.aboutDescription !== undefined) {
       const aboutData = {
