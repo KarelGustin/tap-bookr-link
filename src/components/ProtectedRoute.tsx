@@ -15,27 +15,54 @@ export const ProtectedRoute = ({
 	requireOnboarding = true,
 	requireActiveSubscription = false,
 }: ProtectedRouteProps) => {
-	const { user } = useAuth();
+	const { user, loading, session } = useAuth();
 	const { isLoading: onboardingLoading, onboardingCompleted, currentStep } = useOnboardingStatus();
 	const { isLoading: subscriptionLoading, allowed } = useSubscriptionStatus();
 	const navigate = useNavigate();
 
+	console.log('🔧 ProtectedRoute state:', {
+		hasUser: !!user,
+		hasSession: !!session,
+		authLoading: loading,
+		onboardingLoading,
+		onboardingCompleted,
+		currentStep,
+		subscriptionLoading,
+		subscriptionAllowed: allowed,
+		requireOnboarding,
+		requireActiveSubscription,
+		path: window.location.pathname
+	});
+
 	useEffect(() => {
-		if (!user) return;
+		// Wait for auth to be ready first
+		if (loading) return;
 		
-		// Wait for all loading states to complete
-		if (onboardingLoading || subscriptionLoading) return;
+		if (!user || !session) {
+			console.log('🔧 No user/session, redirecting to login');
+			navigate('/login');
+			return;
+		}
+		
+		// Wait for other loading states to complete
+		if (onboardingLoading || (requireActiveSubscription && subscriptionLoading)) {
+			console.log('🔧 Still loading onboarding or subscription status');
+			return;
+		}
 
 		const currentPath = window.location.pathname;
+		console.log('🔧 Checking protection rules for path:', currentPath);
 
 		// Onboarding guard - redirect incomplete onboarding users
 		if (requireOnboarding && !onboardingCompleted) {
+			console.log('🔧 Onboarding required but not completed, redirecting to step:', currentStep || 1);
 			navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
 			return;
 		}
 
 		// Subscription guard - redirect users without active subscription away from protected areas
 		if (requireActiveSubscription && !allowed) {
+			console.log('🔧 Active subscription required but not found, redirecting to payment');
 			navigate('/onboarding?step=7&subscription_required=true', { replace: true });
 			return;
 		}
@@ -44,15 +71,17 @@ export const ProtectedRoute = ({
 		if (currentPath === '/' || currentPath === '/login') {
 			if (!onboardingCompleted) {
 				// User needs to complete onboarding first
+				console.log('🔧 Root redirect: onboarding incomplete, going to step:', currentStep || 1);
 				navigate(`/onboarding?step=${currentStep || 1}`, { replace: true });
 				return;
 			} else if (onboardingCompleted && allowed) {
 				// User has completed onboarding AND has active subscription → Dashboard
-				console.log('🔧 Auto-redirecting to dashboard - user has active subscription');
+				console.log('🔧 Root redirect: auto-redirecting to dashboard - user has active subscription');
 				navigate('/dashboard', { replace: true });
 				return;
 			} else if (onboardingCompleted && !allowed) {
 				// User completed onboarding but NO active subscription → Payment step
+				console.log('🔧 Root redirect: onboarding complete but no subscription, going to payment');
 				navigate('/onboarding?step=7', { replace: true });
 				return;
 			}
@@ -60,15 +89,14 @@ export const ProtectedRoute = ({
 
 		// Handle onboarding page redirect for users with active subscription
 		if (currentPath === '/onboarding' && onboardingCompleted && allowed) {
-			console.log('🔧 Auto-redirecting to dashboard - user already has subscription');
+			console.log('🔧 Onboarding redirect: user already has subscription, going to dashboard');
 			navigate('/dashboard', { replace: true });
 			return;
 		}
-	}, [user, onboardingLoading, onboardingCompleted, currentStep, subscriptionLoading, allowed, requireOnboarding, requireActiveSubscription, navigate]);
+	}, [user, session, loading, onboardingLoading, onboardingCompleted, currentStep, subscriptionLoading, allowed, requireOnboarding, requireActiveSubscription, navigate]);
 
-	// Toon loading state
-	
-	if (onboardingLoading || (requireActiveSubscription && subscriptionLoading)) {
+	// Show loading state
+	if (loading || onboardingLoading || (requireActiveSubscription && subscriptionLoading)) {
 		return (
 			<div className="min-h-screen flex items-center justify-center">
 				<div className="text-center">
@@ -79,20 +107,19 @@ export const ProtectedRoute = ({
 		);
 	}
 
-	// Als gebruiker niet is ingelogd
-	if (!user) {
-		navigate('/login');
+	// If user is not logged in, redirect will be handled by useEffect
+	if (!user || !session) {
 		return null;
 	}
 
-	// Als onboarding status niet overeenkomt met vereiste
+	// If onboarding status doesn't match requirements, redirect will be handled by useEffect
 	if (requireOnboarding && !onboardingCompleted) {
-		return null; // Redirect wordt afgehandeld door useEffect
+		return null;
 	}
 
-	// Subscription gating
+	// Subscription gating, redirect will be handled by useEffect
 	if (requireActiveSubscription && !allowed) {
-		return null; // Redirect via effect
+		return null;
 	}
 
 	return <>{children}</>;

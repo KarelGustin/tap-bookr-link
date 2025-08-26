@@ -32,12 +32,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('🔧 Auth state change:', event, session?.user?.email);
+        console.log('🔧 Auth state change:', event, session?.user?.email, session?.expires_at ? new Date(session.expires_at * 1000) : 'no expiry');
         
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
-          setLoading(false); // Always stop loading on any auth state change
+          
+          // Only stop loading if we have a definitive auth state
+          if (event !== 'INITIAL_SESSION' || session !== null) {
+            setLoading(false);
+          }
         }
       }
     );
@@ -103,7 +107,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user?.id]);
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
+    console.log('🔧 Starting signup process for:', email);
+    
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -111,32 +117,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
     
-    if (data.user && !error) {
-      // Check if profile already exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', data.user.id)
-        .single();
-      
-      if (!existingProfile) {
-        // Only create profile if it doesn't exist
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: data.user.id,
-            handle: '',
-            status: 'draft',
-            onboarding_completed: false,
-            onboarding_step: 1
-          });
-        
-        if (profileError) {
-          console.error('Failed to create profile:', profileError);
-        }
-      } else {
-        console.log('Profile already exists for user:', data.user.id);
-      }
+    if (error) {
+      console.error('🔧 Signup error:', error);
+    } else {
+      console.log('🔧 Signup successful, profile will be created by database trigger');
     }
     
     return { error };

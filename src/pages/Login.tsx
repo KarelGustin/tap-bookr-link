@@ -49,31 +49,12 @@ export default function Login() {
         });
       } else {
         if (isLogin) {
-          // Check onboarding status after login
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('onboarding_completed, onboarding_step')
-                .eq('user_id', user.id)
-                .single<{ onboarding_completed: boolean | null; onboarding_step: number | null }>();
-
-              if (profileError || !profile) {
-                console.error('Error checking profile:', profileError);
-                navigate('/onboarding?step=1', { replace: true });
-              } else if (!profile.onboarding_completed) {
-                navigate(`/onboarding?step=${profile.onboarding_step || 1}`, { replace: true });
-              } else {
-                navigate(`/onboarding?step=7`, { replace: true });
-              }
-            } else {
-              navigate('/onboarding?step=1');
-            }
-          } catch (error) {
-            console.error('Error checking onboarding status:', error);
-            navigate('/onboarding?step=1');
-          }
+          // For login, let ProtectedRoute handle the redirection
+          toast({
+            title: "Ingelogd!",
+            description: "Je wordt doorverwezen...",
+          });
+          navigate('/', { replace: true });
         } else {
           // For signup, redirect to onboarding
           toast({

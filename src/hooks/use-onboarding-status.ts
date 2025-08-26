@@ -17,32 +17,42 @@ export const useOnboardingStatus = () => {
         return;
       }
 
+      console.log('🔧 Checking onboarding status for user:', user.id);
+
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('onboarding_completed, onboarding_step, status')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle to handle case where profile might not exist yet
 
         if (error) {
-          console.error('Error checking onboarding status:', error);
+          console.error('🔧 Error checking onboarding status:', error);
           setIsLoading(false);
           return;
         }
 
         if (profile) {
+          console.log('🔧 Profile found:', { 
+            onboarding_completed: profile.onboarding_completed, 
+            onboarding_step: profile.onboarding_step 
+          });
           setOnboardingCompleted(profile.onboarding_completed || false);
           setCurrentStep(profile.onboarding_step || 1);
+        } else {
+          console.log('🔧 No profile found, defaulting to step 1');
+          setOnboardingCompleted(false);
+          setCurrentStep(1);
         }
       } catch (error) {
-        console.error('Error checking onboarding status:', error);
+        console.error('🔧 Error checking onboarding status:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     checkOnboardingStatus();
-  }, [user, navigate]);
+  }, [user?.id]); // Only depend on user.id, not navigate
 
   return { 
     isLoading, 
