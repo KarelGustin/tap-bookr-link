@@ -74,27 +74,21 @@ serve(async (req)=>{
       message: ''
     };
     switch(event.type){
-      // case 'checkout.session.completed':
-      //   processingResult = await handleCheckoutSessionCompleted(event.data.object, supabase);
-      //   break;
-      // case 'customer.created':
-      //   processingResult = await handleCustomerCreated(event.data.object, supabase);
-      //   break;
       case 'customer.subscription.created':
         processingResult = await handleSubscriptionCreated(event.data.object, supabase);
         break;
-      // case 'customer.subscription.updated':
-      //   processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
-      //   break;
+      case 'customer.subscription.updated':
+        processingResult = await handleSubscriptionUpdated(event.data.object, supabase);
+        break;
       case 'customer.subscription.deleted':
         processingResult = await handleSubscriptionDeleted(event.data.object, supabase);
         break;
-      // case 'invoice.payment_succeeded':
-      //   processingResult = await handleInvoicePaymentSucceeded(event.data.object, supabase);
-      //   break;
-      // case 'invoice.payment_failed':
-      //   processingResult = await handleInvoicePaymentFailed(event.data.object, supabase);
-      //   break;
+      case 'invoice.payment_succeeded':
+        processingResult = await handleInvoicePaymentSucceeded(event.data.object, supabase);
+        break;
+      case 'invoice.payment_failed':
+        processingResult = await handleInvoicePaymentFailed(event.data.object, supabase);
+        break;
       default:
         console.log(`⚠️ Unhandled event type: ${event.type}`);
         processingResult = {
@@ -250,10 +244,143 @@ async function handleSubscriptionDeleted(subscription, supabase) {
     };
   }
 }
-/* async function handleInvoicePaymentSucceeded(invoice, supabase) {
-  const subscriptionId = invoice.subscription;
-  if (!subscriptionId) return {
-    success: false,
-    message: 'No subscription ID in invoice'
-  };
-} */
+
+async function handleSubscriptionUpdated(subscription, supabase) {
+  console.log(`🔧 Processing subscription updated for subscription ${subscription.id}, status: ${subscription.status}`);
+  
+  try {
+    // Update subscription record
+    const { error: subError } = await supabase
+      .from('subscriptions')
+      .update({
+        status: subscription.status,
+        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end,
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_subscription_id', subscription.id);
+
+    if (subError) {
+      console.error('Error updating subscription:', subError);
+      return {
+        success: false,
+        message: `Error updating subscription: ${subError.message}`
+      };
+    }
+
+    // Update profile based on subscription status
+    const isActive = ['active', 'trialing'].includes(subscription.status);
+    const profileStatus = isActive ? 'published' : 'draft';
+    const subscriptionStatus = isActive ? 'active' : 'inactive';
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: subscriptionStatus,
+        status: profileStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_customer_id', subscription.customer);
+
+    if (profileError) {
+      console.error('Error updating profile:', profileError);
+      return {
+        success: false,
+        message: `Error updating profile: ${profileError.message}`
+      };
+    }
+
+    console.log(`✅ Subscription ${subscription.id} updated, profile set to ${profileStatus}`);
+    return {
+      success: true,
+      message: 'Subscription updated successfully'
+    };
+  } catch (error) {
+    console.error('[WEBHOOK] Error in handleSubscriptionUpdated:', error);
+    return {
+      success: false,
+      message: `Error processing subscription update: ${error}`
+    };
+  }
+}
+
+async function handleInvoicePaymentSucceeded(invoice, supabase) {
+  console.log(`🔧 Processing payment succeeded for customer ${invoice.customer}`);
+  
+  try {
+    // Only process subscription invoices
+    if (!invoice.subscription) {
+      return {
+        success: true,
+        message: 'Skipping non-subscription invoice'
+      };
+    }
+
+    // Update profile to published status when payment succeeds
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: 'active',
+        status: 'published',
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_customer_id', invoice.customer);
+
+    if (profileError) {
+      console.error('Error updating profile after payment succeeded:', profileError);
+      return {
+        success: false,
+        message: `Error updating profile: ${profileError.message}`
+      };
+    }
+
+    console.log(`✅ Profile for customer ${invoice.customer} set to published after successful payment`);
+    return {
+      success: true,
+      message: 'Payment success processed'
+    };
+  } catch (error) {
+    console.error('[WEBHOOK] Error in handleInvoicePaymentSucceeded:', error);
+    return {
+      success: false,
+      message: `Error processing payment success: ${error}`
+    };
+  }
+}
+
+async function handleInvoicePaymentFailed(invoice, supabase) {
+  console.log(`🔧 Processing payment failed for customer ${invoice.customer}`);
+  
+  try {
+    // Update profile to draft status when payment fails
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        subscription_status: 'inactive',
+        status: 'draft',
+        updated_at: new Date().toISOString()
+      })
+      .eq('stripe_customer_id', invoice.customer);
+
+    if (profileError) {
+      console.error('Error updating profile after payment failed:', profileError);
+      return {
+        success: false,
+        message: `Error updating profile: ${profileError.message}`
+      };
+    }
+
+    console.log(`✅ Profile for customer ${invoice.customer} set to draft after failed payment`);
+    return {
+      success: true,
+      message: 'Payment failure processed'
+    };
+  } catch (error) {
+    console.error('[WEBHOOK] Error in handleInvoicePaymentFailed:', error);
+    return {
+      success: false,
+      message: `Error processing payment failure: ${error}`
+    };
+  }
+}
