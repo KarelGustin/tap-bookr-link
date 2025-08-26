@@ -526,7 +526,7 @@ const Onboarding = () => {
       
       try {
         const uploadPromises = data.mediaFiles.map(async (file, index) => {
-          const uploadResult = await uploadImage(file, 'media', `profiles/${profileId}/media/${Date.now()}-${index}`);
+          const uploadResult = await uploadImage(file, 'media', `${user?.id}/media/${Date.now()}-${index}`);
           if (uploadResult) {
             return {
               type: 'image',
