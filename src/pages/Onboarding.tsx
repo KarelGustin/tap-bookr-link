@@ -697,7 +697,7 @@ const Onboarding = () => {
     }
     
     setIsLoading(false);
-    updateStep(7);
+    updateStep(8);
   };
 
   const handleStep7 = async (data: {
