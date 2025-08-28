@@ -90,6 +90,29 @@ export default function Dashboard() {
   // Show success message when coming from successful subscription
   useEffect(() => {
     if (success === 'true' && subscriptionStatus === 'active') {
+      // First call the subscription success handler
+      const handleSubscriptionSuccess = async () => {
+        if (!profile?.id) return;
+        
+        try {
+          console.log('🔧 Calling subscription success handler for profile:', profile.id);
+          const { data, error } = await supabase.functions.invoke('handle-subscription-success', {
+            body: { profileId: profile.id }
+          });
+          
+          if (error) {
+            console.error('Error handling subscription success:', error);
+          } else {
+            console.log('✅ Subscription success handled:', data);
+          }
+        } catch (error) {
+          console.error('Error calling subscription success handler:', error);
+        }
+      };
+      
+      // Call the handler first, then show the toast
+      handleSubscriptionSuccess();
+      
       toast({
         title: "🎉 Betaling Succesvol!",
         description: "Je abonnement is actief en je website is nu live op tapbookr.com!",
@@ -107,7 +130,7 @@ export default function Dashboard() {
         window.location.reload();
       }, 2000);
     }
-  }, [success, subscriptionStatus, toast]);
+  }, [success, subscriptionStatus, toast, profile?.id]);
 
   // Handle return from customer portal
   useEffect(() => {
