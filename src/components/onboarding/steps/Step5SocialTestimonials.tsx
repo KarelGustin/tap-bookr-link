@@ -304,13 +304,65 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
     autoSaveTestimonials(updated);
   };
 
-  const handleTestimonialImageChange = (index: number, file: File | null) => {
+  const handleTestimonialImageChange = async (index: number, file: File | null) => {
     const updated = [...testimonials];
+    
     if (file) {
-      updated[index] = { ...updated[index], _file: file };
+      try {
+        setIsSaving(true);
+        
+        // Upload to Supabase storage
+        const fileName = `testimonial-${Date.now()}-${file.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('❌ Error uploading testimonial image:', uploadError);
+          toast({
+            title: "Upload mislukt",
+            description: "Kon foto niet uploaden. Probeer het opnieuw.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(uploadData.path);
+
+        // Update testimonial with image URL
+        updated[index] = { 
+          ...updated[index], 
+          image_url: publicUrl,
+          _file: undefined 
+        };
+
+        console.log('✅ Testimonial image uploaded:', publicUrl);
+        
+        toast({
+          title: "Foto geüpload",
+          description: "Klantfoto is succesvol geüpload.",
+        });
+      } catch (error) {
+        console.error('❌ Error uploading testimonial image:', error);
+        toast({
+          title: "Upload fout",
+          description: "Er ging iets mis bij het uploaden.",
+          variant: "destructive",
+        });
+        return;
+      }
     } else {
-      updated[index] = { ...updated[index], _file: undefined };
+      // Remove image
+      updated[index] = { 
+        ...updated[index], 
+        image_url: '',
+        _file: undefined 
+      };
     }
+    
     setTestimonials(updated);
     
     // Auto-save after changing image
