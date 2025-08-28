@@ -66,8 +66,10 @@ serve(async (req)=>{
       console.error('❌ Supabase environment variables not configured');
       throw new Error('Supabase configuration missing');
     }
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    console.log('🔗 Supabase client initialized');
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false }
+    });
+    console.log('🔗 Supabase client initialized with service role');
     // Process the event
     let processingResult = {
       success: false,
