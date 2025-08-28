@@ -292,6 +292,49 @@ const Onboarding = () => {
     }
   }, [searchParams]);
 
+  // Real-time subscription monitoring for automatic redirect to dashboard
+  useEffect(() => {
+    if (!user?.id || !profileId) return;
+
+    console.log('🔧 Setting up real-time subscription monitoring for onboarding completion...');
+
+    const channel = supabase
+      .channel('onboarding-completion-monitor')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profileId}`
+        },
+        (payload) => {
+          console.log('🔄 Profile updated:', payload);
+          
+          const newData = payload.new as any;
+          if (newData?.onboarding_completed === true) {
+            console.log('🎉 Onboarding completed! Redirecting to dashboard...');
+            
+            toast({
+              title: "🎉 Betaling Succesvol!",
+              description: "Je website is nu live! Je wordt doorgestuurd naar het dashboard.",
+            });
+
+            // Small delay to show the toast message
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 1500);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔧 Cleaning up real-time subscription monitor');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, profileId, navigate, toast]);
+
   const updateStep = useCallback((step: number) => {
     setCurrentStep(step);
     const url = new URL(window.location.href);

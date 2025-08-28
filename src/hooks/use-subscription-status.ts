@@ -64,7 +64,42 @@ export const useSubscriptionStatus = () => {
 				setIsLoading(false)
 			}
 		}
+
 		check()
+
+		// Set up real-time subscription for profile changes
+		const channel = supabase
+			.channel('subscription-status-changes')
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'profiles',
+					filter: `user_id=eq.${user?.id}`
+				},
+				() => {
+					console.log('🔄 Profile subscription status changed, rechecking...')
+					check()
+				}
+			)
+			.on(
+				'postgres_changes',
+				{
+					event: '*',
+					schema: 'public',
+					table: 'subscriptions'
+				},
+				() => {
+					console.log('🔄 Subscription table changed, rechecking...')
+					check()
+				}
+			)
+			.subscribe()
+
+		return () => {
+			supabase.removeChannel(channel)
+		}
 	}, [user?.id])
 
 	return { isLoading, allowed }
