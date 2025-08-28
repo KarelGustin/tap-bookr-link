@@ -9,6 +9,7 @@ import { OnboardingLayout } from '../OnboardingLayout';
 import { supabase } from '../../../integrations/supabase/client';
 import { useToast } from '../../../hooks/use-toast';
 import { sanitizeFilename } from '../../../lib/utils';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface Step5SocialTestimonialsProps {
   onNext: (data: {
@@ -47,6 +48,7 @@ interface Step5SocialTestimonialsProps {
 
 export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }: Step5SocialTestimonialsProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [socialLinks, setSocialLinks] = useState(existingData.socialLinks.length > 0 ? existingData.socialLinks : [
     { id: '1', title: 'Instagram', platform: 'instagram', url: '' },
     { id: '2', title: 'Facebook', platform: 'facebook', url: '' },
@@ -312,11 +314,23 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       try {
         setIsSaving(true);
         
+        // Check if user is authenticated
+        if (!user) {
+          toast({
+            title: "Authenticatie vereist",
+            description: "Je moet ingelogd zijn om foto's te uploaden.",
+            variant: "destructive",
+          });
+          return;
+        }
+        
         // Sanitize filename to prevent Supabase Storage errors
         const sanitizedName = sanitizeFilename(file.name);
-        const fileName = `testimonial-${Date.now()}-${sanitizedName}`;
+        // Include user ID as folder prefix to respect RLS policies
+        const fileName = `${user.id}/testimonial-${Date.now()}-${sanitizedName}`;
         
         console.log('📤 Uploading testimonial image:', {
+          userId: user.id,
           original: file.name,
           sanitized: sanitizedName,
           final: fileName
