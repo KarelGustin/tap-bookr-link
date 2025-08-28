@@ -1,7 +1,5 @@
-// @ts-expect-error - Deno import
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error - Deno import
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,21 +23,16 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client with service role key to bypass RLS
-    // @ts-expect-error -- Deno runtime environment
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    // @ts-expect-error -- Deno runtime environment
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Supabase configuration missing')
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
 
     // Set the profile status to 'published' and set preview expiration to 15 minutes
     const previewExpiresAt = new Date(Date.now() + 15 * 60 * 1000) // 15 minutes from now
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({
         status: 'published',
@@ -48,18 +41,21 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       })
       .eq('id', profileId)
+      .select('id, handle, status, preview_expires_at')
+      .single();
 
     if (error) {
       console.error('🔧 Error starting live preview:', error)
-      throw error
+      throw new Error(`Failed to start live preview: ${error.message}`)
     }
 
-    console.log('🔧 Live preview started successfully for profile:', profileId)
-    console.log('🔧 Preview expires at:', previewExpiresAt.toISOString())
+    console.log('✅ Live preview started successfully for profile:', data)
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
+        success: true,
+        profileId: profileId,
+        status: 'published',
         previewExpiresAt: previewExpiresAt.toISOString(),
         message: 'Live preview started successfully'
       }),
