@@ -8,7 +8,7 @@ import { Upload } from 'lucide-react';
 
 interface Step3BrandingProps {
   onNext: (data: { 
-    businessName?: string; 
+    name?: string; 
     slogan?: string; 
     category?: string;
     banner?: { 
@@ -77,7 +77,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
     }
 
     onNext({
-      businessName: businessName.trim() || undefined,
+      name: businessName.trim() || undefined,
       slogan: slogan.trim() || undefined,
       category: category || undefined,
       banner: {
@@ -109,7 +109,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
           </Label>
           <Input
             id="businessName"
-            placeholder="Glow Brow Studio"
+            placeholder={existingData?.name || "Glow Brow Studio"}
             value={businessName}
             onChange={(e) => setBusinessName(e.target.value)}
             className="rounded-lg h-12"
