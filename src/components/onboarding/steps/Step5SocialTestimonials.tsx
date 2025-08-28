@@ -8,6 +8,7 @@ import { Plus, X, Star, MessageCircle, Share2, Upload, User } from 'lucide-react
 import { OnboardingLayout } from '../OnboardingLayout';
 import { supabase } from '../../../integrations/supabase/client';
 import { useToast } from '../../../hooks/use-toast';
+import { sanitizeFilename } from '../../../lib/utils';
 
 interface Step5SocialTestimonialsProps {
   onNext: (data: {
@@ -311,8 +312,16 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       try {
         setIsSaving(true);
         
-        // Upload to Supabase storage
-        const fileName = `testimonial-${Date.now()}-${file.name}`;
+        // Sanitize filename to prevent Supabase Storage errors
+        const sanitizedName = sanitizeFilename(file.name);
+        const fileName = `testimonial-${Date.now()}-${sanitizedName}`;
+        
+        console.log('📤 Uploading testimonial image:', {
+          original: file.name,
+          sanitized: sanitizedName,
+          final: fileName
+        });
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('media')
           .upload(fileName, file);
