@@ -23,34 +23,34 @@ export const WhyBookr = () => {
     }
   ];
 
-  const pastelColors = ['step-pink', 'step-lavender', 'step-mint', 'step-peach', 'step-teal', 'step-blue'];
+  const pastelColors = ['from-step-pink/20 to-step-lavender/20', 'from-step-mint/20 to-step-peach/20', 'from-step-teal/20 to-step-blue/20'];
 
   return (
-    <section id="why-bookr" className="py-16 bg-gradient-to-br from-step-mint via-step-peach to-step-lavender">
+    <section id="why-bookr" className="py-24 bg-gradient-to-br from-step-pink/10 via-white to-step-lavender/10">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-4">
-            Waarom kiezen voor Bookr? 🌟
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Waarom kiezen voor Bookr?
           </h2>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow">
-            Stop met het missen van potentiële klanten. Bookr maakt het eenvoudig om boekingen te ontvangen.
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+            De eenvoudigste manier om professioneel gevonden te worden en boekingen binnen te halen.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className={`p-6 bg-${pastelColors[index % pastelColors.length]}/20 backdrop-blur-sm border-white/30 hover:bg-white/30 transition-all duration-300 tilt-effect gamify-hover animate-fade-in sparkle-effect`} style={{animationDelay: `${index * 0.2}s`}}>
+            <Card key={index} className={`p-6 bg-gradient-to-br ${pastelColors[index]} backdrop-blur-sm border border-white/20 hover:border-gray-300 transition-all duration-300 tilt-effect gamify-hover animate-fade-in sparkle-effect`} style={{animationDelay: `${index * 0.2}s`}}>
               <CardContent className="p-0">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className={`p-3 bg-white/20 rounded-lg breathing-animation border border-white/30`}>
-                    <feature.icon className={`w-6 h-6 text-white`} />
+                  <div className={`p-3 bg-gray-100 rounded-lg breathing-animation border border-gray-200`}>
+                    <feature.icon className={`w-6 h-6 text-gray-900`} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg text-white drop-shadow">{feature.title}</h3>
-                    <p className={`text-sm text-white/90 font-medium bg-white/20 px-2 py-1 rounded-full backdrop-blur-sm`}>{feature.stat}</p>
+                    <h3 className="font-semibold text-lg text-gray-900">{feature.title}</h3>
+                    <p className={`text-sm text-gray-700 font-medium bg-gray-100 px-2 py-1 rounded-full`}>{feature.stat}</p>
                   </div>
                 </div>
-                <p className="text-white/80 leading-relaxed drop-shadow-sm">{feature.description}</p>
+                <p className="text-gray-800 leading-relaxed">{feature.description}</p>
               </CardContent>
             </Card>
           ))}

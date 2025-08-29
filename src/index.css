@@ -198,6 +198,31 @@
     box-shadow: var(--shadow-soft);
   }
 
+  /* Changing Word Animation */
+  .changing-word {
+    display: inline-block;
+    position: relative;
+    min-width: 120px;
+    text-align: left;
+  }
+
+  .changing-word .word {
+    position: absolute;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.5s ease-in-out;
+  }
+
+  .changing-word .word.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .changing-word .word.exit {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
   .shadow-card {
     box-shadow: var(--shadow-card);
   }

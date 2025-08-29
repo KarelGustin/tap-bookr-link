@@ -10,7 +10,10 @@ export const Hero = () => {
   const [selectedCategory, setSelectedCategory] = useState("beauty");
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const prefix = "bookr.nl/";
+
+  const professions = ["Nailtech", "Kapper", "Tattoo artist", "Salon", "Masseur", "Schoonheidsspecialist"];
 
   const categories = [
     { id: "beauty", name: "Beauty & Hair", handle: "check1", color: "from-pink-400 to-purple-500" },
@@ -38,10 +41,17 @@ export const Hero = () => {
     return () => clearTimeout(t);
   }, [handle]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWordIndex((prev) => (prev + 1) % professions.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow via-step-teal to-step-pink">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow/20 via-step-teal/20 to-step-pink/20 bg-white">
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
         <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 tilt-effect">
@@ -113,27 +123,43 @@ export const Hero = () => {
           {/* Left Content */}
           <div className="flex-1 space-y-8 text-center lg:text-left max-w-2xl">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight drop-shadow-lg">
-                Jouw eigen
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight">
+                Elke{" "}
+                <span className="changing-word inline-block">
+                  {professions.map((profession, index) => (
+                    <span
+                      key={profession}
+                      className={`word ${index === currentWordIndex ? 'active' : ''}`}
+                      style={{
+                        color: 'hsl(var(--step-pink))',
+                        fontWeight: 'black'
+                      }}
+                    >
+                      {profession}
+                    </span>
+                  ))}
+                </span>
                 <br />
-                <span className="bg-gradient-to-r from-step-peach to-step-mint bg-clip-text text-transparent">booking pagina</span>
+                heeft een boeking link.
                 <br />
-                in 2 minuten
+                <span className="bg-gradient-to-r from-step-peach to-step-mint bg-clip-text text-transparent">
+                  Maak nu je eigen website!
+                </span>
               </h1>
               
-              <p className="text-lg md:text-xl text-white/90 max-w-lg drop-shadow mx-auto lg:mx-0">
-                Geen technische kennis nodig. Maak een professionele booking pagina voor je diensten en ontvang direct boekingen van klanten.
+              <p className="text-lg md:text-xl text-gray-700 max-w-lg mx-auto lg:mx-0 font-medium">
+                Je eigen website om je boeking link, in minder dan 5 minuten!
               </p>
               
               {/* Social Proof */}
-              <div className="flex items-center justify-center lg:justify-start gap-4 text-sm text-white/80 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm w-fit mx-auto lg:mx-0">
+              <div className="flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-700 bg-white/80 rounded-full px-4 py-2 backdrop-blur-sm w-fit mx-auto lg:mx-0 border border-gray-200">
                 <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
-                  <span className="ml-1 font-medium text-white">4.9/5</span>
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  <span className="ml-1 font-medium text-gray-900">4.9/5</span>
                 </div>
                 <span>•</span>
                 <span>500+ tevreden gebruikers</span>
@@ -144,7 +170,7 @@ export const Hero = () => {
             <div className="space-y-4 max-w-md mx-auto lg:mx-0">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm font-medium">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
                     bookr.nl/
                   </span>
                   <input
@@ -152,7 +178,7 @@ export const Hero = () => {
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-sm text-white placeholder-white/60 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all gamify-hover"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all gamify-hover"
                     maxLength={20}
                   />
                   {userInput && (
@@ -178,12 +204,12 @@ export const Hero = () => {
               </div>
               
               {userInput && !isHandleAvailable && (
-                <p className="text-sm text-red-300 bg-red-900/30 rounded-lg px-3 py-2 backdrop-blur-sm">
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 border border-red-200">
                   Deze naam is al bezet. Probeer een andere! 🔄
                 </p>
               )}
               
-              <p className="text-xs text-white/80 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm text-center">
+              <p className="text-xs text-gray-600 bg-white/80 rounded-full px-4 py-2 backdrop-blur-sm text-center border border-gray-200">
                 ✨ Gratis • 💳 Geen creditcard vereist • ⚡ Direct live
               </p>
             </div>
@@ -221,7 +247,7 @@ export const Hero = () => {
               
               {/* Caption */}
               <div className="text-center mt-4">
-                <p className="text-sm text-white/80 font-medium drop-shadow">
+                <p className="text-sm text-gray-600 font-medium">
                   Live preview van je profiel ✨
                 </p>
               </div>
