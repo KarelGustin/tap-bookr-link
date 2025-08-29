@@ -77,10 +77,10 @@ export const OnboardingLayout = ({
             </button>
           )}
 
-          {/* Main content card */}
-          <div className="flex-1 px-4 md:px-6 lg:px-8 flex items-center justify-center">
-            <div className="w-full max-w-md mx-auto">
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-card animate-slide-up">
+          {/* Main content card - responsive container */}
+          <div className="flex-1 px-3 md:px-6 lg:px-8 pb-4">
+            <div className="w-full max-w-lg md:max-w-2xl mx-auto">
+              <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-4 md:p-6 shadow-card animate-slide-up max-h-[calc(100vh-12rem)] overflow-y-auto">
                 {/* Title Section */}
                 {title && (
                   <div className="text-center mb-6">
@@ -104,8 +104,8 @@ export const OnboardingLayout = ({
           </div>
 
           {/* Fixed bottom navigation */}
-          <div className="p-4 md:p-6 lg:p-8">
-            <div className="max-w-md mx-auto">
+          <div className="p-4 md:p-6 lg:p-8 bg-background/95 backdrop-blur-sm">
+            <div className="max-w-lg md:max-w-2xl mx-auto">
               {onNext && (
                 <Button
                   onClick={canGoNext ? onNext : undefined}

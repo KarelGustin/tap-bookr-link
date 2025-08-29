@@ -472,20 +472,16 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       onNext={handleSubmit}
       canGoNext={canGoNext()}
       handle={handle}
+      title="Verbind & Bouw Vertrouwen"
+      subtitle="Voeg je klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online."
     >
-      <div className="max-w-4xl mx-auto p-6 space-y-8">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900">Verbind & Bouw Vertrouwen</h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Voeg je klantenbeoordelingen toe om vertrouwen te bouwen en klanten te helpen je te vinden online.
-          </p>
-          {isSaving && (
-            <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span>Opslaan...</span>
-            </div>
-          )}
-        </div>
+      <div className="space-y-6">
+        {isSaving && (
+          <div className="flex items-center justify-center gap-2 text-sm text-blue-600 mb-4">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            <span>Opslaan...</span>
+          </div>
+        )}
 
         {/* Social Links Section */}
         {/* <Card>
@@ -559,153 +555,149 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         </Card> */}
 
         {/* Testimonials Section */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Star className="w-6 h-6 text-primary" />
-              <div>
-                <CardTitle>Klantenbeoordelingen</CardTitle>
-                <CardDescription>
-                  Toon potentiële klanten wat anderen over jou zeggen. Voeg klantenfoto's toe om beoordelingen persoonlijker en betrouwbaarder te maken.
-                </CardDescription>
-              </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-4">
+            <Star className="w-5 h-5 text-primary" />
+            <div>
+              <h3 className="font-semibold text-lg">Klantenbeoordelingen</h3>
+              <p className="text-sm text-muted-foreground">
+                Toon potentiële klanten wat anderen over jou zeggen
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {testimonials.map((testimonial, index) => (
-              <div key={`testimonial-${index}-${renderKey}`} className="p-4 border border-gray-200 rounded-lg space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-medium text-gray-900">Testimonial {index + 1}</h4>
-                  {testimonials.length > 1 && (
+          </div>
+          {testimonials.map((testimonial, index) => (
+            <div key={`testimonial-${index}-${renderKey}`} className="p-3 border border-gray-200 rounded-xl space-y-4 bg-white/50">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-900">Testimonial {index + 1}</h4>
+                {testimonials.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeTestimonial(index)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor={`customer-${index}`} className="text-sm font-medium">Klant Naam</Label>
+                  <Input
+                    id={`customer-${index}`}
+                    placeholder="Sarah Johnson"
+                    value={testimonial.customer_name}
+                    onChange={(e) => updateTestimonial(index, 'customer_name', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`title-${index}`} className="text-sm font-medium">Beoordeling Titel</Label>
+                  <Input
+                    id={`title-${index}`}
+                    placeholder="Geweldige service!"
+                    value={testimonial.review_title}
+                    onChange={(e) => updateTestimonial(index, 'review_title', e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`review-${index}`} className="text-sm font-medium">Beoordeling Tekst</Label>
+                  <Textarea
+                    id={`review-${index}`}
+                    placeholder="Vertel wat de klant over je service zei..."
+                    value={testimonial.review_text}
+                    onChange={(e) => updateTestimonial(index, 'review_text', e.target.value)}
+                    rows={4}
+                    className="mt-1 min-h-[100px] resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Customer Photo Upload */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Klant Foto (Optioneel)</Label>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {/* Show uploaded image if available */}
+                    {testimonial.image_url && testimonial.image_url.trim() ? (
+                      <img 
+                        src={testimonial.image_url} 
+                        alt="Customer photo" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error('❌ Failed to load testimonial image:', testimonial.image_url);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : testimonial._file && testimonial._file instanceof File ? (
+                      /* Show file preview if file is selected but not yet uploaded */
+                      <img 
+                        src={URL.createObjectURL(testimonial._file)} 
+                        alt="Customer photo preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      /* Show placeholder when no image is available */
+                      <User className="w-4 h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1 flex-1">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => removeTestimonial(index)}
+                      onClick={() => {
+                        const input = document.createElement('input');
+                        input.type = 'file';
+                        input.accept = 'image/*';
+                        input.onchange = (e) => {
+                          const file = (e.target as HTMLInputElement).files?.[0];
+                          if (file) {
+                            handleTestimonialImageChange(index, file);
+                          }
+                        };
+                        input.click();
+                      }}
+                      className="h-8 text-xs"
                     >
-                      <X className="w-4 h-4" />
+                      <Upload className="w-3 h-3 mr-1" />
+                      {testimonial.image_url || testimonial._file ? 'Wijzigen' : 'Upload'}
                     </Button>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor={`customer-${index}`}>Klant Naam</Label>
-                    <Input
-                      id={`customer-${index}`}
-                      placeholder="e.g., Sarah Johnson"
-                      value={testimonial.customer_name}
-                      onChange={(e) => updateTestimonial(index, 'customer_name', e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`title-${index}`}>Beoordeling Titel</Label>
-                    <Input
-                      id={`title-${index}`}
-                      placeholder="e.g., Amazing service!"
-                      value={testimonial.review_title}
-                      onChange={(e) => updateTestimonial(index, 'review_title', e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor={`review-${index}`}>Beoordeling Tekst</Label>
-                  <Textarea
-                    id={`review-${index}`}
-                    placeholder="Tell us what the customer said about your service..."
-                    value={testimonial.review_text}
-                    onChange={(e) => updateTestimonial(index, 'review_text', e.target.value)}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Customer Photo Upload */}
-                <div className="space-y-2">
-                  <Label className="text-base font-medium">Klant Foto (Optioneel)</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Een klantfoto maakt beoordelingen persoonlijker en betrouwbaarder.
-                  </p>
-                   <div className="flex items-center gap-4">
-                     <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                       {/* Show uploaded image if available */}
-                       {testimonial.image_url && testimonial.image_url.trim() ? (
-                         <img 
-                           src={testimonial.image_url} 
-                           alt="Customer photo" 
-                           className="w-full h-full object-cover"
-                           onError={(e) => {
-                             console.error('❌ Failed to load testimonial image:', testimonial.image_url);
-                             e.currentTarget.style.display = 'none';
-                           }}
-                         />
-                       ) : testimonial._file && testimonial._file instanceof File ? (
-                         /* Show file preview if file is selected but not yet uploaded */
-                         <img 
-                           src={URL.createObjectURL(testimonial._file)} 
-                           alt="Customer photo preview" 
-                           className="w-full h-full object-cover"
-                         />
-                       ) : (
-                         /* Show placeholder when no image is available */
-                         <User className="w-6 h-6 text-muted-foreground" />
-                       )}
-                     </div>
-                    <div className="flex flex-col gap-2">
+                    {(testimonial.image_url || testimonial._file) && (
                       <Button
                         type="button"
-                        variant="outline"
-                        onClick={() => {
-                          const input = document.createElement('input');
-                          input.type = 'file';
-                          input.accept = 'image/*';
-                          input.onchange = (e) => {
-                            const file = (e.target as HTMLInputElement).files?.[0];
-                            if (file) {
-                              handleTestimonialImageChange(index, file);
-                            }
-                          };
-                          input.click();
-                        }}
-                        className="h-10"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTestimonialImageChange(index, null)}
+                        className="h-6 text-xs text-muted-foreground hover:text-destructive"
                       >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {testimonial.image_url || testimonial._file ? 'Change Photo' : 'Upload Photo'}
+                        <X className="w-3 h-3 mr-1" />
+                        Verwijder
                       </Button>
-                      {(testimonial.image_url || testimonial._file) && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleTestimonialImageChange(index, null)}
-                          className="h-8 text-sm text-muted-foreground hover:text-destructive"
-                        >
-                          <X className="w-4 h-4 mr-2" />
-                          Verwijder Foto
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
-            ))}
-            
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addTestimonial}
-              className="w-full"
-              disabled={testimonials.length >= 6}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nog een Beoordeling Toevoegen
-            </Button>
-            
-            <p className="text-sm text-gray-500 text-center">
-              Je kunt maximaal 6 beoordelingen toevoegen. Klantenfoto's helpen vertrouwen te bouwen en beoordelingen persoonlijker te maken.
-            </p>
-          </CardContent>
-        </Card>
+            </div>
+          ))}
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addTestimonial}
+            className="w-full h-12 rounded-xl"
+            disabled={testimonials.length >= 6}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nog een Beoordeling Toevoegen
+          </Button>
+          
+          <p className="text-xs text-muted-foreground text-center">
+            Je kunt maximaal 6 beoordelingen toevoegen
+          </p>
+        </div>
       </div>
     </OnboardingLayout>
   );
