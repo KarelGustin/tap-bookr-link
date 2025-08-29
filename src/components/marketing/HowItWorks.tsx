@@ -1,130 +1,98 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Link, Palette, Rocket } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { User, Settings, Rocket, ArrowRight, ExternalLink } from "lucide-react";
 
 export const HowItWorks = () => {
+  const stepColors = [
+    { bg: 'bg-step-yellow', text: 'text-step-yellow-foreground', accent: 'step-yellow' },
+    { bg: 'bg-step-teal', text: 'text-step-teal-foreground', accent: 'step-teal' },
+    { bg: 'bg-step-pink', text: 'text-step-pink-foreground', accent: 'step-pink' }
+  ];
+
   return (
-    <section id="how-it-works" className="py-24 bg-gradient-to-b from-gray-50 to-white">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Bouw in 60 seconden
+    <section id="how-it-works" className="py-16 bg-gradient-to-br from-step-teal via-step-blue to-step-lavender">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg mb-4">
+            Hoe het werkt ⚡
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Drie eenvoudige stappen naar je professionele boekingspagina. Geen code, geen wachten, geen hoofdpijn.
+          <p className="text-xl text-white/90 max-w-2xl mx-auto drop-shadow">
+            In slechts 3 stappen heb je jouw eigen professionele booking pagina klaar.
           </p>
         </div>
-        
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
-          {/* Card 1: Claim your handle */}
-          <div className="text-center">
-            <Card className="border border-gray-200 bg-white rounded-2xl">
-              <CardContent className="p-8">
-                <div 
-                  className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center relative"
-                  style={{ backgroundColor: "hsl(var(--accent))" }}
-                >
-                  <Link className="w-10 h-10 text-black" />
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200">
-                    <span className="text-sm font-bold text-gray-900">1</span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900">
-                  Claim je handle
-                </h3>
-                <p className="text-gray-600 leading-relaxed mb-4">
-                  Kies je perfecte handle. Maak het memorabel en makkelijk te delen.
-                </p>
-                <div className="text-sm text-gray-500 font-medium">
-                  30 seconden
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Card 2: Connect & customize */}
-          <div className="text-center">
-            <Card className="border border-gray-200 bg-white rounded-2xl">
-              <CardContent className="p-8">
-                <div 
-                  className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center relative"
-                  style={{ backgroundColor: "hsl(var(--accent))" }}
-                >
-                  <Palette className="w-10 h-10 text-black z-20" />
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200">
-                    <span className="text-sm font-bold text-gray-900">2</span>
-                  </div>
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
+          {[
+            {
+              step: 1,
+              icon: User,
+              title: "Claim je handle",
+              description: "Kies een unieke naam voor jouw booking pagina. Bijvoorbeeld: bookr.nl/jouw-naam",
+              time: "30 seconden",
+            },
+            {
+              step: 2,
+              icon: Settings,
+              title: "Verbind & personaliseer",
+              description: "Verbind je agenda en pas je pagina aan met jouw kleuren, foto's en services.",
+              time: "2 minuten",
+            },
+            {
+              step: 3,
+              icon: Rocket,
+              title: "Publiceer",
+              description: "Je pagina gaat direct live. Deel de link en ontvang je eerste boekingen!",
+              time: "Direct live",
+            }
+          ].map((item, index) => (
+            <Card key={item.step} className={`relative p-8 text-center ${stepColors[index].bg}/30 backdrop-blur-sm border-white/30 hover:bg-white/40 transition-all duration-500 tilt-effect gamify-hover animate-fade-in sparkle-effect`} style={{animationDelay: `${index * 0.2}s`}}>
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <div className={`bg-gradient-to-r from-step-peach to-step-mint text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm breathing-animation shadow-lg`}>
+                  {item.step}
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900">
-                  Koppel & pas aan
-                </h3>
-                <p className="text-gray-600 leading-relaxed mb-4">
-                  Koppel je bestaande boekingssysteem, pas tekst aan en klaar.
-                </p>
-                <div className="text-sm text-gray-500 font-medium">
-                  3,5 minuten
-                </div>
-              </CardContent>
+              </div>
+              
+              <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl ${stepColors[index].bg}/40 backdrop-blur-sm flex items-center justify-center border border-white/30 breathing-animation`}>
+                <item.icon className={`w-8 h-8 ${stepColors[index].text}`} />
+              </div>
+              
+              <h3 className="text-xl font-bold text-white mb-3 drop-shadow">
+                {item.title}
+              </h3>
+              
+              <p className="text-white/90 mb-4 leading-relaxed drop-shadow-sm">
+                {item.description}
+              </p>
+              
+              <div className={`inline-block bg-white/20 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm border border-white/30`}>
+                ⚡ {item.time}
+              </div>
             </Card>
-          </div>
-
-          {/* Card 3: Publish */}
-          <div className="text-center">
-            <Card className="border border-gray-200 bg-white rounded-2xl">
-              <CardContent className="p-8">
-                <div 
-                  className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center relative"
-                  style={{ backgroundColor: "hsl(var(--primary))" }}
-                >
-                  <Rocket className="w-10 h-10 text-black" />
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center border border-gray-200">
-                    <span className="text-sm font-bold text-gray-900">3</span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900">
-                  Publiceer
-                </h3>
-                <p className="text-gray-600 leading-relaxed mb-4">
-                  Klik op publiceren en begin direct met het ontvangen van boekingen. Geen wachten, geen vertragingen.
-                </p>
-                <div className="text-sm text-gray-500 font-medium">
-                  15 seconden
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          ))}
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center">
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 md:p-12 max-w-4xl mx-auto">
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Klaar om te beginnen?
-            </h3>
-            <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Sluit je aan bij 2.000+ bedrijven die hun boekingservaring al hebben getransformeerd. 
-              Je professionele pagina is slechts 60 seconden verwijderd.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-              <a
-                href="/onboarding"
-                className="bg-primary text-gray-900 font-semibold px-8 py-4 rounded-xl text-lg"
-              >
-                Begin nu met bouwen
+        {/* Call to Action */}
+        <div className="text-center bg-white/20 backdrop-blur-sm border border-white/30 rounded-3xl p-12 sparkle-effect">
+          <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-4">
+            Klaar om te beginnen? 🚀
+          </h3>
+          <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto drop-shadow">
+            Sluit je aan bij honderden professionals die hun bookings hebben geautomatiseerd met Bookr.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button variant="celebration" size="xl" className="px-12 py-6 text-xl font-bold shadow-2xl" asChild>
+              <a href="/onboarding">
+                ✨ Begin nu met bouwen
+                <ArrowRight className="w-6 h-6 ml-2" />
               </a>
-              <a
-                href="https://tapbookr.com/check1"
-                target="_blank"
-                rel="noreferrer"
-                className="border-2 border-gray-300 text-gray-700 font-semibold px-8 py-4 rounded-xl text-lg"
-              >
-                Bekijk live demo
+            </Button>
+            <Button variant="pastel" size="xl" className="px-12 py-6 text-xl font-bold backdrop-blur-sm border-2 border-white/40" asChild>
+              <a href="#demo">
+                👀 Bekijk live demo
+                <ExternalLink className="w-6 h-6 ml-2" />
               </a>
-            </div>
-            
-            <div className="text-sm text-gray-500">
-              <p>✓ Slechts €9 per maand, en geen dure ontwerpkosten • ✓ Op elk moment opzegbaar</p>
-            </div>
+            </Button>
           </div>
         </div>
       </div>

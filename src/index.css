@@ -41,21 +41,41 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 224 71.4% 4.1%;
 
-    /* Trendy Pastel Colors for Onboarding Steps */
-    --step-yellow: 50 100% 80%;        /* Warm Yellow #FFD23F -> lighter */
-    --step-yellow-foreground: 45 86% 25%;
-    --step-teal: 177 64% 75%;          /* Soft Teal #4ECDC4 -> lighter */
-    --step-teal-foreground: 177 85% 15%;
-    --step-pink: 350 75% 85%;          /* Gentle Pink #FFB3BA -> softer */
-    --step-pink-foreground: 350 85% 25%;
-    --step-lavender: 263 35% 85%;      /* Lavender #BFAFD9 -> softer */
-    --step-lavender-foreground: 263 55% 25%;
-    --step-mint: 160 50% 85%;          /* Mint Green #B5EAD7 -> softer */
-    --step-mint-foreground: 160 70% 25%;
-    --step-peach: 15 100% 90%;         /* Peach #FFD6CC -> softer */
-    --step-peach-foreground: 15 85% 25%;
-    --step-blue: 225 73% 90%;          /* Light Blue #C7CEEA -> softer */
-    --step-blue-foreground: 225 85% 25%;
+    /* Step colors for onboarding - Bright pastels */
+    --step-yellow: 50 100% 85%;
+    --step-yellow-foreground: 45 80% 20%;
+    --step-teal: 177 64% 85%;
+    --step-teal-foreground: 177 80% 15%;
+    --step-pink: 350 75% 90%;
+    --step-pink-foreground: 350 80% 20%;
+    --step-lavender: 263 35% 90%;
+    --step-lavender-foreground: 263 50% 20%;
+    --step-mint: 160 50% 90%;
+    --step-mint-foreground: 160 70% 15%;
+    --step-peach: 15 100% 92%;
+    --step-peach-foreground: 15 80% 20%;
+    --step-blue: 225 73% 95%;
+    --step-blue-foreground: 225 80% 20%;
+
+    /* Gamification colors */
+    --gamify-success: 142 76% 36%;
+    --gamify-success-foreground: 138 62% 47%;
+    --gamify-warning: 48 96% 53%;
+    --gamify-warning-foreground: 20 14.3% 4.1%;
+    --gamify-celebration: 280 100% 70%;
+    
+    /* Gradient variables for pastels */
+    --gradient-yellow-teal: linear-gradient(135deg, hsl(var(--step-yellow)), hsl(var(--step-teal)));
+    --gradient-pink-lavender: linear-gradient(135deg, hsl(var(--step-pink)), hsl(var(--step-lavender)));
+    --gradient-mint-peach: linear-gradient(135deg, hsl(var(--step-mint)), hsl(var(--step-peach)));
+    --gradient-teal-blue: linear-gradient(135deg, hsl(var(--step-teal)), hsl(var(--step-blue)));
+    --gradient-celebration: linear-gradient(135deg, hsl(var(--gamify-celebration)), hsl(var(--step-pink)));
+    
+    /* Animation variables */
+    --transition-gamify: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --shadow-gamify: 0 10px 25px -5px hsl(var(--primary) / 0.2), 0 8px 10px -6px hsl(var(--primary) / 0.1);
+    --shadow-celebration: 0 20px 40px -10px hsl(var(--gamify-celebration) / 0.4);
 
     /* Button and interaction colors */
     --button-primary: 220.9 39.3% 11%;
@@ -185,6 +205,65 @@
   .shadow-button {
     box-shadow: var(--shadow-button);
   }
+
+  /* Gamification utilities */
+  .gamify-hover {
+    transition: var(--transition-gamify);
+  }
+  
+  .gamify-hover:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: var(--shadow-gamify);
+  }
+
+  .gamify-press:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .gamify-celebration {
+    background: var(--gradient-celebration);
+    box-shadow: var(--shadow-celebration);
+  }
+
+  .gamify-celebration:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: var(--shadow-celebration), 0 0 30px hsl(var(--gamify-celebration) / 0.6);
+  }
+
+  .tilt-effect {
+    transition: var(--transition-gamify);
+    transform-style: preserve-3d;
+  }
+
+  .tilt-effect:hover {
+    transform: rotateY(5deg) rotateX(5deg);
+  }
+
+  .breathing-animation {
+    animation: breathing 3s ease-in-out infinite;
+  }
+
+  .sparkle-effect {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sparkle-effect::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, hsl(var(--gamify-celebration) / 0.3), transparent);
+    animation: sparkle-rotate 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .sparkle-effect:hover::before {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
@@ -199,25 +278,72 @@
 }
 
 @keyframes fade-in {
-  from {
+  0% {
     opacity: 0;
+    transform: translateY(10px);
   }
-  to {
+  100% {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes bounce-in {
   0% {
+    transform: scale(0.3);
     opacity: 0;
-    transform: scale(0.8);
   }
-  60% {
-    opacity: 1;
+  50% {
     transform: scale(1.05);
   }
+  70% {
+    transform: scale(0.9);
+  }
   100% {
-    opacity: 1;
     transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* New gamification keyframes */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sparkle-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes celebration-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -15px, 0);
+  }
+  70% {
+    transform: translate3d(0, -7px, 0);
+  }
+  90% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.6), 0 0 30px hsl(var(--primary) / 0.4);
   }
 }

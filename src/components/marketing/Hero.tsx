@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, X, CheckCircle, XCircle, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -8,9 +8,9 @@ export const Hero = () => {
   const [handle, setHandle] = useState("demo");
   const [debouncedHandle, setDebouncedHandle] = useState("check1");
   const [selectedCategory, setSelectedCategory] = useState("beauty");
-  const [handleAvailable, setHandleAvailable] = useState(true);
-  const [showMenu, setShowMenu] = useState(false);
-  const prefix = "TapBookr.com/";
+  const [isHandleAvailable, setIsHandleAvailable] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const prefix = "bookr.nl/";
 
   const categories = [
     { id: "beauty", name: "Beauty & Hair", handle: "check1", color: "from-pink-400 to-purple-500" },
@@ -30,7 +30,7 @@ export const Hero = () => {
     setUserInput(extracted);
     setHandle(sanitizeHandle(extracted) || "demo");
     // Simple availability check (you can enhance this with actual API call)
-    setHandleAvailable(extracted.length > 2 && !["admin", "login", "signup", "www"].includes(extracted.toLowerCase()));
+    setIsHandleAvailable(extracted.length > 2 && !["admin", "login", "signup", "www"].includes(extracted.toLowerCase()));
   };
 
   useEffect(() => {
@@ -41,166 +41,190 @@ export const Hero = () => {
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-secondary py-4">
-      {/* Floating Header */}
-      <div className="container mx-auto max-w-7xl px-2 md:px-3">
-        <div className="bg-white rounded-2xl p-3 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="text-xl font-black text-gray-900">Bookr</div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6">
-              <a href="#why-bookr" className="text-gray-600 text-sm">Waarom Bookr</a>
-              <a href="#how-it-works" className="text-gray-600 text-sm">Hoe het werkt</a>
-              <a href="#testimonials" className="text-gray-600 text-sm">Klantenverhalen</a>
-              <a href="#faq" className="text-gray-600 text-sm">Veelgestelde vragen</a>
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow via-step-teal to-step-pink">
+      {/* Floating header */}
+      <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
+        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 tilt-effect">
+          <div className="flex items-center justify-between px-6 py-3">
+            <div className="flex items-center gap-8">
+              <div className="font-black text-xl">
+                Bookr<span className="text-step-pink">.</span>
+              </div>
+              
+              {/* Desktop Navigation */}
+              <nav className="hidden md:flex items-center gap-6">
+                <a href="#features" className="text-gray-700 hover:text-step-teal font-medium gamify-hover">Features</a>
+                <a href="#how-it-works" className="text-gray-700 hover:text-step-pink font-medium gamify-hover">Hoe het werkt</a>
+                <a href="#testimonials" className="text-gray-700 hover:text-step-lavender font-medium gamify-hover">Reviews</a>
+                <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium gamify-hover">Prijzen</a>
+              </nav>
             </div>
             
-            {/* Mobile + Desktop Actions */}
-            <div className="flex items-center gap-2">
-              <Button asChild variant="ghost" className="text-gray-600 text-sm px-3 py-2">
-                <Link to="/login">Inloggen</Link>
-              </Button>
-              <Button asChild className="bg-gray-900 text-white hover:bg-gray-800 rounded-full px-4 py-2 text-sm">
-                <Link to="/login">Gratis aanmelden</Link>
-              </Button>
-              {/* Mobile Hamburger */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="md:hidden p-2 rounded-sm"
-                onClick={() => setShowMenu(!showMenu)}
+            <div className="flex items-center gap-3">
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                <Menu className="w-5 h-5 text-gray-600" />
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </Button>
-            </div>
-          </div>
-          
-          {/* Mobile Menu Dropdown */}
-          {showMenu && (
-            <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
-              <div className="flex flex-col gap-2">
-                <a href="#why-bookr" className="text-gray-600 text-sm py-2">Waarom Bookr</a>
-                <a href="#how-it-works" className="text-gray-600 text-sm py-2">Hoe het werkt</a>
-                <a href="#testimonials" className="text-gray-600 text-sm py-2">Klantenverhalen</a>
-                <a href="#faq" className="text-gray-600 text-sm py-2">Veelgestelde vragen</a>
+              
+              {/* Desktop auth buttons */}
+              <div className="hidden md:flex items-center gap-3">
+                <Button variant="ghost" asChild>
+                  <a href="/login">Inloggen</a>
+                </Button>
+                <Button variant="celebration" asChild className="breathing-animation">
+                  <a href="/onboarding">🚀 Gratis beginnen</a>
+                </Button>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Hero Content */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 min-h-[calc(100vh-120px)]">
-          {/* Left Content */}
-          <div className="flex-1 space-y-4 sm:space-y-6 text-center max-w-3xl px-2 ">
-            <h1 className="text-4xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary leading-tight tracking-tight">
-              Je "€1000" Website,<br></br> in 10 Minuten voor €1.
-            </h1>
-            
-            <p className="text-base sm:text-lg md:text-xl text-white leading-relaxed font-medium">
-              Lanceer vandaag nog een website, in 10 minuten. Je maakt je website in 7 makkelijke stappen. 
-            </p>
-            
-            {/* Social Proof */}
-            <div className="flex items-center gap-4 text-sm text-white/80">
-              <div className="flex items-center gap-2 justify-center mx-auto">
-                <span className="text-yellow-400">★★★★★</span>
-                <span>Vertrouwd door 2.000+ bedrijven</span>
+        {/* Mobile Navigation Overlay */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 p-6 animate-slide-up">
+            <nav className="flex flex-col gap-4">
+              <a href="#features" className="text-gray-700 hover:text-step-teal font-medium py-2 gamify-hover rounded-lg px-3">Features</a>
+              <a href="#how-it-works" className="text-gray-700 hover:text-step-pink font-medium py-2 gamify-hover rounded-lg px-3">Hoe het werkt</a>
+              <a href="#testimonials" className="text-gray-700 hover:text-step-lavender font-medium py-2 gamify-hover rounded-lg px-3">Reviews</a>
+              <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium py-2 gamify-hover rounded-lg px-3">Prijzen</a>
+              <div className="border-t border-gray-200 pt-4 mt-2">
+                <div className="flex flex-col gap-3">
+                  <Button variant="pastel" className="justify-start" asChild>
+                    <a href="/login">Inloggen</a>
+                  </Button>
+                  <Button variant="celebration" className="justify-start" asChild>
+                    <a href="/onboarding">🚀 Gratis beginnen</a>
+                  </Button>
+                </div>
               </div>
-              {/* <div className="hidden sm:flex items-center gap-2">
+            </nav>
+          </div>
+        )}
+      </header>
+
+      {/* Hero Content */}
+      <div className="container mx-auto max-w-7xl px-4 pt-24">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[calc(100vh-8rem)]">
+          {/* Left Content */}
+          <div className="flex-1 space-y-8 text-center lg:text-left max-w-2xl">
+            <div className="space-y-6">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-tight drop-shadow-lg">
+                Jouw eigen
+                <br />
+                <span className="bg-gradient-to-r from-step-peach to-step-mint bg-clip-text text-transparent">booking pagina</span>
+                <br />
+                in 2 minuten
+              </h1>
+              
+              <p className="text-lg md:text-xl text-white/90 max-w-lg drop-shadow mx-auto lg:mx-0">
+                Geen technische kennis nodig. Maak een professionele booking pagina voor je diensten en ontvang direct boekingen van klanten.
+              </p>
+              
+              {/* Social Proof */}
+              <div className="flex items-center justify-center lg:justify-start gap-4 text-sm text-white/80 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm w-fit mx-auto lg:mx-0">
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                  <Star className="w-4 h-4 fill-yellow-300 text-yellow-300" />
+                  <span className="ml-1 font-medium text-white">4.9/5</span>
+                </div>
                 <span>•</span>
-                <span>Geen creditcard vereist</span>
-              </div> */}
+                <span>500+ tevreden gebruikers</span>
+              </div>
             </div>
-            
-            <div className="space-y-3 max-w-lg pt-4 mx-auto">
-              <div className="bg-white rounded-lg p-1">
-                <div className="flex items-center justify-center mx-auto">
-                  <span className="px-3 py-2 sm:px-4 sm:py-3 text-gray-500 font-medium text-base sm:text-lg">
-                    TapBookr.com/
+
+            {/* Handle Claim Section */}
+            <div className="space-y-4 max-w-md mx-auto lg:mx-0">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm font-medium">
+                    bookr.nl/
                   </span>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={userInput}
                     onChange={handleInputChange}
-                    placeholder="jouw-handle" 
-                    className="flex-1 px-2 py-2 sm:py-3 bg-transparent text-gray-900 placeholder-gray-400 text-base sm:text-lg font-medium focus:outline-none"
+                    placeholder="jouw-naam"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-white/30 bg-white/20 backdrop-blur-sm text-white placeholder-white/60 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all gamify-hover"
+                    maxLength={20}
                   />
+                  {userInput && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isHandleAvailable ? (
+                        <CheckCircle className="w-5 h-5 text-green-400 animate-bounce" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-400" />
+                      )}
+                    </div>
+                  )}
                 </div>
-                {/* Handle availability indicator */}
-                {userInput && (
-                  <div className="px-3 py-1 text-xs">
-                    {handleAvailable ? (
-                      <span className="text-green-600 font-medium">✓ Beschikbaar</span>
-                    ) : (
-                      <span className="text-red-600 font-medium">✗ Niet beschikbaar</span>
-                    )}
-                  </div>
-                )}
+                
+                <Button 
+                  variant="celebration"
+                  size="lg" 
+                  className="px-8 font-bold shadow-xl"
+                  disabled={!userInput || !isHandleAvailable}
+                >
+                  🎯 Claim Nu
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
               </div>
               
-              <Button 
-                asChild 
-                className={`w-full font-black text-base sm:text-lg py-4 sm:py-6 rounded-full transition-all ${
-                  handleAvailable && userInput
-                    ? 'bg-purple-400 hover:bg-purple-500 text-gray-900'
-                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                }`}
-                disabled={!handleAvailable || !userInput}
-              >
-                <Link to={`/login?handle=${encodeURIComponent(sanitizeHandle(userInput))}`}>
-                  Claim je Bookr Link
-                </Link>
-              </Button>
-
+              {userInput && !isHandleAvailable && (
+                <p className="text-sm text-red-300 bg-red-900/30 rounded-lg px-3 py-2 backdrop-blur-sm">
+                  Deze naam is al bezet. Probeer een andere! 🔄
+                </p>
+              )}
               
+              <p className="text-xs text-white/80 bg-white/10 rounded-full px-4 py-2 backdrop-blur-sm text-center">
+                ✨ Gratis • 💳 Geen creditcard vereist • ⚡ Direct live
+              </p>
             </div>
           </div>
-          
           {/* Right Content - Live iPhone Preview */}
-          <div className="flex-1 flex justify-center items-center mt-6 lg:mt-0 px-2">
-            <div className="relative" aria-label="Live iPhone preview">
-              {/* iPhone 14 Pro styled frame */}
-              <div className="relative bg-black rounded-[2.5rem] p-1.5 shadow-2xl">
+          <div className="flex-1 flex justify-center items-center mt-6 lg:mt-0">
+            <div className="relative mx-auto w-full max-w-xs">
+              {/* iPhone Frame */}
+              <div className="relative bg-background border-8 border-border rounded-[2.5rem] shadow-xl tilt-effect">
+                {/* Top Notch */}
+                <div className="absolute top-0 inset-x-0 flex justify-center">
+                  <div className="bg-border h-6 w-32 rounded-b-2xl"></div>
+                </div>
+                
                 {/* Screen */}
-                <div className="bg-white rounded-[2rem] overflow-hidden" style={{ width: "320px", height: "692px" }}>
-                  <div className="relative w-full h-full overflow-hidden">
-                    <iframe
-                      key={debouncedHandle}
-                      src="https://tapbookr.com/tapbookr"
-                      className="w-full h-full"
-                      title="Live Mobile Preview"
-                      style={{ 
-                        border: "none", 
-                        transform: "scale(0.9)", 
-                        transformOrigin: "top left", 
-                        width: "111%", 
-                        height: "111%"
-                      }}
-                      sandbox="allow-scripts allow-same-origin"
-                    />
-                    {/* Overlay to prevent clicks while allowing scroll */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ 
-                        background: 'transparent',
-                        zIndex: 10
-                      }}
-                    />
-                  </div>
+                <div className="relative bg-background rounded-[1.75rem] overflow-hidden h-[600px] w-full">
+                  <iframe
+                    src={`${previewUrl}?preview=${debouncedHandle}`}
+                    className="w-full h-full border-0"
+                    title={`Preview van ${userInput || 'je profiel'}`}
+                    loading="lazy"
+                    scrolling="yes"
+                    style={{ 
+                      overflow: 'auto',
+                      WebkitOverflowScrolling: 'touch'
+                    }}
+                  />
+                </div>
+                
+                {/* Home Indicator */}
+                <div className="absolute bottom-1 inset-x-0 flex justify-center">
+                  <div className="bg-border h-1 w-32 rounded-full"></div>
                 </div>
               </div>
-              {/* Dynamic Island */}
-              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-6 bg-black rounded-b-2xl" />
-              {/* Home Indicator */}
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 bg-black rounded-full opacity-60" />
               
-              {/* Preview label */}
-              {/* <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-center">
-                <p className="text-sm text-white/80 font-medium">
-                  {userInput ? `Preview: ${userInput}` : `${categories.find(c => c.id === selectedCategory)?.name} template`}
+              {/* Caption */}
+              <div className="text-center mt-4">
+                <p className="text-sm text-white/80 font-medium drop-shadow">
+                  Live preview van je profiel ✨
                 </p>
-              </div> */}
+              </div>
             </div>
           </div>
         </div>
