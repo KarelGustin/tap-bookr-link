@@ -33,16 +33,6 @@ export function PhoneMockup({ profileUrl, userName }: PhoneMockupProps) {
               WebkitOverflowScrolling: 'touch'
             }}
           />
-          
-          {/* Overlay for better UX */}
-          <div className="absolute inset-0 bg-transparent hover:bg-black/5 transition-colors cursor-pointer" 
-               onClick={handleViewFull}>
-            <div className="absolute bottom-4 right-4">
-              <Button size="sm" variant="secondary" className="shadow-lg">
-                <ExternalLink className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
         </div>
         
         {/* Home Indicator */}

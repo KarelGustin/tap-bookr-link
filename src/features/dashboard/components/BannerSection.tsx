@@ -158,7 +158,7 @@ export function BannerSection({
                 className="text-sm opacity-90"
                 style={{ color: bannerTextColor }}
               >
-                {bannerSubheading || slogan || 'Jouw banner ondertitel'}
+                {bannerSubheading || 'Jouw banner ondertitel'}
               </p>
             </div>
             
@@ -174,17 +174,6 @@ export function BannerSection({
 
           {/* Banner Controls */}
           <div className="space-y-4">
-            {bannerUrl && (
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">Huidige banner:</p>
-                <img 
-                  src={bannerUrl} 
-                  alt="Banner preview" 
-                  className="w-full h-24 object-cover rounded border"
-                />
-              </div>
-            )}
-            
             <div>
               <Label htmlFor="bannerTextColor">Tekst Kleur</Label>
               <div className="flex gap-2 mt-1">

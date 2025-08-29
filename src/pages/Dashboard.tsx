@@ -19,6 +19,7 @@ import { SocialsSection } from '@/features/dashboard/components/SocialsSection'
 import { MediaSection } from '@/features/dashboard/components/MediaSection'
 import { PhoneMockup } from '@/components/PhoneMockup'
 import { FooterSection } from '@/features/dashboard/components/FooterSection'
+import { TestimonialsSection } from '@/features/dashboard/components/TestimonialsSection'
 
 interface Profile {
   id: string
@@ -135,6 +136,8 @@ export default function Dashboard() {
     bookingMode: 'embed',
     testimonials: [],
   })
+  
+  const [testimonials, setTestimonials] = useState<Array<{ customer_name: string; review_title: string; review_text: string; image_url?: string }>>([])
 
   // Success message handling
   const success = searchParams.get('success')
@@ -270,6 +273,13 @@ export default function Dashboard() {
           image_url: t.image_url
         }))
       })
+      
+      setTestimonials(testimonialsData.map((t: any) => ({
+        customer_name: t.customer_name || '',
+        review_title: t.review_title || '',
+        review_text: t.review_text || '',
+        image_url: t.image_url
+      })))
     }
   }, [profile])
 
@@ -320,7 +330,7 @@ export default function Dashboard() {
         footer_terms_of_service: design.footerTermsOfService,
         footer_show_maps: design.footerShowMaps,
         footer_hours: design.footerHours,
-        testimonials: design.testimonials,
+        testimonials: testimonials,
         updated_at: new Date().toISOString()
       }
 
@@ -488,6 +498,12 @@ export default function Dashboard() {
             <MediaSection
               mediaItems={design.mediaOrder}
               onUpdate={(mediaOrder) => setDesign(prev => ({ ...prev, mediaOrder }))}
+            />
+
+            {/* Testimonials Section */}
+            <TestimonialsSection
+              testimonials={testimonials}
+              onUpdate={setTestimonials}
             />
 
             {/* Booking */}
