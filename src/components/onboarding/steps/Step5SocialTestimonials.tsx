@@ -70,6 +70,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
     },
   ]);
   const [isSaving, setIsSaving] = useState(false);
+  const [renderKey, setRenderKey] = useState(0); // Force re-render after image uploads
 
   // Auto-save function for testimonials
   const autoSaveTestimonials = useCallback(async (updatedTestimonials: typeof testimonials) => {
@@ -372,8 +373,15 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         console.log('✅ Testimonial image uploaded:', publicUrl);
         
         // Update the component state immediately to show the new image
-        setTestimonials(updated);
+        setTestimonials([...updated]); // Force new array reference
+        setRenderKey(prev => prev + 1); // Force component re-render
         setIsSaving(false);
+        
+        console.log('🔧 State updated after upload:', {
+          testimonialIndex: index,
+          image_url: publicUrl,
+          renderKey: renderKey + 1
+        });
         
         toast({
           title: "Foto geüpload",
@@ -381,7 +389,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         });
         
         // Auto-save after successful upload
-        autoSaveTestimonials(updated);
+        autoSaveTestimonials([...updated]);
       } catch (error) {
         console.error('❌ Error uploading testimonial image:', error);
         setIsSaving(false);
@@ -565,7 +573,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
           </CardHeader>
           <CardContent className="space-y-4">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3">
+              <div key={`testimonial-${index}-${renderKey}`} className="p-4 border border-gray-200 rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium text-gray-900">Testimonial {index + 1}</h4>
                   {testimonials.length > 1 && (
@@ -618,34 +626,31 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
                   <p className="text-sm text-muted-foreground">
                     Een klantfoto maakt beoordelingen persoonlijker en betrouwbaarder.
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                      {testimonial.image_url && testimonial.image_url.trim().length > 0 ? (
-                        <img 
-                          src={testimonial.image_url} 
-                          alt="Customer photo" 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error('❌ Failed to load testimonial image:', testimonial.image_url);
-                            // Hide the broken image and show placeholder instead
-                            e.currentTarget.style.display = 'none';
-                            const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (placeholder) placeholder.style.display = 'flex';
-                          }}
-                        />
-                      ) : testimonial._file && testimonial._file instanceof File ? (
-                        <img 
-                          src={URL.createObjectURL(testimonial._file)} 
-                          alt="Customer photo preview" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : null}
-                      {/* Placeholder icon - shown when no image or when image fails to load */}
-                      {(!testimonial.image_url || testimonial.image_url.trim().length === 0) && 
-                       (!testimonial._file || !(testimonial._file instanceof File)) && (
-                        <User className="w-6 h-6 text-muted-foreground" />
-                      )}
-                    </div>
+                   <div className="flex items-center gap-4">
+                     <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
+                       {/* Show uploaded image if available */}
+                       {testimonial.image_url && testimonial.image_url.trim() ? (
+                         <img 
+                           src={testimonial.image_url} 
+                           alt="Customer photo" 
+                           className="w-full h-full object-cover"
+                           onError={(e) => {
+                             console.error('❌ Failed to load testimonial image:', testimonial.image_url);
+                             e.currentTarget.style.display = 'none';
+                           }}
+                         />
+                       ) : testimonial._file && testimonial._file instanceof File ? (
+                         /* Show file preview if file is selected but not yet uploaded */
+                         <img 
+                           src={URL.createObjectURL(testimonial._file)} 
+                           alt="Customer photo preview" 
+                           className="w-full h-full object-cover"
+                         />
+                       ) : (
+                         /* Show placeholder when no image is available */
+                         <User className="w-6 h-6 text-muted-foreground" />
+                       )}
+                     </div>
                     <div className="flex flex-col gap-2">
                       <Button
                         type="button"
