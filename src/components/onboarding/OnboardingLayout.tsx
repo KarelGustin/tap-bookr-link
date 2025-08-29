@@ -125,7 +125,7 @@ export const OnboardingLayout = ({
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    {isLastStep ? 'Live Preview Starten' : 'Volgende'}
+                    {isLastStep ? 'Ga live voor €1' : 'Volgende'}
                     <ArrowRight className="w-5 h-5" />
                   </div>
                 )}

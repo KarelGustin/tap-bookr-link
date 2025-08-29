@@ -190,19 +190,8 @@ export const Step7Preview = ({
     }
   };
 
-  const canProceed = () => {
-    // Check if preview has been started at least once or subscription is in progress
-    return isLivePreviewActive || isSubscribing || livePreviewTimeLeft < 15 * 60;
-  };
-
   const handleNext = async () => {
-    if (!canProceed()) {
-      // Start live preview first
-      await startLivePreview();
-      return;
-    }
-    
-    // If preview is active, proceed to subscription
+    // Direct to subscription flow - "Ga live voor €1"
     await handleSubscribe();
   };
 
@@ -215,7 +204,7 @@ export const Step7Preview = ({
       onBack={onBack}
       onNext={handleNext}
       canGoNext={true}
-      isLoading={isStartingPreview || isSubscribing}
+      isLoading={isSubscribing}
       isLastStep={true}
       handle={handle}
     >
