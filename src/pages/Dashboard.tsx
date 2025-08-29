@@ -234,8 +234,8 @@ export default function Dashboard() {
       // Convert media items to proper format
       const mediaArray = (mediaData.items || []).map((item: any, index: number) => ({
         id: `media_${index}`,
-        url: typeof item === 'string' ? item : item.url,
-        alt: typeof item === 'object' ? item.alt : undefined
+        url: typeof item === 'string' ? item : item.imageUrl,
+        alt: typeof item === 'object' ? item.description : undefined
       }))
 
       setDesign({
