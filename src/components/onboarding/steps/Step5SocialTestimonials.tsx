@@ -348,6 +348,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
 
         if (uploadError) {
           console.error('❌ Error uploading testimonial image:', uploadError);
+          setIsSaving(false);
           toast({
             title: "Upload mislukt",
             description: "Kon foto niet uploaden. Probeer het opnieuw.",
@@ -372,13 +373,18 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         
         // Update the component state immediately to show the new image
         setTestimonials(updated);
+        setIsSaving(false);
         
         toast({
           title: "Foto geüpload",
           description: "Klantfoto is succesvol geüpload.",
         });
+        
+        // Auto-save after successful upload
+        autoSaveTestimonials(updated);
       } catch (error) {
         console.error('❌ Error uploading testimonial image:', error);
+        setIsSaving(false);
         toast({
           title: "Upload fout",
           description: "Er ging iets mis bij het uploaden.",
@@ -401,8 +407,7 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
       return;
     }
     
-    // Auto-save after changing image (only when uploading, not when removing)
-    autoSaveTestimonials(updated);
+    // Note: Auto-save is handled in the upload success block above
   };
 
   const handleSubmit = () => {
