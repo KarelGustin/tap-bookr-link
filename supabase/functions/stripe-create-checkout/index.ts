@@ -42,14 +42,24 @@ serve(async (req) => {
     console.log('🔧 Supabase client initialized with service role')
 
     // Get profile to find user email
+    console.log('🔧 Looking for profile with ID:', profileId)
+    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_id, stripe_customer_id')
       .eq('id', profileId)
-      .single()
+      .maybeSingle()
 
-    if (profileError || !profile) {
-      throw new Error('Profile not found')
+    console.log('🔧 Profile query result:', { profile, profileError })
+
+    if (profileError) {
+      console.error('🔧 Database error when fetching profile:', profileError)
+      throw new Error(`Database error: ${profileError.message}`)
+    }
+
+    if (!profile) {
+      console.error('🔧 No profile found with ID:', profileId)
+      throw new Error(`No profile found with ID: ${profileId}`)
     }
 
     // Get user email from auth.users
