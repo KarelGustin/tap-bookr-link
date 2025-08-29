@@ -24,7 +24,6 @@ export function useDesignState() {
     footerPrivacyPolicy: '',
     footerTermsOfService: '',
     footerShowMaps: true,
-    footerShowAttribution: true,
     mediaFiles: [] as File[],
     mediaOrder: [] as Array<{ id: string; url: string; alt?: string }>,
     socials: [] as Array<{ id: string; title: string; platform?: string; url: string }>,
