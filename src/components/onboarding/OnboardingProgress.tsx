@@ -8,40 +8,22 @@ interface OnboardingProgressProps {
 }
 
 export const OnboardingProgress = ({ currentStep, totalSteps }: OnboardingProgressProps) => {
-  const { t } = useLanguage();
-  
-  const steps = [
-    { key: 1, label: t('onboarding.step1.title') },
-    { key: 2, label: t('onboarding.step2.title') },
-    { key: 3, label: t('onboarding.step3.title') },
-    { key: 4, label: t('onboarding.step4.title') },
-    { key: 5, label: t('onboarding.step5.title') },
-    { key: 6, label: t('onboarding.step6.title') },
-    { key: 7, label: t('onboarding.step7.title') },
-  ];
-
   const progress = (currentStep / totalSteps) * 100;
   
   return (
-    <div className="p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Progress bar */}
-        <div className="mb-4">
-          <Progress value={progress} className="h-2" />
-        </div>
-        
-        {/* Step labels */}
-        <div className="flex justify-between text-xs text-muted-foreground">
-          {steps.map((step) => (
-            <div
-              key={step.key}
-              className={`flex-1 text-center ${
-                step.key <= currentStep ? 'text-foreground font-medium' : ''
-              }`}
-            >
-              {step.label}
-            </div>
-          ))}
+    <div className="p-3">
+      <div className="max-w-md mx-auto">
+        {/* Progress bar only */}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-medium text-muted-foreground min-w-fit">
+            {currentStep}/{totalSteps}
+          </span>
+          <div className="flex-1">
+            <Progress value={progress} className="h-2" />
+          </div>
+          <span className="text-xs font-medium text-muted-foreground">
+            {Math.round(progress)}%
+          </span>
         </div>
       </div>
     </div>

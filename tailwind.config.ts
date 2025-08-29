@@ -46,11 +46,15 @@ export default {
 				},
 				warning: {
 					DEFAULT: 'hsl(var(--warning))',
-					foreground: 'hsl(var(--foreground))'
+					foreground: 'hsl(var(--warning-foreground))'
 				},
 				success: {
 					DEFAULT: 'hsl(var(--success))',
-					foreground: 'hsl(var(--background))'
+					foreground: 'hsl(var(--success-foreground))'
+				},
+				info: {
+					DEFAULT: 'hsl(var(--info))',
+					foreground: 'hsl(var(--info-foreground))'
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -69,6 +73,42 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				chart: {
+					'1': 'hsl(var(--chart-1))',
+					'2': 'hsl(var(--chart-2))',
+					'3': 'hsl(var(--chart-3))',
+					'4': 'hsl(var(--chart-4))',
+					'5': 'hsl(var(--chart-5))'
+				},
+				// Onboarding step colors
+				'step-yellow': {
+					DEFAULT: 'hsl(var(--step-yellow))',
+					foreground: 'hsl(var(--step-yellow-foreground))'
+				},
+				'step-teal': {
+					DEFAULT: 'hsl(var(--step-teal))',
+					foreground: 'hsl(var(--step-teal-foreground))'
+				},
+				'step-pink': {
+					DEFAULT: 'hsl(var(--step-pink))',
+					foreground: 'hsl(var(--step-pink-foreground))'
+				},
+				'step-lavender': {
+					DEFAULT: 'hsl(var(--step-lavender))',
+					foreground: 'hsl(var(--step-lavender-foreground))'
+				},
+				'step-mint': {
+					DEFAULT: 'hsl(var(--step-mint))',
+					foreground: 'hsl(var(--step-mint-foreground))'
+				},
+				'step-peach': {
+					DEFAULT: 'hsl(var(--step-peach))',
+					foreground: 'hsl(var(--step-peach-foreground))'
+				},
+				'step-blue': {
+					DEFAULT: 'hsl(var(--step-blue))',
+					foreground: 'hsl(var(--step-blue-foreground))'
 				}
 			},
 			borderRadius: {

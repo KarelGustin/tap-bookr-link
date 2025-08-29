@@ -96,8 +96,8 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
       totalSteps={7}
       onNext={handleSubmit}
       canGoNext={canContinue}
-      title="Banner & Branding"
-      subtitle="Customize your banner and business identity."
+      title="Jouw Branding"
+      subtitle="Maak je pagina herkenbaar met je bedrijfsnaam en banner"
       onBack={onBack}
       handle={handle}
     >

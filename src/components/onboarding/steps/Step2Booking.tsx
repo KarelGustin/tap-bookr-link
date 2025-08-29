@@ -78,9 +78,11 @@ export const Step2Booking = ({ onNext, onBack, existingData, handle }: Step2Book
     <OnboardingLayout
       currentStep={2}
       totalSteps={7}
-      title={existingData?.bookingUrl ? "Je boekingslink" : "Voeg je boekingslink toe"}
-      subtitle={existingData?.bookingUrl ? "Je boekingslink is al verbonden." : "Verbind je bestaande boekingssysteem."}
+      title={existingData?.bookingUrl ? "Je boekingslink" : "Boekingsmethode"}
+      subtitle={existingData?.bookingUrl ? "Je boekingslink is al verbonden." : "Hoe willen klanten een afspraak maken?"}
       onBack={onBack}
+      onNext={handleSubmit}
+      canGoNext={canContinue}
       handle={handle}
     >
       <div className="space-y-6">
@@ -267,18 +269,8 @@ export const Step2Booking = ({ onNext, onBack, existingData, handle }: Step2Book
           </div>
         )}
 
-        {/* Continue button */}
-        <Button 
-          onClick={handleSubmit}
-          disabled={!canContinue}
-          className="w-full h-12 text-base rounded-lg"
-          size="lg"
-        >
-          {existingData?.bookingUrl ? 'Doorgaan met opgeslagen boekingslink' : 'Doorgaan'}
-        </Button>
-        
         <p className="text-center text-sm text-muted-foreground">
-          Je kunt dit later wijzigen in Pagina Bewerken.
+          Je kunt dit later wijzigen in je dashboard.
         </p>
       </div>
     </OnboardingLayout>

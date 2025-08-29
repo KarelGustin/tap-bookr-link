@@ -268,13 +268,15 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
   return (
     <OnboardingLayout
       currentStep={1}
-      totalSteps={8}
+      totalSteps={7}
       title="Kies je handle"
       subtitle="Kies een unieke naam voor je TapBookr pagina"
       onBack={onBack}
+      onNext={handleNext}
+      canGoNext={canGoNext()}
       handle={handle || userHandle}
     >
-      <div className="max-w-2xl mx-auto space-y-8 relative">
+      <div className="space-y-6">
         {/* Existing handle section */}
         {userHandle && !useExistingHandle && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -393,19 +395,6 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-between pt-6">
-          <Button variant="outline" onClick={onBack} className="rounded-lg">
-            Terug
-          </Button>
-          <Button 
-            onClick={handleNext}
-            disabled={!canGoNext()}
-            className="rounded-lg"
-          >
-            {useExistingHandle && userHandle ? 'Verder gaan met je handle' : 'Claim deze handle'}
-          </Button>
-        </div>
       </div>
     </OnboardingLayout>
   );

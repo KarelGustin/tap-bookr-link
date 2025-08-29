@@ -103,14 +103,14 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Ste
     <OnboardingLayout
       currentStep={4}
       totalSteps={7}
-      title="Persoonlijke afbeelding"
-      subtitle="Voeg een foto van jezelf toe om je profiel persoonlijker te maken"
+      title="Jouw Verhaal"
+      subtitle="Vertel wie je bent en voeg een persoonlijke foto toe"
       onBack={onBack}
       onNext={handleSubmit}
       canGoNext={canGoNext}
       handle={handle}
     >
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="space-y-6">
     
         {/* Persoonlijke afbeelding */}
         <div className="space-y-4">
@@ -218,16 +218,6 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Ste
 
               </div>
         
-        {/* Helper text for why button might be disabled */}
-        {!canGoNext && (
-          <div className="text-center mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              {!hasAvatar && !hasRequiredInfo && "Upload een foto en vul de informatie in om door te gaan"}
-              {!hasAvatar && hasRequiredInfo && "Upload een foto om door te gaan"}
-              {hasAvatar && !hasRequiredInfo && "Vul de titel en beschrijving in om door te gaan"}
-            </p>
-          </div>
-        )}
       </OnboardingLayout>
     );
   };
