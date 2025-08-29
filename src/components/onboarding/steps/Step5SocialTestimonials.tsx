@@ -375,7 +375,6 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         // Update the component state immediately to show the new image
         setTestimonials([...updated]); // Force new array reference
         setRenderKey(prev => prev + 1); // Force component re-render
-        setIsSaving(false);
         
         console.log('🔧 State updated after upload:', {
           testimonialIndex: index,
@@ -383,10 +382,17 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
           renderKey: renderKey + 1
         });
         
+        // Force a state update to trigger immediate re-render
+        setTimeout(() => {
+          setTestimonials(prev => [...prev]); // Force another re-render
+        }, 100);
+        
         toast({
           title: "Foto geüpload",
           description: "Klantfoto is succesvol geüpload.",
         });
+        
+        setIsSaving(false);
         
         // Auto-save after successful upload
         autoSaveTestimonials([...updated]);

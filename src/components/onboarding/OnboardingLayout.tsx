@@ -58,9 +58,9 @@ export const OnboardingLayout = ({
         <OnboardingProgress currentStep={currentStep} totalSteps={totalSteps} />
       </div>
 
-      {/* Mobile-first card layout */}
-      <div className="pt-16 pb-safe">
-        <div className="min-h-[calc(100vh-4rem)] flex flex-col">
+          {/* Mobile-first card layout */}
+      <div className="pt-16 pb-20 md:pb-4 min-h-screen">
+        <div className="h-full flex flex-col">
           {/* Skip button (top right) */}
           <div className="absolute top-20 right-4 z-40 md:right-6">
             <LanguageSelector />
@@ -77,10 +77,10 @@ export const OnboardingLayout = ({
             </button>
           )}
 
-          {/* Main content card - responsive container */}
-          <div className="flex-1 px-3 md:px-6 lg:px-8 pb-4">
-            <div className="w-full max-w-lg md:max-w-2xl mx-auto">
-              <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-4 md:p-6 shadow-card animate-slide-up max-h-[calc(100vh-12rem)] overflow-y-auto">
+          {/* Main content area - scrollable */}
+          <div className="flex-1 overflow-y-auto px-3 md:px-6 lg:px-8 pb-4">
+            <div className="w-full max-w-lg md:max-w-2xl mx-auto min-h-full flex flex-col">
+              <div className="bg-white/95 backdrop-blur-sm rounded-3xl p-4 md:p-6 shadow-card animate-slide-up flex-1">
                 {/* Title Section */}
                 {title && (
                   <div className="text-center mb-6">
@@ -96,48 +96,48 @@ export const OnboardingLayout = ({
                 )}
                 
                 {/* Content */}
-                <div className="space-y-6">
+                <div className="space-y-6 pb-6">
                   {children}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Fixed bottom navigation */}
-          <div className="p-4 md:p-6 lg:p-8 bg-background/95 backdrop-blur-sm">
-            <div className="max-w-lg md:max-w-2xl mx-auto">
-              {onNext && (
-                <Button
-                  onClick={canGoNext ? onNext : undefined}
-                  disabled={isLoading || !canGoNext}
-                  className={`w-full h-14 text-lg font-semibold rounded-2xl shadow-button button-press animate-bounce-in ${
-                    canGoNext 
-                      ? 'bg-gray-900 hover:bg-gray-800 text-white' 
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                  size="lg"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      Bezig...
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      {isLastStep ? 'Live Preview Starten' : 'Volgende'}
-                      <ArrowRight className="w-5 h-5" />
-                    </div>
-                  )}
-                </Button>
-              )}
-              
-              {/* Helper text for disabled state */}
-              {onNext && !canGoNext && !isLoading && (
-                <p className="text-center text-sm text-muted-foreground mt-3">
-                  Vul alle vereiste velden in om door te gaan
-                </p>
-              )}
-            </div>
+        {/* Fixed bottom navigation - always visible */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 md:p-6 bg-background/95 backdrop-blur-sm border-t md:relative md:border-t-0">
+          <div className="max-w-lg md:max-w-2xl mx-auto">
+            {onNext && (
+              <Button
+                onClick={canGoNext ? onNext : undefined}
+                disabled={isLoading || !canGoNext}
+                className={`w-full h-14 text-lg font-semibold rounded-2xl shadow-button button-press animate-bounce-in ${
+                  canGoNext 
+                    ? 'bg-gray-900 hover:bg-gray-800 text-white' 
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
+                size="lg"
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    Bezig...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-2">
+                    {isLastStep ? 'Live Preview Starten' : 'Volgende'}
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                )}
+              </Button>
+            )}
+            
+            {/* Helper text for disabled state */}
+            {onNext && !canGoNext && !isLoading && (
+              <p className="text-center text-sm text-muted-foreground mt-3">
+                Vul alle vereiste velden in om door te gaan
+              </p>
+            )}
           </div>
         </div>
       </div>

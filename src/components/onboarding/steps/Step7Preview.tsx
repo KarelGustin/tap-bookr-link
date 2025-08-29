@@ -190,6 +190,22 @@ export const Step7Preview = ({
     }
   };
 
+  const canProceed = () => {
+    // Check if preview has been started at least once or subscription is in progress
+    return isLivePreviewActive || isSubscribing || livePreviewTimeLeft < 15 * 60;
+  };
+
+  const handleNext = async () => {
+    if (!canProceed()) {
+      // Start live preview first
+      await startLivePreview();
+      return;
+    }
+    
+    // If preview is active, proceed to subscription
+    await handleSubscribe();
+  };
+
   return (
     <OnboardingLayout
       currentStep={8}
@@ -197,9 +213,13 @@ export const Step7Preview = ({
       title="Voorvertoning & Publicatie"
       subtitle="Bekijk je pagina en kies hoe je verder wilt gaan"
       onBack={onBack}
+      onNext={handleNext}
+      canGoNext={true}
+      isLoading={isStartingPreview || isSubscribing}
+      isLastStep={true}
       handle={handle}
     >
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="space-y-8">
         {/* Live Preview Status */}
         {isLivePreviewActive && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -234,134 +254,113 @@ export const Step7Preview = ({
           </div>
         )}
 
-        {/* Preview Tabs */}
-        <div className="space-y-8">
-          {/* Page Preview */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Pagina Voorvertoning</h3>
-            <div className="border rounded-lg overflow-hidden">
-              {isLivePreviewActive ? (
-                <iframe
-                  key={previewKey}
-                  src={`https://tapbookr.com/${handle}`}
-                  className="w-full h-96 border-0"
-                  title="Live Page Preview"
-                />
-              ) : (
-                <div className="w-full h-96 bg-gray-100 flex items-center justify-center">
-                  <div className="text-center">
-                    <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-600 mb-2">
-                      Start Live Preview
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Klik op "Start 15 min. Live Preview" om je pagina live te zetten
-                    </p>
-                  </div>
+        {/* Page Preview */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Pagina Voorvertoning</h3>
+          <div className="border rounded-lg overflow-hidden">
+            {isLivePreviewActive ? (
+              <iframe
+                key={previewKey}
+                src={`https://tapbookr.com/${handle}`}
+                className="w-full h-96 border-0"
+                title="Live Page Preview"
+              />
+            ) : (
+              <div className="w-full h-96 bg-gray-100 flex items-center justify-center">
+                <div className="text-center">
+                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">
+                    Start Live Preview
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Klik op "Live Preview Starten" om je pagina live te zetten
+                  </p>
                 </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-3">
-              <Button
-                onClick={startLivePreview}
-                disabled={isLivePreviewActive || isStartingPreview}
-                className="flex-1"
-              >
-                <Clock className="w-4 h-4 mr-2" />
-                {isStartingPreview ? 'Bezig met starten...' : 'Start 15 min. Live Preview'}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
-                disabled={!isLivePreviewActive}
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in nieuw tabblad
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
-
-          {/* Page Summary */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Pagina Samenvatting</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-3">Basis Informatie</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p><span className="font-medium">Handle:</span> <span className="break-all">@{handle}</span></p>
-                  <p><span className="font-medium">Naam:</span> <span className="break-words">{profileData.name || 'Niet ingevuld'}</span></p>
-                  <p><span className="font-medium">Slogan:</span> <span className="break-words">{profileData.slogan || 'Niet ingevuld'}</span></p>
-                  <p><span className="font-medium">Categorie:</span> <span className="break-words">{profileData.category || 'Niet ingevuld'}</span></p>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-3">Boeking</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Status:</span> {profileData.bookingUrl ? 'Gekoppeld aan boekingssysteem' : 'Geen boeking ingesteld'}
-                  </p>
-                  {profileData.bookingUrl && (
-                    <p>
-                      <span className="font-medium">URL:</span>
-                      <span 
-                        className="ml-1 text-blue-600 hover:text-blue-800 cursor-pointer break-all"
-                        title={profileData.bookingUrl}
-                        onClick={() => window.open(profileData.bookingUrl, '_blank')}
-                      >
-                        {profileData.bookingUrl.length > 50 
-                          ? `${profileData.bookingUrl.substring(0, 50)}...` 
-                          : profileData.bookingUrl
-                        }
-                      </span>
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-3">Content</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Over jou:</span> {profileData.aboutTitle ? 'Ingevuld' : 'Niet ingevuld'}
-                  </p>
-                  <p><span className="font-medium">Media items:</span> {profileData.mediaFiles?.length || 0}</p>
-                  <p><span className="font-medium">Testimonials:</span> {profileData.testimonials?.length || 0}</p>
-                  {profileData.socialLinks && profileData.socialLinks.length > 0 && (
-                    <p><span className="font-medium">Sociale links:</span> {profileData.socialLinks.length}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium mb-3">Footer</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <p>
-                    <span className="font-medium">Bedrijfsinfo:</span> {profileData.footer?.businessName ? 'Ingevuld' : 'Niet ingevuld'}
-                  </p>
-                  {profileData.footer?.email && (
-                    <p><span className="font-medium">Email:</span> <span className="break-all">{profileData.footer.email}</span></p>
-                  )}
-                  {profileData.footer?.phone && (
-                    <p><span className="font-medium">Telefoon:</span> <span className="break-words">{profileData.footer.phone}</span></p>
-                  )}
-                </div>
-              </div>
-            </div>
+          
+          {/* Additional actions */}
+          <div className="flex flex-col gap-3">
+            <Button
+              variant="outline"
+              onClick={() => window.open(`https://tapbookr.com/${handle}`, '_blank')}
+              disabled={!isLivePreviewActive}
+              className="w-full"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open in nieuw tabblad
+            </Button>
           </div>
         </div>
 
-        {/* Subscribe Button - Only Monthly */}
-        <div className="flex flex-col gap-3 pt-6">
-          <Button
-            onClick={handleSubscribe}
-            disabled={isSubscribing}
-            className="w-full"
-            size="lg"
-          >
-            <CreditCard className="w-4 h-4 mr-2" />
-            {isSubscribing ? 'Bezig met abonnement...' : 'Ga live voor €1'}
-          </Button>
+        {/* Page Summary */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Pagina Samenvatting</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-3">Basis Informatie</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p><span className="font-medium">Handle:</span> <span className="break-all">@{handle}</span></p>
+                <p><span className="font-medium">Naam:</span> <span className="break-words">{profileData.name || 'Niet ingevuld'}</span></p>
+                <p><span className="font-medium">Slogan:</span> <span className="break-words">{profileData.slogan || 'Niet ingevuld'}</span></p>
+                <p><span className="font-medium">Categorie:</span> <span className="break-words">{profileData.category || 'Niet ingevuld'}</span></p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-3">Boeking</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>
+                  <span className="font-medium">Status:</span> {profileData.bookingUrl ? 'Gekoppeld aan boekingssysteem' : 'Geen boeking ingesteld'}
+                </p>
+                {profileData.bookingUrl && (
+                  <p>
+                    <span className="font-medium">URL:</span>
+                    <span 
+                      className="ml-1 text-blue-600 hover:text-blue-800 cursor-pointer break-all"
+                      title={profileData.bookingUrl}
+                      onClick={() => window.open(profileData.bookingUrl, '_blank')}
+                    >
+                      {profileData.bookingUrl.length > 50 
+                        ? `${profileData.bookingUrl.substring(0, 50)}...` 
+                        : profileData.bookingUrl
+                      }
+                    </span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-3">Content</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>
+                  <span className="font-medium">Over jou:</span> {profileData.aboutTitle ? 'Ingevuld' : 'Niet ingevuld'}
+                </p>
+                <p><span className="font-medium">Media items:</span> {profileData.mediaFiles?.length || 0}</p>
+                <p><span className="font-medium">Testimonials:</span> {profileData.testimonials?.length || 0}</p>
+                {profileData.socialLinks && profileData.socialLinks.length > 0 && (
+                  <p><span className="font-medium">Sociale links:</span> {profileData.socialLinks.length}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h4 className="font-medium mb-3">Footer</h4>
+              <div className="space-y-2 text-sm text-gray-600">
+                <p>
+                  <span className="font-medium">Bedrijfsinfo:</span> {profileData.footer?.businessName ? 'Ingevuld' : 'Niet ingevuld'}
+                </p>
+                {profileData.footer?.email && (
+                  <p><span className="font-medium">Email:</span> <span className="break-all">{profileData.footer.email}</span></p>
+                )}
+                {profileData.footer?.phone && (
+                  <p><span className="font-medium">Telefoon:</span> <span className="break-words">{profileData.footer.phone}</span></p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Subscription Info */}
