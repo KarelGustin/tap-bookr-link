@@ -71,9 +71,9 @@ serve(async (req) => {
 
     console.log('🔧 Found user email:', user.email)
 
-    // Get environment variables
-    const priceId = 'price_1RyGZDFR5NTFUA4SSuJ0yKEw'
-    console.log('🔧 Price ID:', priceId)
+    // Get environment variables - €7 per month price
+    const priceId = 'price_1RyGZDFR5NTFUA4SSuJ0yKEw' // €7/month
+    console.log('🔧 Price ID (€7/month):', priceId)
 
     // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')

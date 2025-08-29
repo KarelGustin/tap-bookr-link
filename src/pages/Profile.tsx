@@ -1,170 +1,104 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
 import { 
-  ChevronDown,
-  Settings,
-  Palette,
-  BarChart3,
-  Users,
-  Zap,
-  Instagram,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Youtube,
-  Mail,
-  Plus,
-  Edit3,
-  Trash2,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  Star,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  CreditCard,
   Calendar,
-  Lock,
-  ChevronRight,
-  Sparkles,
-  Share2,
+  Download,
+  ExternalLink,
   AlertTriangle,
-  X,
-  MoreVertical,
-  FolderOpen,
-  Archive,
-  ExternalLink
+  Loader2,
+  Settings
 } from 'lucide-react';
+import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
-interface SocialLink {
+interface SubscriptionData {
   id: string;
-  platform: string;
-  title: string;
-  url: string;
-  isActive: boolean;
-  clicks: number;
+  status: string;
+  stripe_subscription_id: string;
+  stripe_customer_id: string;
+  current_period_start: string;
+  current_period_end: string;
+  cancel_at_period_end: boolean;
 }
 
 export default function Profile() {
+  const [searchParams] = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [activeSection, setActiveSection] = useState('links');
-  const [showMaintenanceAlert, setShowMaintenanceAlert] = useState(true);
-  const { user, signOut, loading: authLoading } = useAuth();
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Sample social links data
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
-    {
-      id: '1',
-      platform: 'instagram',
-      title: 'Instagram',
-      url: 'https://instagram.com/username',
-      isActive: false,
-      clicks: 0
-    },
-    {
-      id: '2',
-      platform: 'whatsapp',
-      title: 'WhatsApp',
-      url: 'https://wa.me/1234567890',
-      isActive: false,
-      clicks: 0
-    },
-    {
-      id: '3',
-      platform: 'tiktok',
-      title: 'TikTok',
-      url: 'https://tiktok.com/@username',
-      isActive: false,
-      clicks: 0
-    },
-    {
-      id: '4',
-      platform: 'facebook',
-      title: 'Facebook',
-      url: 'https://facebook.com/username',
-      isActive: false,
-      clicks: 0
+  // Handle success messages
+  const success = searchParams.get('success');
+  const subscriptionStatus = searchParams.get('subscription');
+  const cancellation = searchParams.get('cancellation');
+  const billing = searchParams.get('billing');
+
+  useEffect(() => {
+    if (success === 'true' && subscriptionStatus === 'active') {
+      toast({
+        title: "🎉 Betaling Succesvol!",
+        description: "Je abonnement is actief voor €7 per maand!",
+        variant: "default",
+      });
+      
+      const url = new URL(window.location.href);
+      url.searchParams.delete('success');
+      url.searchParams.delete('subscription');
+      window.history.replaceState({}, '', url.toString());
     }
-  ]);
+
+    if (cancellation === 'initiated') {
+      toast({
+        title: "📝 Abonnement Opgezegd",
+        description: "Je abonnement wordt opgezegd aan het einde van de huidige periode.",
+        variant: "default",
+      });
+      
+      const url = new URL(window.location.href);
+      url.searchParams.delete('cancellation');
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    if (billing === 'viewed') {
+      toast({
+        title: "📊 Facturen Bekeken",
+        description: "Je hebt je factuurgeschiedenis bekeken.",
+        variant: "default",
+      });
+      
+      const url = new URL(window.location.href);
+      url.searchParams.delete('billing');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [success, subscriptionStatus, cancellation, billing, toast]);
 
   useEffect(() => {
     if (user) {
-      checkOnboardingStatus();
+      loadProfile();
     } else if (user === null) {
-      // User is not authenticated
       setProfileLoading(false);
     }
   }, [user]);
 
-  const checkOnboardingStatus = async () => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error checking onboarding status:', error);
-        navigate('/onboarding');
-        return;
-      }
-
-      if (profile && !(profile as { onboarding_completed: boolean }).onboarding_completed) {
-        navigate('/onboarding');
-        return;
-      }
-
-      // If onboarding is completed, load the profile
-      loadProfile();
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-      navigate('/onboarding');
-    }
-  };
-
-  useEffect(() => {
-    // If we're still loading after 5 seconds, something might be wrong
-    const timeout = setTimeout(() => {
-      if (profileLoading) {
-        console.log('Profile loading timeout - checking user state');
-        if (!user) {
-          setProfileLoading(false);
-        }
-      }
-    }, 5000);
-
-    return () => clearTimeout(timeout);
-  }, [profileLoading, user]);
-
   const loadProfile = async () => {
     try {
-      if (!user?.id) {
-        console.log('No user ID available');
-        return;
-      }
-      
-      console.log('Loading profile for user:', user.id);
-      console.log('User object:', user);
-      
-      // Test the Supabase connection first
-      const { data: testData, error: testError } = await supabase
-        .from('profiles')
-        .select('count')
-        .limit(1);
-      
-      console.log('Supabase connection test:', { testData, testError });
+      if (!user?.id) return;
       
       const { data, error } = await supabase
         .from('profiles')
@@ -172,509 +106,329 @@ export default function Profile() {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('Profile query result:', { data, error });
-      console.log('Query details:', {
-        table: 'profiles',
-        user_id: user.id,
-        query: `SELECT * FROM profiles WHERE user_id = '${user.id}'`
-      });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Profile data:', data);
+      if (error) throw error;
 
       if (!data) {
-        console.log('No profile found, redirecting to onboarding');
-        // Redirect to onboarding if no profile exists
         navigate('/onboarding');
         return;
       }
 
-      console.log('Profile loaded successfully:', data.handle);
-      setProfile(data);
-    } catch (error) {
-      console.error('Profile loading error:', error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
-      
-      // Check if it's a "not found" type error
-      if (errorMessage.includes('not found') || errorMessage.includes('No rows returned')) {
-        console.log('Redirecting to onboarding due to profile error');
+      if (!data.onboarding_completed) {
         navigate('/onboarding');
         return;
       }
-      
+
+      setProfile(data);
+      loadSubscriptionData(data);
+    } catch (error) {
+      console.error('Profile loading error:', error);
       toast({
-        title: "Error",
-        description: errorMessage,
+        title: "Fout",
+        description: "Kan profiel niet laden",
         variant: "destructive",
       });
+      navigate('/onboarding');
     } finally {
       setProfileLoading(false);
     }
   };
 
-  const handleSave = async () => {
-    if (!profile) return;
+  const loadSubscriptionData = async (profileData: Profile) => {
+    if (!profileData?.id || !profileData?.subscription_id) {
+      setSubscription(null);
+      return;
+    }
     
-    setSaving(true);
+    setSubscriptionLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: profile.name,
-          slogan: profile.slogan,
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Saved!",
-        description: "Your profile has been updated.",
+      const { data: subscriptionData, error } = await supabase.functions.invoke('get-stripe-subscription', {
+        body: { profileId: profileData.id }
       });
+
+      if (error) {
+        console.log('Error fetching Stripe subscription:', error);
+        // Fallback to profile data
+        const fallbackData = {
+          id: profileData.id,
+          status: profileData.subscription_status || 'inactive',
+          stripe_subscription_id: profileData.subscription_id || '',
+          stripe_customer_id: profileData.stripe_customer_id || '',
+          current_period_start: profileData.subscription_started_at || profileData.created_at,
+          current_period_end: profileData.trial_end_date || '',
+          cancel_at_period_end: false,
+        };
+        setSubscription(fallbackData);
+      } else if (subscriptionData) {
+        setSubscription(subscriptionData);
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save profile",
-        variant: "destructive",
-      });
+      console.log('Error loading subscription data:', error);
     } finally {
-      setSaving(false);
+      setSubscriptionLoading(false);
     }
   };
 
-  const toggleLink = (linkId: string) => {
-    setSocialLinks(prev => 
-      prev.map(link => 
-        link.id === linkId 
-          ? { ...link, isActive: !link.isActive }
-          : link
-      )
-    );
+  const handleStartSubscription = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-create-checkout', {
+        body: {
+          profileId: profile.id,
+          successUrl: `${window.location.origin}/profile?success=true&subscription=active`,
+          cancelUrl: `${window.location.origin}/profile`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error('Error starting subscription:', error);
+      toast({
+        title: "Fout",
+        description: "Kan abonnement niet starten",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteLink = (linkId: string) => {
-    setSocialLinks(prev => prev.filter(link => link.id !== linkId));
-    toast({
-      title: "Link deleted",
-      description: "Social link has been removed.",
+  const handleManageSubscription = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-customer-portal', {
+        body: {
+          profileId: profile.id,
+          returnUrl: `${window.location.origin}/profile?billing=viewed`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast({
+        title: "Fout",
+        description: "Kan abonnementsbeheer niet openen",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('nl-NL', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
+  };
+
+  const getNextPaymentDate = (endDate: string) => {
+    const end = new Date(endDate);
+    return new Date(end.getFullYear(), end.getMonth() + 1, end.getDate());
   };
 
   if (authLoading || profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            {authLoading ? 'Checking authentication...' : 'Loading your profile...'}
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Profiel laden...</p>
         </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!user || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">Please log in to access your profile dashboard.</p>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-2xl font-bold">Toegang geweigerd</h2>
+          <p className="text-muted-foreground">Log in om je profiel te bekijken.</p>
           <Button onClick={() => navigate('/login')}>
-            Go to Login
+            Inloggen
           </Button>
         </div>
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h2>
-          <p className="text-gray-600 mb-6">Redirecting you to complete your profile setup...</p>
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+  const isActive = subscription?.status === 'active';
+  const startedDate = subscription?.current_period_start || profile.subscription_started_at || profile.created_at;
+  const nextPaymentDate = subscription?.current_period_end ? getNextPaymentDate(subscription.current_period_end) : null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left Sidebar */}
-      <div className="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
-        <div className="p-6">
-          {/* User Account */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">
-                  {profile.name?.charAt(0)?.toUpperCase() || 'U'}
-                </span>
-              </div>
-              <span className="font-semibold text-gray-900">{profile.name || 'User'}</span>
-            </div>
-            <ChevronDown className="w-4 h-4 text-gray-500" />
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      {/* Header */}
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/dashboard')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
+            <h1 className="text-xl font-bold">Abonnement</h1>
           </div>
           
-          {/* Navigation Menu */}
-          <nav className="space-y-1">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">My Bookr</h3>
-                <ChevronDown className="w-4 h-4 text-gray-500" />
-              </div>
-              <div className="space-y-1">
-                <button
-                  onClick={() => setActiveSection('links')}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'links' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <LinkIcon className="w-4 h-4 mr-3" />
-                  Links
-                </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <FolderOpen className="w-4 h-4 mr-3" />
-                  Shop
-                </button>
-                <button
-                  onClick={() => setActiveSection('design')}
-                  className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                    activeSection === 'design' 
-                      ? 'bg-gray-200 text-gray-900' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <Palette className="w-4 h-4 mr-3" />
-                  Design
-                </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <Star className="w-4 h-4 mr-3" />
-                  Earn
-                  <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">NEW</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="mb-4">
-              <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <Users className="w-4 h-4 mr-3" />
-                Audience
-              </button>
-              <button
-                onClick={() => setActiveSection('insights')}
-                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                  activeSection === 'insights' 
-                    ? 'bg-gray-200 text-gray-900' 
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4 mr-3" />
-                Insights
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tools</h3>
-              <div className="space-y-1">
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <Zap className="w-4 h-4 mr-3" />
-                  Social planner
-                </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <Instagram className="w-4 h-4 mr-3" />
-                  Instagram auto-reply
-                </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <LinkIcon className="w-4 h-4 mr-3" />
-                  Link shortener
-                </button>
-                <button className="w-full flex items-center px-3 py-2 text-sm rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <Sparkles className="w-4 h-4 mr-3" />
-                  Post ideas
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* Growth Tools */}
-          <div className="mt-auto pt-6 border-t border-gray-200">
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <Sparkles className="w-4 h-4 text-green-600" />
-                </div>
-                <h4 className="text-sm font-semibold text-green-900">New growth tools</h4>
-              </div>
-              <button className="text-sm text-green-700 hover:text-green-800 font-medium">
-                Get started →
-              </button>
-            </div>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/${profile.handle}`)}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">My Bookr</h1>
-            <div className="flex items-center space-x-3">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/edit')}
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
-              <Button variant="outline" size="sm">
-                <Palette className="w-4 h-4 mr-2" />
-                Design
-              </Button>
-              <Button variant="outline" size="sm">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="outline" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          <div className="max-w-4xl">
-            {/* Maintenance Alert */}
-            {showMaintenanceAlert && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                <div className="flex items-start">
-                  <AlertTriangle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5" />
-                  <div className="flex-1">
-                    <h3 className="text-sm font-medium text-yellow-800">Scheduled Maintenance</h3>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Bookr will be briefly unavailable for 10-20 minutes on Monday, August 11th from 7:15 AM GMT+2.
-                    </p>
-                    <button 
-                      onClick={() => setShowMaintenanceAlert(false)}
-                      className="text-sm text-yellow-700 hover:text-yellow-800 font-medium mt-2"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+      {/* Content */}  
+      <div className="container mx-auto px-4 py-6 max-w-2xl">
+        <div className="space-y-6">
+          {/* Current Plan */}
+          <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Huidig Abonnement
+                </span>
+                {isActive ? (
+                  <Badge variant="default" className="bg-green-500">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Actief
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Inactief
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <h3 className="text-lg font-semibold">TapBookr Pro</h3>
+                  <p className="text-2xl font-bold text-primary">€7 <span className="text-sm font-normal text-muted-foreground">per maand</span></p>
                 </div>
-              </div>
-            )}
-
-            {/* Profile Header */}
-            <div className="bg-white rounded-lg p-6 mb-6 border border-gray-200">
-              <div className="flex items-start space-x-4">
-                <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-gray-500" />
-                </div>
-                <div className="flex-1">
-                  <div className="mb-4">
-                    <Label htmlFor="handle" className="text-sm font-medium text-gray-700">Handle</Label>
-                    <div className="flex items-center mt-1">
-                      <span className="text-lg font-semibold text-gray-900">@{profile.handle}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="ml-2"
-                        onClick={() => navigate(`/${profile.handle}`)}
-                      >
-                        <ExternalLink className="w-4 h-4 mr-1" />
-                        View Public Page
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mb-4">
-                    <Label htmlFor="bio" className="text-sm font-medium text-gray-700">Add bio</Label>
-                    <Textarea
-                      id="bio"
-                      placeholder="Tell people about yourself..."
-                      value={profile.slogan || ''}
-                      onChange={(e) => setProfile({ ...profile, slogan: e.target.value })}
-                      className="mt-1"
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Instagram className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Twitter className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Mail className="w-4 h-4 text-gray-500" />
-                    </div>
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <Plus className="w-4 h-4 text-gray-500" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mb-6 space-y-3">
-              <Button className="w-full" size="lg">
-                <Plus className="mr-2 h-4 w-4" />
-                + Add
-              </Button>
-              <div className="flex space-x-3">
-                <Button variant="outline" className="flex-1">
-                  <FolderOpen className="mr-2 h-4 w-4" />
-                  Add collection
-                </Button>
-                <Button variant="ghost" className="text-gray-600">
-                  <Archive className="mr-2 h-4 w-4" />
-                  View archive <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Links Section */}
-            {activeSection === 'links' && (
-              <div className="space-y-4">
-                {socialLinks.map((link) => (
-                  <Card key={link.id} className="border border-gray-200">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-3">
-                            <h3 className="font-medium text-gray-900 mr-2">{link.title}</h3>
-                            <Edit3 className="w-4 h-4 text-gray-400 cursor-pointer" />
-                          </div>
-                          <div className="flex items-center mb-3">
-                            <span className="text-sm text-gray-500 mr-2">URL</span>
-                            <Edit3 className="w-4 h-4 text-gray-400 cursor-pointer" />
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MoreVertical className="w-4 h-4 text-gray-400" />
-                            <LinkIcon className="w-4 h-4 text-gray-400" />
-                            <ImageIcon className="w-4 h-4 text-gray-400" />
-                            <Star className="w-4 h-4 text-gray-400" />
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <Lock className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-500">{link.clicks} clicks</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div 
-                            className={`w-10 h-6 rounded-full relative cursor-pointer ${
-                              link.isActive ? 'bg-purple-500' : 'bg-gray-200'
-                            }`}
-                            onClick={() => toggleLink(link.id)}
-                          >
-                            <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${
-                              link.isActive ? 'right-0.5' : 'left-0.5'
-                            }`} />
-                          </div>
-                          <Trash2 
-                            className="w-4 h-4 text-gray-400 cursor-pointer hover:text-red-500" 
-                            onClick={() => deleteLink(link.id)}
-                          />
-                        </div>
-                      </div>
-                      
-                      {/* Instagram Warning Banner */}
-                      {link.platform === 'instagram' && !link.isActive && (
-                        <div className="mt-3 bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                          <div className="flex items-start">
-                            <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center mr-2 mt-0.5">
-                              <span className="text-xs text-white">!</span>
-                            </div>
-                            <div className="text-sm text-yellow-800">
-                              Finish connecting your Instagram to display it on your Bookr. 
-                              <button className="text-yellow-700 font-medium ml-1 hover:underline">Connect Instagram</button>
-                            </div>
-                          </div>
-                        </div>
+                <div className="text-right text-sm text-muted-foreground">
+                  {isActive ? (
+                    <>
+                      <p>Gestart op: {formatDate(startedDate)}</p>
+                      {nextPaymentDate && (
+                        <p>Volgende betaling: {formatDate(nextPaymentDate.toISOString())}</p>
                       )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Design Section */}
-            {activeSection === 'design' && (
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Design Settings</h3>
-                <p className="text-gray-600">Customize your profile appearance, colors, and layout here.</p>
-              </div>
-            )}
-
-            {/* Insights Section */}
-            {activeSection === 'insights' && (
-              <div className="bg-white rounded-lg p-6 border border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Analytics & Insights</h3>
-                <p className="text-gray-600">View your profile analytics, visitor insights, and performance metrics here.</p>
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
-
-      {/* Right Sidebar - Mobile Preview */}
-      <div className="w-80 bg-gray-100 border-l border-gray-200 p-6">
-        <div className="bg-white rounded-3xl shadow-lg p-4 mx-auto" style={{ width: '280px', height: '560px' }}>
-          {/* Mobile Preview Header */}
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-gray-300 rounded-full mx-auto mb-3 flex items-center justify-center">
-              <ImageIcon className="w-8 h-8 text-gray-500" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900">@{profile.handle}</h3>
-            {profile.slogan && (
-              <p className="text-sm text-gray-600 mt-1">{profile.slogan}</p>
-            )}
-          </div>
-
-          {/* Mobile Preview Content */}
-          <div className="space-y-3">
-            {socialLinks.filter(link => link.isActive).map((link) => (
-              <div key={link.id} className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                <span className="text-sm text-gray-500">{link.title}</span>
-              </div>
-            ))}
-            {socialLinks.filter(link => link.isActive).length === 0 && (
-              <>
-                <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No links yet</span>
+                    </>
+                  ) : (
+                    <p>Geen actief abonnement</p>
+                  )}
                 </div>
-                <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No links yet</span>
-                </div>
-                <div className="w-full h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <span className="text-sm text-gray-500">No links yet</span>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
 
-          {/* Mobile Preview Footer */}
-          <div className="absolute bottom-4 left-4 right-4">
-            <Button className="w-full" size="sm">
-              <Star className="w-4 h-4 mr-2" />
-              Join {profile.handle} on Bookr
-            </Button>
-            <div className="flex justify-center space-x-4 mt-3 text-xs text-gray-500">
-              <button className="hover:text-gray-700">Report</button>
-              <button className="hover:text-gray-700">Privacy</button>
-            </div>
-          </div>
+              <div className="flex flex-col space-y-2">
+                {isActive ? (
+                  <>
+                    <Button
+                      onClick={handleManageSubscription}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Abonnement Beheren
+                    </Button>
+                    {subscription && (
+                      <InvoiceGenerator 
+                        subscription={subscription}
+                        profile={profile}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <Button
+                    onClick={handleStartSubscription}
+                    className="w-full bg-primary hover:bg-primary/90"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Start Abonnement - €7/maand
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Features */}
+          <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Wat krijg je?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Gepersonaliseerde website op tapbookr.com</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Onbeperkte design aanpassingen</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Booking integratie</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Social media links</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>Klantbeoordelingen</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span>24/7 support</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Info */}
+          {isActive && (
+            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Betaling Informatie
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p>• Automatische verlenging elke maand</p>
+                  <p>• Opzeggen kan altijd via abonnementsbeheer</p>
+                  <p>• Je website blijft actief tot het einde van de betaalde periode</p>
+                  {subscription?.cancel_at_period_end && (
+                    <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center text-yellow-800">
+                        <AlertTriangle className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium">
+                          Abonnement wordt opgezegd op {subscription.current_period_end ? formatDate(subscription.current_period_end) : 'onbekende datum'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
