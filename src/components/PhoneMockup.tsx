@@ -27,6 +27,11 @@ export function PhoneMockup({ profileUrl, userName }: PhoneMockupProps) {
             className="w-full h-full border-0"
             title={`Preview van ${userName || 'je profiel'}`}
             loading="lazy"
+            scrolling="yes"
+            style={{ 
+              overflow: 'auto',
+              WebkitOverflowScrolling: 'touch'
+            }}
           />
           
           {/* Overlay for better UX */}
