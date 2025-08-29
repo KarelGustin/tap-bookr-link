@@ -94,6 +94,20 @@ export const Step7Preview = ({
     }
   }, [isPreviewActive]);
 
+  // Auto-start live preview when component mounts (user reaches step 8)
+  useEffect(() => {
+    const autoStartPreview = async () => {
+      if (!isLivePreviewActive && !isStartingPreview) {
+        console.log('🔧 Auto-starting live preview on step 8...');
+        await startLivePreview();
+      }
+    };
+    
+    // Small delay to ensure component is fully mounted
+    const timer = setTimeout(autoStartPreview, 1000);
+    return () => clearTimeout(timer);
+  }, []); // Only run once when component mounts
+
   // Start live preview countdown
   useEffect(() => {
     if (isLivePreviewActive && livePreviewTimeLeft > 0) {
@@ -245,7 +259,15 @@ export const Step7Preview = ({
 
         {/* Page Preview */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Pagina Voorvertoning</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Pagina Voorvertoning</h3>
+            {isStartingPreview && (
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>Preview wordt gestart...</span>
+              </div>
+            )}
+          </div>
           <div className="border rounded-lg overflow-hidden">
             {isLivePreviewActive ? (
               <iframe
@@ -259,10 +281,10 @@ export const Step7Preview = ({
                 <div className="text-center">
                   <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-600 mb-2">
-                    Start Live Preview
+                    {isStartingPreview ? 'Preview wordt gestart...' : 'Preview starten'}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Klik op "Live Preview Starten" om je pagina live te zetten
+                    {isStartingPreview ? 'Even geduld, je pagina wordt live gezet' : 'Je pagina wordt automatisch live gezet'}
                   </p>
                 </div>
               </div>
