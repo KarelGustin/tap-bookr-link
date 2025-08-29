@@ -360,7 +360,7 @@ export const Step7Preview = ({
             size="lg"
           >
             <CreditCard className="w-4 h-4 mr-2" />
-            {isSubscribing ? 'Bezig met abonnement...' : 'Ga live voor €7 per maand (eerste maand €1)'}
+            {isSubscribing ? 'Bezig met abonnement...' : 'Ga live voor €1'}
           </Button>
         </div>
 
