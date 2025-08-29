@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 import { Navigate, useSearchParams, useNavigate } from 'react-router-dom'
-import { InvoiceGenerator } from '@/components/InvoiceGenerator'
+import { PaidInvoicesSection } from '@/components/PaidInvoicesSection'
 import { SectionCard } from '@/features/dashboard/components/SectionCard'
 import { BannerSection } from '@/features/dashboard/components/BannerSection'
 import { AboutSection } from '@/features/dashboard/components/AboutSection'
@@ -565,8 +565,8 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Invoice Generator */}
-            <InvoiceGenerator profile={profile} />
+            {/* Paid Invoices */}
+            <PaidInvoicesSection profileId={profile.id} />
           </div>
         )}
       </div>

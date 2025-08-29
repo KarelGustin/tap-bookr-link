@@ -138,7 +138,12 @@ export function BannerSection({
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={(e) => {
                   console.error('Banner image failed to load:', bannerUrl);
-                  e.currentTarget.style.display = 'none';
+                  // Hide broken image on error
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                }}
+                onLoad={() => {
+                  console.log('Banner image loaded successfully:', bannerUrl);
                 }}
               />
             )}
