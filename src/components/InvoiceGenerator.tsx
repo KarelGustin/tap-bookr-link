@@ -17,11 +17,10 @@ interface SubscriptionData {
 }
 
 interface InvoiceGeneratorProps {
-  subscription: SubscriptionData;
   profile: Profile;
 }
 
-export function InvoiceGenerator({ subscription, profile }: InvoiceGeneratorProps) {
+export function InvoiceGenerator({ profile }: InvoiceGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateInvoice = () => {
@@ -100,7 +99,7 @@ export function InvoiceGenerator({ subscription, profile }: InvoiceGeneratorProp
           <tbody>
             <tr>
               <td>TapBookr Pro Abonnement</td>
-              <td>${new Date(subscription.current_period_start).toLocaleDateString('nl-NL')} - ${new Date(subscription.current_period_end).toLocaleDateString('nl-NL')}</td>
+              <td>Maandelijks abonnement</td>
               <td>1</td>
               <td>€5,79</td>
               <td>€1,21</td>
@@ -163,7 +162,7 @@ export function InvoiceGenerator({ subscription, profile }: InvoiceGeneratorProp
           <div>
             <h4 className="font-medium">Maandelijkse Factuur</h4>
             <p className="text-sm text-muted-foreground">
-              {formatDate(subscription.current_period_start)} - €7,00
+              Maandelijks - €7,00
             </p>
           </div>
           <Button

@@ -348,7 +348,6 @@ export default function Profile() {
                     </Button>
                     {subscription && (
                       <InvoiceGenerator 
-                        subscription={subscription}
                         profile={profile}
                       />
                     )}

@@ -23,7 +23,6 @@ interface FooterSectionProps {
   footerPrivacyPolicy: string
   footerTermsOfService: string
   footerShowMaps: boolean
-  footerShowAttribution: boolean
   onUpdate: (data: Partial<FooterSectionProps>) => void
 }
 
@@ -38,7 +37,6 @@ export function FooterSection({
   footerPrivacyPolicy,
   footerTermsOfService,
   footerShowMaps,
-  footerShowAttribution,
   onUpdate
 }: FooterSectionProps) {
   const defaultHours: BusinessHours = {
@@ -153,14 +151,6 @@ export function FooterSection({
                   onCheckedChange={(checked) => onUpdate({ footerShowMaps: !!checked })}
                 />
                 <Label htmlFor="footerShowMaps">Toon kaart in footer</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="footerShowAttribution"
-                  checked={footerShowAttribution}
-                  onCheckedChange={(checked) => onUpdate({ footerShowAttribution: !!checked })}
-                />
-                <Label htmlFor="footerShowAttribution">Toon "Powered by" attributie</Label>
               </div>
             </div>
           </TabsContent>

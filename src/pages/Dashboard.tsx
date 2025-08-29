@@ -17,6 +17,7 @@ import { BannerSection } from '@/features/dashboard/components/BannerSection'
 import { AboutSection } from '@/features/dashboard/components/AboutSection'
 import { SocialsSection } from '@/features/dashboard/components/SocialsSection'
 import { MediaSection } from '@/features/dashboard/components/MediaSection'
+import { PhoneMockup } from '@/components/PhoneMockup'
 import { FooterSection } from '@/features/dashboard/components/FooterSection'
 
 interface Profile {
@@ -27,12 +28,16 @@ interface Profile {
   handle: string | null
   banner_url: string | null
   avatar_url: string | null
+  accent_color: string | null
+  theme_mode: string
+  booking_mode: string
+  booking_url: string | null
   banner: any
   about: any
   media: any
   socials: any
-  booking_url: string | null
-  booking_mode: string | null
+  contact: any
+  footer: any
   footer_business_name: string | null
   footer_address: string | null
   footer_email: string | null
@@ -46,13 +51,27 @@ interface Profile {
   footer_show_attribution: boolean | null
   testimonials: any
   onboarding_completed: boolean | null
+  onboarding_step: number | null
   subscription_status: string | null
+  user_id: string
+  created_at: string
+  updated_at: string
+  is_business: boolean | null
+  use_whatsapp: boolean | null
+  whatsapp_number: string | null
+  status: string
+  subscription_id: string | null
+  trial_start_date: string | null
+  trial_end_date: string | null
+  grace_period_ends_at: string | null
+  subscription_started_at: string | null
+  preview_expires_at: string | null
+  preview_started_at: string | null
+  stripe_customer_id: string | null
 }
 
 interface DesignState {
-  bannerType: 'color' | 'image'
   bannerUrl: string
-  bannerColor: string
   bannerHeading: string
   bannerSubheading: string
   bannerTextColor: string
@@ -71,8 +90,7 @@ interface DesignState {
   footerCancellationPolicy: string
   footerPrivacyPolicy: string
   footerTermsOfService: string
-  footerShowMaps: boolean
-  footerShowAttribution: boolean
+    footerShowMaps: boolean
   mediaOrder: Array<{ id: string; url: string; alt?: string }>
   socials: Array<{ id: string; title: string; platform?: string; url: string }>
   bookingUrl: string
@@ -91,9 +109,7 @@ export default function Dashboard() {
   const { toast } = useToast()
 
   const [design, setDesign] = useState<DesignState>({
-    bannerType: 'image',
     bannerUrl: '',
-    bannerColor: '#6E56CF',
     bannerHeading: '',
     bannerSubheading: '',
     bannerTextColor: '#FFFFFF',
@@ -113,7 +129,6 @@ export default function Dashboard() {
     footerPrivacyPolicy: '',
     footerTermsOfService: '',
     footerShowMaps: true,
-    footerShowAttribution: true,
     mediaOrder: [],
     socials: [],
     bookingUrl: '',
@@ -224,9 +239,7 @@ export default function Dashboard() {
       }))
 
       setDesign({
-        bannerType: bannerData.type || 'color',
         bannerUrl: profile.banner_url || '',
-        bannerColor: bannerData.color || '#6E56CF',
         bannerHeading: bannerData.heading || '',
         bannerSubheading: bannerData.subheading || '',
         bannerTextColor: bannerData.textColor || '#FFFFFF',
@@ -246,7 +259,6 @@ export default function Dashboard() {
         footerPrivacyPolicy: profile.footer_privacy_policy || '',
         footerTermsOfService: profile.footer_terms_of_service || '',
         footerShowMaps: profile.footer_show_maps ?? true,
-        footerShowAttribution: profile.footer_show_attribution ?? true,
         mediaOrder: mediaArray,
         socials: socialsArray,
         bookingUrl: profile.booking_url || '',
@@ -274,8 +286,6 @@ export default function Dashboard() {
         banner_url: design.bannerUrl,
         avatar_url: design.avatarUrl,
         banner: {
-          type: design.bannerType,
-          color: design.bannerColor,
           heading: design.bannerHeading,
           subheading: design.bannerSubheading,
           textColor: design.bannerTextColor,
@@ -309,7 +319,6 @@ export default function Dashboard() {
         footer_privacy_policy: design.footerPrivacyPolicy,
         footer_terms_of_service: design.footerTermsOfService,
         footer_show_maps: design.footerShowMaps,
-        footer_show_attribution: design.footerShowAttribution,
         footer_hours: design.footerHours,
         testimonials: design.testimonials,
         updated_at: new Date().toISOString()
@@ -441,6 +450,14 @@ export default function Dashboard() {
         {/* Section Content */}
         {activeSection === 'design' ? (
           <div className="space-y-6">
+            {/* iPhone Mockup Preview */}
+            <div className="mb-6">
+              <PhoneMockup 
+                profileUrl={`https://tapbookr.com/${profile.handle || profile.id}`}
+                userName={profile.name || undefined}
+              />
+            </div>
+
             {/* Basis Informatie */}
             <SectionCard title="Basis Informatie">
               <div className="space-y-4">
@@ -479,7 +496,6 @@ export default function Dashboard() {
             {/* Banner Section */}
             <BannerSection
               bannerUrl={design.bannerUrl}
-              bannerColor={design.bannerColor}
               bannerHeading={design.bannerHeading}
               bannerSubheading={design.bannerSubheading}
               bannerTextColor={design.bannerTextColor}
@@ -533,7 +549,6 @@ export default function Dashboard() {
               footerPrivacyPolicy={design.footerPrivacyPolicy}
               footerTermsOfService={design.footerTermsOfService}
               footerShowMaps={design.footerShowMaps}
-              footerShowAttribution={design.footerShowAttribution}
               onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
             />
 

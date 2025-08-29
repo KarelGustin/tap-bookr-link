@@ -49,9 +49,7 @@ export function MediaSection({ mediaItems, onUpdate }: MediaSectionProps) {
       })
 
       const uploadedItems = await Promise.all(uploadPromises)
-      const validItems = uploadedItems.filter((item): item is MediaItem => {
-        return item !== null
-      })
+      const validItems = uploadedItems.filter((item) => item !== null)
       
       if (validItems.length > 0) {
         onUpdate([...mediaItems, ...validItems])
