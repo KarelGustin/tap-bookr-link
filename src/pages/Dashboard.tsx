@@ -239,7 +239,7 @@ export default function Dashboard() {
       }))
 
       setDesign({
-        bannerUrl: profile.banner_url || '',
+        bannerUrl: profile.banner_url || bannerData.imageUrl || '',
         bannerHeading: bannerData.heading || '',
         bannerSubheading: bannerData.subheading || '',
         bannerTextColor: bannerData.textColor || '#FFFFFF',
