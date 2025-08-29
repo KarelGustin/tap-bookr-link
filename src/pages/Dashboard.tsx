@@ -458,47 +458,15 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Basis Informatie */}
-            <SectionCard title="Basis Informatie">
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <Label htmlFor="name">Naam</Label>
-                    <Input
-                      id="name"
-                      placeholder="Je naam"
-                      value={design.name}
-                      onChange={(e) => setDesign(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="slogan">Slogan</Label>
-                    <Input
-                      id="slogan"
-                      placeholder="Je slogan of ondertitel"
-                      value={design.slogan}
-                      onChange={(e) => setDesign(prev => ({ ...prev, slogan: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Categorie</Label>
-                    <Input
-                      id="category"
-                      placeholder="Wat doe je?"
-                      value={design.category}
-                      onChange={(e) => setDesign(prev => ({ ...prev, category: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
-            </SectionCard>
-
             {/* Banner Section */}
             <BannerSection
               bannerUrl={design.bannerUrl}
               bannerHeading={design.bannerHeading}
               bannerSubheading={design.bannerSubheading}
               bannerTextColor={design.bannerTextColor}
+              name={design.name}
+              slogan={design.slogan}
+              category={design.category}
               onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
             />
 

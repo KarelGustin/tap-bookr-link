@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,14 +18,25 @@ interface SocialsSectionProps {
 }
 
 export function SocialsSection({ socials, onUpdate }: SocialsSectionProps) {
-  const [localSocials, setLocalSocials] = useState<Social[]>(
-    socials.length > 0 ? socials : [
+  const [localSocials, setLocalSocials] = useState<Social[]>(() => {
+    if (socials.length > 0) {
+      return socials
+    }
+    // Default socials with placeholders - URLs will be filled from DB data
+    return [
       { id: '1', title: 'Instagram', platform: 'instagram', url: '' },
       { id: '2', title: 'Facebook', platform: 'facebook', url: '' },
       { id: '3', title: 'LinkedIn', platform: 'linkedin', url: '' },
       { id: '4', title: 'YouTube', platform: 'youtube', url: '' },
     ]
-  )
+  })
+
+  // Update local state when socials prop changes (from DB)
+  useEffect(() => {
+    if (socials.length > 0) {
+      setLocalSocials(socials)
+    }
+  }, [socials])
 
   const updateSocial = (id: string, field: 'title' | 'url', value: string) => {
     const updated = localSocials.map(social =>
@@ -93,7 +104,7 @@ export function SocialsSection({ socials, onUpdate }: SocialsSectionProps) {
               <Label htmlFor={`social-url-${social.id}`}>URL</Label>
               <Input
                 id={`social-url-${social.id}`}
-                placeholder="https://instagram.com/jouwpagina"
+                placeholder={social.url || `https://${social.platform || 'example'}.com/jouwpagina`}
                 value={social.url}
                 onChange={(e) => updateSocial(social.id, 'url', e.target.value)}
               />
