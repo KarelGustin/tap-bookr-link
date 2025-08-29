@@ -221,31 +221,37 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
     }
   }, [handle]);
 
-  // Set initial state based on existing data
+  // Loading existing data effect
   useEffect(() => {
     console.log('🔧 Step5SocialTestimonials: Loading existing data:', existingData);
     
-    if (existingData.socialLinks.length > 0) {
-      console.log('✅ Loading existing social links:', existingData.socialLinks);
+    if (existingData.socialLinks && existingData.socialLinks.length > 0) {
       setSocialLinks(existingData.socialLinks);
     }
     
-    if (existingData.testimonials.length > 0) {
+    if (existingData.testimonials && existingData.testimonials.length > 0) {
       console.log('✅ Loading existing testimonials:', existingData.testimonials);
-      setTestimonials(existingData.testimonials);
       
-      // Validate testimonial structure
-      existingData.testimonials.forEach((testimonial, index) => {
+      const testimonialsWithDebug = existingData.testimonials.map((testimonial, index) => {
         console.log(`🔧 Testimonial ${index} loaded:`, {
           customer_name: testimonial.customer_name,
           review_title: testimonial.review_title,
           review_text: testimonial.review_text,
           image_url: testimonial.image_url,
+          image_url_length: testimonial.image_url?.length || 0,
+          image_url_valid: !!(testimonial.image_url && testimonial.image_url.trim().length > 0),
           has_file: '_file' in testimonial
         });
+        
+        return {
+          ...testimonial,
+          // Ensure image_url is properly preserved and not overwritten by empty _file
+          image_url: testimonial.image_url || '',
+          _file: undefined, // Clear _file for loaded testimonials since we have the URL
+        };
       });
-    } else {
-      console.log('❌ No existing testimonials found');
+      
+      setTestimonials(testimonialsWithDebug);
     }
   }, [existingData]);
 
@@ -364,6 +370,9 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
 
         console.log('✅ Testimonial image uploaded:', publicUrl);
         
+        // Update the component state immediately to show the new image
+        setTestimonials(updated);
+        
         toast({
           title: "Foto geüpload",
           description: "Klantfoto is succesvol geüpload.",
@@ -384,11 +393,15 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
         image_url: '',
         _file: undefined 
       };
+      
+      setTestimonials(updated);
+      
+      // Auto-save after removing image
+      autoSaveTestimonials(updated);
+      return;
     }
     
-    setTestimonials(updated);
-    
-    // Auto-save after changing image
+    // Auto-save after changing image (only when uploading, not when removing)
     autoSaveTestimonials(updated);
   };
 
@@ -602,11 +615,29 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
                   </p>
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center overflow-hidden">
-                      {testimonial.image_url ? (
-                        <img src={testimonial.image_url} alt="Customer photo" className="w-full h-full object-cover" />
+                      {testimonial.image_url && testimonial.image_url.trim().length > 0 ? (
+                        <img 
+                          src={testimonial.image_url} 
+                          alt="Customer photo" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('❌ Failed to load testimonial image:', testimonial.image_url);
+                            // Hide the broken image and show placeholder instead
+                            e.currentTarget.style.display = 'none';
+                            const placeholder = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (placeholder) placeholder.style.display = 'flex';
+                          }}
+                        />
                       ) : testimonial._file && testimonial._file instanceof File ? (
-                        <img src={URL.createObjectURL(testimonial._file)} alt="Customer photo preview" className="w-full h-full object-cover" />
-                      ) : (
+                        <img 
+                          src={URL.createObjectURL(testimonial._file)} 
+                          alt="Customer photo preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : null}
+                      {/* Placeholder icon - shown when no image or when image fails to load */}
+                      {(!testimonial.image_url || testimonial.image_url.trim().length === 0) && 
+                       (!testimonial._file || !(testimonial._file instanceof File)) && (
                         <User className="w-6 h-6 text-muted-foreground" />
                       )}
                     </div>
