@@ -173,7 +173,7 @@ async function handleSubscriptionCreated(subscription, supabase) {
       };
     }
 
-    // Update profile flags
+    // Update profile flags and clear preview fields when subscription becomes active
     const isActive = ['active', 'trialing'].includes(subscription.status);
     const { error: updateError } = await supabase
       .from('profiles')
@@ -183,6 +183,8 @@ async function handleSubscriptionCreated(subscription, supabase) {
         onboarding_completed: true,
         subscription_id: subscription.id,
         onboarding_step: 8,
+        preview_expires_at: null, // Clear preview fields when subscription is active
+        preview_started_at: null, // Clear preview fields when subscription is active
         updated_at: new Date().toISOString()
       })
       .eq('id', profile.id);
@@ -319,12 +321,14 @@ async function handleInvoicePaymentSucceeded(invoice, supabase) {
       };
     }
 
-    // Update profile to published status when payment succeeds
+    // Update profile to published status and clear preview fields when payment succeeds
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
         subscription_status: 'active',
         status: 'published',
+        preview_expires_at: null, // Clear preview fields when subscription payment succeeds
+        preview_started_at: null, // Clear preview fields when subscription payment succeeds
         updated_at: new Date().toISOString()
       })
       .eq('stripe_customer_id', invoice.customer);
