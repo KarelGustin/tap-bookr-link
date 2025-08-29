@@ -3,6 +3,7 @@ import { useState } from 'react'
 export function useDesignState() {
   const [design, setDesign] = useState({
     bannerType: 'image' as 'color' | 'image',
+    bannerUrl: '',
     bannerColor: '#6E56CF',
     bannerHeading: '',
     bannerSubheading: '',
@@ -10,6 +11,7 @@ export function useDesignState() {
     name: '',
     slogan: '',
     category: '',
+    avatarUrl: '',
     aboutTitle: '',
     aboutDescription: '',
     footerBusinessName: '',
@@ -24,8 +26,8 @@ export function useDesignState() {
     footerShowMaps: true,
     footerShowAttribution: true,
     mediaFiles: [] as File[],
-    mediaOrder: [] as string[],
-    socials: [] as Array<{ title?: string; platform?: string; url?: string }>,
+    mediaOrder: [] as Array<{ id: string; url: string; alt?: string }>,
+    socials: [] as Array<{ id: string; title: string; platform?: string; url: string }>,
     bookingUrl: '',
     bookingMode: 'embed' as 'embed' | 'new_tab',
     testimonials: [] as Array<{ customer_name: string; review_title: string; review_text: string; image_url?: string }>,

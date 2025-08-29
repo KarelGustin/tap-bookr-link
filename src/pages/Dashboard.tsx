@@ -1,245 +1,355 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Database, Json } from '@/integrations/supabase/types';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import StripeService from '@/services/stripeService';
-import { 
-  ChevronDown,
-  Settings,
-  Palette,
-  BarChart3,
-  Plus,
-  Edit3,
-  Save,
-  Link as LinkIcon,
-  Star,
-  Share2,
-  Menu,
-  Lock,
-  ExternalLink,
-  LogOut,
-  CheckCircle,
-  Calendar,
-  CreditCard,
-  Download,
-  X,
-  ArrowLeft,
-  User,
-  Globe,
-  Image as ImageIcon,
-  Upload,
-  Clock
-} from 'lucide-react';
-import { LanguageSelector } from '@/components/ui/language-selector';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { useDashboardProfile } from '@/features/dashboard/hooks/useDashboardProfile';
-import { useDesignState } from '@/features/dashboard/hooks/useDesignState';
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { Loader2, CheckCircle, User, Settings, CreditCard, Clock, Palette, ExternalLink, LogOut } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/integrations/supabase/client'
+import { useToast } from '@/hooks/use-toast'
+import { Navigate, useSearchParams, useNavigate } from 'react-router-dom'
+import { InvoiceGenerator } from '@/components/InvoiceGenerator'
+import { SectionCard } from '@/features/dashboard/components/SectionCard'
+import { BannerSection } from '@/features/dashboard/components/BannerSection'
+import { AboutSection } from '@/features/dashboard/components/AboutSection'
+import { SocialsSection } from '@/features/dashboard/components/SocialsSection'
+import { MediaSection } from '@/features/dashboard/components/MediaSection'
+import { FooterSection } from '@/features/dashboard/components/FooterSection'
 
-// Types
-export type SocialItem = { title?: string; platform?: string; url?: string };
-export type TestimonialItem = { customer_name: string; review_title: string; review_text: string; image_url?: string };
-export type Banner = { 
-  type: 'color' | 'image'; 
-  color?: string; 
-  imageUrl?: string;
-  heading?: string;
-  subheading?: string;
-  textColor?: string;
-};
+interface Profile {
+  id: string
+  name: string | null
+  slogan: string | null
+  category: string | null
+  handle: string | null
+  banner_url: string | null
+  avatar_url: string | null
+  banner: any
+  about: any
+  media: any
+  socials: any
+  booking_url: string | null
+  booking_mode: string | null
+  footer_business_name: string | null
+  footer_address: string | null
+  footer_email: string | null
+  footer_phone: string | null
+  footer_hours: any
+  footer_next_available: string | null
+  footer_cancellation_policy: string | null
+  footer_privacy_policy: string | null
+  footer_terms_of_service: string | null
+  footer_show_maps: boolean | null
+  footer_show_attribution: boolean | null
+  testimonials: any
+  onboarding_completed: boolean | null
+  subscription_status: string | null
+}
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+interface DesignState {
+  bannerType: 'color' | 'image'
+  bannerUrl: string
+  bannerColor: string
+  bannerHeading: string
+  bannerSubheading: string
+  bannerTextColor: string
+  name: string
+  slogan: string
+  category: string
+  avatarUrl: string
+  aboutTitle: string
+  aboutDescription: string
+  footerBusinessName: string
+  footerAddress: string
+  footerEmail: string
+  footerPhone: string
+  footerHours: Record<string, { open: string; close: string; closed: boolean }>
+  footerNextAvailable: string
+  footerCancellationPolicy: string
+  footerPrivacyPolicy: string
+  footerTermsOfService: string
+  footerShowMaps: boolean
+  footerShowAttribution: boolean
+  mediaOrder: Array<{ id: string; url: string; alt?: string }>
+  socials: Array<{ id: string; title: string; platform?: string; url: string }>
+  bookingUrl: string
+  bookingMode: 'embed' | 'new_tab'
+  testimonials: Array<{ customer_name: string; review_title: string; review_text: string; image_url?: string }>
+}
 
 export default function Dashboard() {
-  const [searchParams] = useSearchParams();
-  const [activeSection, setActiveSection] = useState<'design' | 'subscription'>('design');
-  const [isSaving, setIsSaving] = useState(false);
-  const { user, signOut, loading: authLoading } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const { profile, loading: profileLoading, reload: reloadProfile } = useDashboardProfile();
-  const { design, setDesign } = useDesignState();
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [activeSection, setActiveSection] = useState<'design' | 'subscription'>('design')
+  const [isSaving, setIsSaving] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const { user, signOut, loading: authLoading } = useAuth()
+  const { toast } = useToast()
+
+  const [design, setDesign] = useState<DesignState>({
+    bannerType: 'image',
+    bannerUrl: '',
+    bannerColor: '#6E56CF',
+    bannerHeading: '',
+    bannerSubheading: '',
+    bannerTextColor: '#FFFFFF',
+    name: '',
+    slogan: '',
+    category: '',
+    avatarUrl: '',
+    aboutTitle: '',
+    aboutDescription: '',
+    footerBusinessName: '',
+    footerAddress: '',
+    footerEmail: '',
+    footerPhone: '',
+    footerHours: {},
+    footerNextAvailable: '',
+    footerCancellationPolicy: '',
+    footerPrivacyPolicy: '',
+    footerTermsOfService: '',
+    footerShowMaps: true,
+    footerShowAttribution: true,
+    mediaOrder: [],
+    socials: [],
+    bookingUrl: '',
+    bookingMode: 'embed',
+    testimonials: [],
+  })
 
   // Success message handling
-  const success = searchParams.get('success');
-  const subscriptionStatus = searchParams.get('subscription');
+  const success = searchParams.get('success')
+  const subscriptionStatus = searchParams.get('subscription')
 
   // Show success message when coming from successful subscription
   useEffect(() => {
     if (success === 'true' && subscriptionStatus === 'active') {
       const handleSubscriptionSuccess = async () => {
-        if (!profile?.id) return;
+        if (!profile?.id) return
         
         try {
           const { data, error } = await supabase.functions.invoke('handle-subscription-success', {
             body: { profileId: profile.id }
-          });
+          })
           
           if (error) {
-            console.error('Error handling subscription success:', error);
+            console.error('Error handling subscription success:', error)
           }
         } catch (error) {
-          console.error('Error calling subscription success handler:', error);
+          console.error('Error calling subscription success handler:', error)
         }
-      };
+      }
       
-      handleSubscriptionSuccess();
+      handleSubscriptionSuccess()
       
       toast({
         title: "🎉 Betaling Succesvol!",
         description: "Je abonnement is actief en je website is nu live op tapbookr.com!",
         variant: "default",
-      });
+      })
       
-      const url = new URL(window.location.href);
-      url.searchParams.delete('success');
-      url.searchParams.delete('subscription');
-      window.history.replaceState({}, '', url.toString());
+      const url = new URL(window.location.href)
+      url.searchParams.delete('success')
+      url.searchParams.delete('subscription')
+      window.history.replaceState({}, '', url.toString())
       
       setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+        window.location.reload()
+      }, 2000)
     }
-  }, [success, subscriptionStatus, toast, profile?.id]);
+  }, [success, subscriptionStatus, toast, profile?.id])
+
+  // Load profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        
+        if (error) throw error
+        setProfile(data)
+      } catch (error) {
+        console.error('Error loading profile:', error)
+        toast({
+          title: "Fout",
+          description: "Kon profiel niet laden.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadProfile()
+  }, [user, toast])
 
   // Check onboarding completion
   useEffect(() => {
     if (profile && !profile.onboarding_completed) {
-      navigate('/onboarding');
+      navigate('/onboarding')
     }
-  }, [profile, navigate]);
+  }, [profile, navigate])
 
   // Load design data from profile
   useEffect(() => {
-    if (!profile) return;
-    
-    const bannerData = (profile.banner as any) || {};
-    const aboutData = (profile.about as any) || {};
-    const footerData = (profile.footer as any) || {};
-    const socialsData = (profile.socials as any) || {};
-    const mediaData = (profile.media as any) || { items: [] };
-    const testimonialsData = (profile.testimonials as any) || [];
+    if (profile) {
+      const bannerData = (profile.banner as any) || {}
+      const aboutData = (profile.about as any) || {}
+      const mediaData = (profile.media as any) || { items: [] }
+      const socialsData = (profile.socials as any) || {}
+      const testimonialsData = (profile.testimonials as any) || []
 
-    setDesign({
-      bannerType: bannerData.type || 'color',
-      bannerColor: bannerData.color || '#6E56CF',
-      bannerHeading: bannerData.heading || '',
-      bannerSubheading: bannerData.subheading || '',
-      bannerTextColor: bannerData.textColor || '#FFFFFF',
-      name: profile.name || '',
-      slogan: profile.slogan || '',
-      category: profile.category || '',
-      aboutTitle: aboutData.title || '',
-      aboutDescription: aboutData.description || '',
-      footerBusinessName: profile.footer_business_name || '',
-      footerAddress: profile.footer_address || '',
-      footerEmail: profile.footer_email || '',
-      footerPhone: profile.footer_phone || '',
-      footerHours: (profile.footer_hours as Record<string, any>) || {},
-      footerNextAvailable: profile.footer_next_available || '',
-      footerCancellationPolicy: profile.footer_cancellation_policy || '',
-      footerPrivacyPolicy: profile.footer_privacy_policy || '',
-      footerTermsOfService: profile.footer_terms_of_service || '',
-      footerShowMaps: profile.footer_show_maps ?? true,
-      footerShowAttribution: profile.footer_show_attribution ?? true,
-      mediaFiles: [],
-      mediaOrder: mediaData.items?.map((item: any) => item.url) || [],
-      socials: Object.entries(socialsData).map(([platform, data]: [string, any]) => ({
+      // Convert socials object to array with IDs
+      const socialsArray = Object.entries(socialsData).map(([platform, data]: [string, any], index) => ({
+        id: `${platform}_${index}`,
         title: data?.title || platform,
         platform,
         url: data?.url || ''
-      })),
-      bookingUrl: profile.booking_url || '',
-      bookingMode: (profile.booking_mode as 'embed' | 'new_tab') || 'embed',
-      testimonials: testimonialsData.map((t: any) => ({
-        customer_name: t.customer_name || '',
-        review_title: t.review_title || '',
-        review_text: t.review_text || '',
-        image_url: t.image_url
       }))
-    });
-  }, [profile, setDesign]);
+
+      // Convert media items to proper format
+      const mediaArray = (mediaData.items || []).map((item: any, index: number) => ({
+        id: `media_${index}`,
+        url: typeof item === 'string' ? item : item.url,
+        alt: typeof item === 'object' ? item.alt : undefined
+      }))
+
+      setDesign({
+        bannerType: bannerData.type || 'color',
+        bannerUrl: profile.banner_url || '',
+        bannerColor: bannerData.color || '#6E56CF',
+        bannerHeading: bannerData.heading || '',
+        bannerSubheading: bannerData.subheading || '',
+        bannerTextColor: bannerData.textColor || '#FFFFFF',
+        name: profile.name || '',
+        slogan: profile.slogan || '',
+        category: profile.category || '',
+        avatarUrl: profile.avatar_url || '',
+        aboutTitle: aboutData.title || '',
+        aboutDescription: aboutData.description || '',
+        footerBusinessName: profile.footer_business_name || '',
+        footerAddress: profile.footer_address || '',
+        footerEmail: profile.footer_email || '',
+        footerPhone: profile.footer_phone || '',
+        footerHours: (profile.footer_hours as Record<string, any>) || {},
+        footerNextAvailable: profile.footer_next_available || '',
+        footerCancellationPolicy: profile.footer_cancellation_policy || '',
+        footerPrivacyPolicy: profile.footer_privacy_policy || '',
+        footerTermsOfService: profile.footer_terms_of_service || '',
+        footerShowMaps: profile.footer_show_maps ?? true,
+        footerShowAttribution: profile.footer_show_attribution ?? true,
+        mediaOrder: mediaArray,
+        socials: socialsArray,
+        bookingUrl: profile.booking_url || '',
+        bookingMode: (profile.booking_mode as 'embed' | 'new_tab') || 'embed',
+        testimonials: testimonialsData.map((t: any) => ({
+          customer_name: t.customer_name || '',
+          review_title: t.review_title || '',
+          review_text: t.review_text || '',
+          image_url: t.image_url
+        }))
+      })
+    }
+  }, [profile])
 
   const handleSave = async () => {
-    if (!profile) return;
+    if (!profile) return
     
-    setIsSaving(true);
+    setIsSaving(true)
     try {
+      // Update profile with design changes
+      const updates = {
+        name: design.name,
+        slogan: design.slogan,
+        category: design.category,
+        banner_url: design.bannerUrl,
+        avatar_url: design.avatarUrl,
+        banner: {
+          type: design.bannerType,
+          color: design.bannerColor,
+          heading: design.bannerHeading,
+          subheading: design.bannerSubheading,
+          textColor: design.bannerTextColor,
+        },
+        about: {
+          title: design.aboutTitle,
+          description: design.aboutDescription,
+          socialLinks: design.socials,
+          testimonials: design.testimonials,
+        },
+        media: {
+          items: design.mediaOrder
+        },
+        socials: design.socials.reduce((acc, social) => {
+          if (social.platform) {
+            acc[social.platform] = {
+              title: social.title,
+              url: social.url
+            }
+          }
+          return acc
+        }, {} as any),
+        booking_url: design.bookingUrl,
+        booking_mode: design.bookingMode,
+        footer_business_name: design.footerBusinessName,
+        footer_address: design.footerAddress,
+        footer_email: design.footerEmail,
+        footer_phone: design.footerPhone,
+        footer_next_available: design.footerNextAvailable,
+        footer_cancellation_policy: design.footerCancellationPolicy,
+        footer_privacy_policy: design.footerPrivacyPolicy,
+        footer_terms_of_service: design.footerTermsOfService,
+        footer_show_maps: design.footerShowMaps,
+        footer_show_attribution: design.footerShowAttribution,
+        footer_hours: design.footerHours,
+        testimonials: design.testimonials,
+        updated_at: new Date().toISOString()
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          name: design.name,
-          slogan: design.slogan,
-          category: design.category,
-          banner: {
-            type: design.bannerType,
-            color: design.bannerColor,
-            heading: design.bannerHeading,
-            subheading: design.bannerSubheading,
-            textColor: design.bannerTextColor,
-            imageUrl: profile.banner_url
-          },
-          about: {
-            title: design.aboutTitle,
-            description: design.aboutDescription
-          },
-          footer_business_name: design.footerBusinessName,
-          footer_address: design.footerAddress,
-          footer_email: design.footerEmail,
-          footer_phone: design.footerPhone,
-          footer_hours: design.footerHours,
-          footer_next_available: design.footerNextAvailable,
-          footer_cancellation_policy: design.footerCancellationPolicy,
-          footer_privacy_policy: design.footerPrivacyPolicy,
-          footer_terms_of_service: design.footerTermsOfService,
-          footer_show_maps: design.footerShowMaps,
-          footer_show_attribution: design.footerShowAttribution,
-          socials: design.socials.reduce((acc, social) => {
-            if (social.platform) {
-              acc[social.platform] = {
-                title: social.title,
-                url: social.url
-              };
-            }
-            return acc;
-          }, {} as any),
-          booking_url: design.bookingUrl,
-          booking_mode: design.bookingMode,
-          testimonials: design.testimonials,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profile.id);
+        .update(updates)
+        .eq('id', profile.id)
 
-      if (error) throw error;
+      if (error) throw error
 
       toast({
         title: "✅ Opgeslagen!",
         description: "Je wijzigingen zijn succesvol opgeslagen.",
-      });
+      })
       
-      reloadProfile();
+      // Reload profile to get fresh data
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profile.id)
+        .single()
+      
+      if (data) {
+        setProfile(data)
+      }
     } catch (error) {
+      console.error('Error saving profile:', error)
       toast({
         title: "❌ Fout",
         description: "Er is een fout opgetreden bij het opslaan.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
-  if (authLoading || profileLoading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -247,7 +357,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Dashboard laden...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (!user || !profile) {
@@ -261,7 +371,7 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -331,322 +441,152 @@ export default function Dashboard() {
         {/* Section Content */}
         {activeSection === 'design' ? (
           <div className="space-y-6">
-            {/* Basic Info Section */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center">
-                  <User className="w-5 h-5 mr-2" />
-                  Basis Informatie
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Naam</Label>
-                  <Input
-                    id="name"
-                    value={design.name}
-                    onChange={(e) => setDesign(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Je naam of bedrijfsnaam"
-                  />
+            {/* Basis Informatie */}
+            <SectionCard title="Basis Informatie">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="name">Naam</Label>
+                    <Input
+                      id="name"
+                      placeholder="Je naam"
+                      value={design.name}
+                      onChange={(e) => setDesign(prev => ({ ...prev, name: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="slogan">Slogan</Label>
+                    <Input
+                      id="slogan"
+                      placeholder="Je slogan of ondertitel"
+                      value={design.slogan}
+                      onChange={(e) => setDesign(prev => ({ ...prev, slogan: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Categorie</Label>
+                    <Input
+                      id="category"
+                      placeholder="Wat doe je?"
+                      value={design.category}
+                      onChange={(e) => setDesign(prev => ({ ...prev, category: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="slogan">Slogan</Label>
-                  <Input
-                    id="slogan"
-                    value={design.slogan}
-                    onChange={(e) => setDesign(prev => ({ ...prev, slogan: e.target.value }))}
-                    placeholder="Een korte beschrijving"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category">Categorie</Label>
-                  <Input
-                    id="category"
-                    value={design.category}
-                    onChange={(e) => setDesign(prev => ({ ...prev, category: e.target.value }))}
-                    placeholder="Bijv. Restaurant, Kapper, Coach"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </SectionCard>
 
             {/* Banner Section */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center">
-                  <ImageIcon className="w-5 h-5 mr-2" />
-                  Banner
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="banner-heading">Hoofdtekst</Label>
-                  <Input
-                    id="banner-heading"
-                    value={design.bannerHeading}
-                    onChange={(e) => setDesign(prev => ({ ...prev, bannerHeading: e.target.value }))}
-                    placeholder="Welkom bij..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="banner-subheading">Ondertekst</Label>
-                  <Input
-                    id="banner-subheading"
-                    value={design.bannerSubheading}
-                    onChange={(e) => setDesign(prev => ({ ...prev, bannerSubheading: e.target.value }))}
-                    placeholder="Meer informatie..."
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="banner-color">Banner Kleur</Label>
-                  <Input
-                    id="banner-color"
-                    type="color"
-                    value={design.bannerColor}
-                    onChange={(e) => setDesign(prev => ({ ...prev, bannerColor: e.target.value }))}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <BannerSection
+              bannerUrl={design.bannerUrl}
+              bannerColor={design.bannerColor}
+              bannerHeading={design.bannerHeading}
+              bannerSubheading={design.bannerSubheading}
+              bannerTextColor={design.bannerTextColor}
+              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+            />
 
             {/* About Section */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center">
-                  <Globe className="w-5 h-5 mr-2" />
-                  Over Mij
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="about-title">Titel</Label>
-                  <Input
-                    id="about-title"
-                    value={design.aboutTitle}
-                    onChange={(e) => setDesign(prev => ({ ...prev, aboutTitle: e.target.value }))}
-                    placeholder="Over mij"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="about-description">Beschrijving</Label>
-                  <Textarea
-                    id="about-description"
-                    value={design.aboutDescription}
-                    onChange={(e) => setDesign(prev => ({ ...prev, aboutDescription: e.target.value }))}
-                    placeholder="Vertel iets over jezelf..."
-                    rows={4}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <AboutSection
+              avatarUrl={design.avatarUrl}
+              aboutTitle={design.aboutTitle}
+              aboutDescription={design.aboutDescription}
+              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+            />
 
-            {/* Booking Section */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center">
-                  <Calendar className="w-5 h-5 mr-2" />
-                  Boekingen
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            {/* Socials Section */}
+            <SocialsSection
+              socials={design.socials}
+              onUpdate={(socials) => setDesign(prev => ({ ...prev, socials }))}
+            />
+
+            {/* Media Section */}
+            <MediaSection
+              mediaItems={design.mediaOrder}
+              onUpdate={(mediaOrder) => setDesign(prev => ({ ...prev, mediaOrder }))}
+            />
+
+            {/* Booking */}
+            <SectionCard title="Boeking">
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="booking-url">Booking URL</Label>
+                  <Label htmlFor="bookingUrl">Jouw Booking URL</Label>
                   <Input
-                    id="booking-url"
+                    id="bookingUrl"
+                    placeholder="https://calendly.com/jouwpagina"
                     value={design.bookingUrl}
                     onChange={(e) => setDesign(prev => ({ ...prev, bookingUrl: e.target.value }))}
-                    placeholder="https://calendly.com/jouwlink"
                   />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </SectionCard>
+
+            {/* Footer Section */}
+            <FooterSection
+              footerBusinessName={design.footerBusinessName}
+              footerAddress={design.footerAddress}
+              footerEmail={design.footerEmail}
+              footerPhone={design.footerPhone}
+              footerHours={design.footerHours}
+              footerNextAvailable={design.footerNextAvailable}
+              footerCancellationPolicy={design.footerCancellationPolicy}
+              footerPrivacyPolicy={design.footerPrivacyPolicy}
+              footerTermsOfService={design.footerTermsOfService}
+              footerShowMaps={design.footerShowMaps}
+              footerShowAttribution={design.footerShowAttribution}
+              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+            />
 
             {/* Save Button */}
             <div className="sticky bottom-4">
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="w-full py-3 text-lg font-semibold"
+                className="w-full h-12 text-base font-medium shadow-lg"
                 size="lg"
               >
                 {isSaving ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Opslaan...
                   </>
                 ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Wijzigingen Opslaan
-                  </>
+                  "Wijzigingen Opslaan"
                 )}
               </Button>
             </div>
           </div>
         ) : (
-          // Subscription Section
           <div className="space-y-6">
-            {/* Subscription Status */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center">
-                    <CreditCard className="w-5 h-5 mr-2" />
-                    Abonnement Status
-                  </span>
-                  {profile.subscription_status === 'active' ? (
-                    <div className="flex items-center text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Actief
-                    </div>
-                  ) : (
-                    <div className="flex items-center text-orange-600 bg-orange-50 px-3 py-1 rounded-full text-sm font-medium">
-                      <Clock className="w-4 h-4 mr-1" />
-                      Inactief
-                    </div>
-                  )}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CreditCard className="w-5 h-5 mr-2" />
+                  Abonnement Status
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-semibold">TapBookr Pro</h3>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">€7</p>
-                      <p className="text-sm text-muted-foreground">per maand</p>
-                    </div>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge variant={profile.subscription_status === 'active' ? 'default' : 'secondary'}>
+                      {profile.subscription_status === 'active' ? 'Actief' : 'Inactief'}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {profile.subscription_status === 'active' 
+                        ? 'Je website is live en toegankelijk'
+                        : 'Activeer je abonnement om je website live te zetten'
+                      }
+                    </p>
                   </div>
-                  
-                  {profile.subscription_status === 'active' ? (
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Gestart op:</strong> {profile.subscription_started_at ? new Date(profile.subscription_started_at).toLocaleDateString('nl-NL') : 'Onbekend'}</p>
-                      {profile.trial_end_date && (
-                        <p><strong>Volgende betaling:</strong> {new Date(profile.trial_end_date).toLocaleDateString('nl-NL')}</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Geen actief abonnement</p>
-                  )}
-                </div>
-
-                <div className="flex flex-col space-y-3">
-                  {profile.subscription_status === 'active' ? (
-                    <>
-                      <Button
-                        onClick={() => navigate('/profile')}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Settings className="w-4 h-4 mr-2" />
-                        Abonnement Beheren
-                      </Button>
-                      <Button
-                        onClick={() => navigate('/profile')}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Factuur Printen
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={async () => {
-                        if (!profile?.id) return;
-                        
-                        try {
-                          const { data, error } = await supabase.functions.invoke('stripe-create-checkout', {
-                            body: {
-                              profileId: profile.id,
-                              successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
-                              cancelUrl: `${window.location.origin}/dashboard`
-                            }
-                          });
-
-                          if (error) throw error;
-
-                          if (data?.url) {
-                            window.location.href = data.url;
-                          }
-                        } catch (error) {
-                          console.error('Error starting subscription:', error);
-                          toast({
-                            title: "Fout",
-                            description: "Kan abonnement niet starten",
-                            variant: "destructive",
-                          });
-                        }
-                      }}
-                      className="w-full bg-primary hover:bg-primary/90"
-                    >
-                      <CreditCard className="w-4 h-4 mr-2" />
-                      Start Abonnement - €7/maand
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Subscription Features */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle>Wat krijg je?</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Gepersonaliseerde website op tapbookr.com</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Onbeperkte design aanpassingen</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Booking integratie</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Social media links</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>Klantbeoordelingen</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span>24/7 support</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card className="border-0 shadow-lg bg-background/50 backdrop-blur-sm">
-              <CardHeader className="pb-4">
-                <CardTitle>Snelle Acties</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button
-                  onClick={() => navigate(`/${profile.handle}`)}
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Website Bekijken
-                </Button>
-                <Button
-                  onClick={() => navigate('/profile')}
-                  variant="outline"
-                  className="w-full justify-start"
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  Geavanceerde Instellingen
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Invoice Generator */}
+            <InvoiceGenerator profile={profile} />
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }
