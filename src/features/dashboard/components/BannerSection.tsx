@@ -130,14 +130,18 @@ export function BannerSection({
           </div>
 
           {/* Banner Preview */}
-          <div 
-            className="relative h-32 rounded-lg overflow-hidden border flex items-center justify-center"
-            style={{
-              background: bannerUrl 
-                ? `url(${bannerUrl}) center/cover`
-                : 'hsl(var(--muted))'
-            }}
-          >
+          <div className="relative h-32 rounded-lg overflow-hidden border flex items-center justify-center">
+            {bannerUrl && (
+              <img 
+                src={bannerUrl} 
+                alt="Banner preview" 
+                className="absolute inset-0 w-full h-full object-cover"
+                onError={(e) => {
+                  console.error('Banner image failed to load:', bannerUrl);
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            )}
             <div className="text-center px-4">
               <h3 
                 className="font-bold text-lg mb-1"
