@@ -162,7 +162,7 @@ export const Step7Preview = ({
         .from('profiles')
         .select('id, booking_url, whatsapp_number')
         .eq('handle', profileData.handle)
-        .single();
+        .maybeSingle();
       
       if (error || !profile?.id) {
         throw new Error('Profile niet gevonden');
