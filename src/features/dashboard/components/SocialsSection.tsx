@@ -35,6 +35,9 @@ export function SocialsSection({ socials, onUpdate }: SocialsSectionProps) {
   useEffect(() => {
     if (socials.length > 0) {
       setLocalSocials(socials)
+    } else {
+      // Reset to default empty state
+      setLocalSocials([])
     }
   }, [socials])
 
@@ -90,34 +93,38 @@ export function SocialsSection({ socials, onUpdate }: SocialsSectionProps) {
         </div>
         
         {localSocials.map((social) => (
-          <div key={social.id} className="flex gap-3 items-end">
-            <div className="flex-1">
-              <Label htmlFor={`social-title-${social.id}`}>Platform naam</Label>
-              <Input
-                id={`social-title-${social.id}`}
-                placeholder="Instagram"
-                value={social.title}
-                onChange={(e) => updateSocial(social.id, 'title', e.target.value)}
-              />
+          <div key={social.id} className="space-y-3 p-4 border rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <Label htmlFor={`social-title-${social.id}`}>Platform naam</Label>
+                <Input
+                  id={`social-title-${social.id}`}
+                  placeholder="Instagram"
+                  value={social.title}
+                  onChange={(e) => updateSocial(social.id, 'title', e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeSocial(social.id)}
+                className="ml-3 shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-            <div className="flex-1">
+            <div>
               <Label htmlFor={`social-url-${social.id}`}>URL</Label>
               <Input
                 id={`social-url-${social.id}`}
                 placeholder={social.url || `https://${social.platform || 'example'}.com/jouwpagina`}
                 value={social.url}
                 onChange={(e) => updateSocial(social.id, 'url', e.target.value)}
+                className="mt-1"
               />
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => removeSocial(social.id)}
-              className="shrink-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
         ))}
         

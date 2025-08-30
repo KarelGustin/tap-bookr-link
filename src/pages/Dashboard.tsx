@@ -1,25 +1,29 @@
 import { useState, useEffect } from 'react'
+import { supabase } from '@/integrations/supabase/client'
+import { useAuth } from '@/contexts/AuthContext'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CheckCircle, User, Settings, CreditCard, Clock, Palette, ExternalLink, LogOut } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
-import { Navigate, useSearchParams, useNavigate } from 'react-router-dom'
-import { PaidInvoicesSection } from '@/components/PaidInvoicesSection'
-import { SectionCard } from '@/features/dashboard/components/SectionCard'
 import { BannerSection } from '@/features/dashboard/components/BannerSection'
 import { AboutSection } from '@/features/dashboard/components/AboutSection'
 import { SocialsSection } from '@/features/dashboard/components/SocialsSection'
 import { MediaSection } from '@/features/dashboard/components/MediaSection'
-import { PhoneMockup } from '@/components/PhoneMockup'
-import { FooterSection } from '@/features/dashboard/components/FooterSection'
 import { TestimonialsSection } from '@/features/dashboard/components/TestimonialsSection'
+import { FooterSection } from '@/features/dashboard/components/FooterSection'
+import { CollapsibleDesignSection } from '@/features/dashboard/components/CollapsibleDesignSection'
+import { PhoneMockup } from '@/components/PhoneMockup'
+import { PaidInvoicesSection } from '@/components/PaidInvoicesSection'
+import { 
+  Palette, 
+  CreditCard, 
+  ExternalLink, 
+  LogOut, 
+  Loader2 
+} from 'lucide-react'
 
 interface Profile {
   id: string
@@ -320,6 +324,106 @@ export default function Dashboard() {
     }
   }, [profile])
 
+  const handleSectionSave = async (section: string) => {
+    if (!profile?.id) return
+    
+    try {
+      let updates: any = { updated_at: new Date().toISOString() }
+      
+      switch (section) {
+        case 'banner':
+          updates = {
+            ...updates,
+            banner_url: design.bannerUrl,
+            name: design.name,
+            slogan: design.slogan,
+            category: design.category,
+          }
+          break
+        case 'about':
+          updates = {
+            ...updates,
+            avatar_url: design.avatarUrl,
+            about: JSON.stringify({
+              title: design.aboutTitle,
+              description: design.aboutDescription
+            }),
+          }
+          break
+        case 'socials':
+          updates = {
+            ...updates,
+            socials: JSON.stringify(
+              design.socials.reduce((acc, social) => {
+                if (social.title && social.url) {
+                  acc[social.title.toLowerCase()] = social.url
+                }
+                return acc
+              }, {} as Record<string, string>)
+            ),
+          }
+          break
+        case 'media':
+          updates = {
+            ...updates,
+            media: JSON.stringify({
+              items: design.mediaOrder
+            }),
+          }
+          break
+        case 'testimonials':
+          updates = {
+            ...updates,
+            testimonials: design.testimonials,
+          }
+          break
+        case 'booking':
+          updates = {
+            ...updates,
+            booking_url: design.bookingUrl,
+            booking_mode: design.bookingMode,
+          }
+          break
+        case 'footer':
+          updates = {
+            ...updates,
+            footer_business_name: design.footerBusinessName,
+            footer_address: design.footerAddress,
+            footer_email: design.footerEmail,
+            footer_phone: design.footerPhone,
+            footer_next_available: design.footerNextAvailable,
+            footer_cancellation_policy: design.footerCancellationPolicy,
+            footer_privacy_policy: design.footerPrivacyPolicy,
+            footer_terms_of_service: design.footerTermsOfService,
+            footer_show_maps: design.footerShowMaps,
+            footer_hours: design.footerHours,
+          }
+          break
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', profile.id)
+
+      if (error) throw error
+      
+      // Reload profile to get fresh data
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', profile.id)
+        .single()
+      
+      if (data) {
+        setProfile(data)
+      }
+    } catch (error) {
+      console.error('Error saving profile section:', error)
+      throw error
+    }
+  }
+
   const handleSave = async () => {
     if (!profile) return
     
@@ -532,7 +636,7 @@ export default function Dashboard() {
 
         {/* Section Content */}
         {activeSection === 'design' ? (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* iPhone Mockup Preview */}
             <div className="mb-6">
               <PhoneMockup 
@@ -541,46 +645,88 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Banner Section */}
-            <BannerSection
-              bannerUrl={design.bannerUrl}
-              bannerHeading={design.bannerHeading}
-              bannerSubheading={design.bannerSubheading}
-              bannerTextColor={design.bannerTextColor}
-              name={design.name}
-              slogan={design.slogan}
-              category={design.category}
-              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
-            />
+            {/* Collapsible Sections */}
+            <CollapsibleDesignSection
+              id="banner"
+              title="Banner & Profiel"
+              onSave={() => handleSectionSave('banner')}
+              data={design}
+              fieldName="banner"
+              defaultOpen={true}
+            >
+              <BannerSection
+                bannerUrl={design.bannerUrl}
+                bannerHeading={design.bannerHeading}
+                bannerSubheading={design.bannerSubheading}
+                bannerTextColor={design.bannerTextColor}
+                name={design.name}
+                slogan={design.slogan}
+                category={design.category}
+                onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+              />
+            </CollapsibleDesignSection>
 
-            {/* About Section */}
-            <AboutSection
-              avatarUrl={design.avatarUrl}
-              aboutTitle={design.aboutTitle}
-              aboutDescription={design.aboutDescription}
-              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
-            />
+            <CollapsibleDesignSection
+              id="about"
+              title="Over Mij"
+              onSave={() => handleSectionSave('about')}
+              data={design}
+              fieldName="about"
+            >
+              <AboutSection
+                avatarUrl={design.avatarUrl}
+                aboutTitle={design.aboutTitle}
+                aboutDescription={design.aboutDescription}
+                onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+              />
+            </CollapsibleDesignSection>
 
-            {/* Socials Section */}
-            <SocialsSection
-              socials={design.socials}
-              onUpdate={(socials) => setDesign(prev => ({ ...prev, socials }))}
-            />
+            <CollapsibleDesignSection
+              id="socials"
+              title="Sociale Media"
+              onSave={() => handleSectionSave('socials')}
+              data={design}
+              fieldName="socials"
+            >
+              <SocialsSection
+                socials={design.socials}
+                onUpdate={(socials) => setDesign(prev => ({ ...prev, socials }))}
+              />
+            </CollapsibleDesignSection>
 
-            {/* Media Section */}
-            <MediaSection
-              mediaItems={design.mediaOrder}
-              onUpdate={(mediaOrder) => setDesign(prev => ({ ...prev, mediaOrder }))}
-            />
+            <CollapsibleDesignSection
+              id="media"
+              title="Media"
+              onSave={() => handleSectionSave('media')}
+              data={design}
+              fieldName="media"
+            >
+              <MediaSection
+                mediaItems={design.mediaOrder}
+                onUpdate={(mediaOrder) => setDesign(prev => ({ ...prev, mediaOrder }))}
+              />
+            </CollapsibleDesignSection>
 
-            {/* Testimonials Section */}
-            <TestimonialsSection
-              testimonials={design.testimonials}
-              onUpdate={(testimonials) => setDesign(prev => ({ ...prev, testimonials }))}
-            />
+            <CollapsibleDesignSection
+              id="testimonials"
+              title="Testimonials"
+              onSave={() => handleSectionSave('testimonials')}
+              data={design}
+              fieldName="testimonials"
+            >
+              <TestimonialsSection
+                testimonials={design.testimonials}
+                onUpdate={(testimonials) => setDesign(prev => ({ ...prev, testimonials }))}
+              />
+            </CollapsibleDesignSection>
 
-            {/* Booking */}
-            <SectionCard title="Boeking">
+            <CollapsibleDesignSection
+              id="booking"
+              title="Boeking"
+              onSave={() => handleSectionSave('booking')}
+              data={design}
+              fieldName="booking"
+            >
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="bookingUrl">Jouw Booking URL</Label>
@@ -592,41 +738,29 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
-            </SectionCard>
+            </CollapsibleDesignSection>
 
-            {/* Footer Section */}
-            <FooterSection
-              footerBusinessName={design.footerBusinessName}
-              footerAddress={design.footerAddress}
-              footerEmail={design.footerEmail}
-              footerPhone={design.footerPhone}
-              footerHours={design.footerHours}
-              footerNextAvailable={design.footerNextAvailable}
-              footerCancellationPolicy={design.footerCancellationPolicy}
-              footerPrivacyPolicy={design.footerPrivacyPolicy}
-              footerTermsOfService={design.footerTermsOfService}
-              footerShowMaps={design.footerShowMaps}
-              onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
-            />
-
-            {/* Save Button */}
-            <div className="sticky bottom-4">
-              <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="w-full h-12 text-base font-medium shadow-lg"
-                size="lg"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Opslaan...
-                  </>
-                ) : (
-                  "Wijzigingen Opslaan"
-                )}
-              </Button>
-            </div>
+            <CollapsibleDesignSection
+              id="footer"
+              title="Footer & Contact"
+              onSave={() => handleSectionSave('footer')}
+              data={design}
+              fieldName="footer"
+            >
+              <FooterSection
+                footerBusinessName={design.footerBusinessName}
+                footerAddress={design.footerAddress}
+                footerEmail={design.footerEmail}
+                footerPhone={design.footerPhone}
+                footerHours={design.footerHours}
+                footerNextAvailable={design.footerNextAvailable}
+                footerCancellationPolicy={design.footerCancellationPolicy}
+                footerPrivacyPolicy={design.footerPrivacyPolicy}
+                footerTermsOfService={design.footerTermsOfService}
+                footerShowMaps={design.footerShowMaps}
+                onUpdate={(updates) => setDesign(prev => ({ ...prev, ...updates }))}
+              />
+            </CollapsibleDesignSection>
           </div>
         ) : (
           <div className="space-y-6">
@@ -644,10 +778,10 @@ export default function Dashboard() {
                       {profile.subscription_status === 'active' ? 'Actief' : 'Inactief'}
                     </Badge>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {profile.subscription_status === 'active' 
-                        ? 'Je website is live en toegankelijk'
-                        : 'Activeer je abonnement om je website live te zetten'
-                      }
+                {profile.subscription_status === 'active' 
+                  ? 'Je website is live en toegankelijk'
+                  : 'Activeer je abonnement om je website live te zetten'
+                }
                     </p>
                   </div>
                 </div>
