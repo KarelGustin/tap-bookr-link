@@ -65,7 +65,7 @@ export const Footer = () => {
                     <li key={linkIndex}>
                       <Link
                         to={link.href}
-                        className="text-gray-600 hover:text-gray-900 transition-colors duration-200 text-sm"
+                        className="text-gray-600 hover:text-tapbookr-green transition-colors duration-200 text-sm"
                       >
                         {link.name}
                       </Link>
@@ -86,14 +86,14 @@ export const Footer = () => {
             Sluit je aan bij duizenden bedrijven die hun boekingservaring al hebben getransformeerd met TapBookr.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="gameified-accent" size="lg" asChild>
+            <Button variant="tapbookr" size="lg" asChild>
               <Link to="/onboarding">
                 Begin nu met bouwen
               </Link>
             </Button>
-            <Button variant="gameified-outline" size="lg" asChild>
+            <Button variant="tapbookr-outline" size="lg" asChild>
               <Link
-                to="https://tapbookr.com/check1"
+                to="https://tapbookr.com/tapbookr"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -116,9 +116,9 @@ export const Footer = () => {
           </div>
           
           <div className="flex items-center gap-6 text-sm">
-            <Link to="/terms" className="hover:text-gray-900">Voorwaarden</Link>
-            <Link to="/privacy" className="hover:text-gray-900">Privacy</Link>
-            <Link to="/cookies" className="hover:text-gray-900">Cookies</Link>
+            <Link to="/terms" className="hover:text-tapbookr-green">Voorwaarden</Link>
+            <Link to="/privacy" className="hover:text-tapbookr-green">Privacy</Link>
+            <Link to="/cookies" className="hover:text-tapbookr-green">Cookies</Link>
           </div>
           
           <p className="text-gray-500 text-sm">

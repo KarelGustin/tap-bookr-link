@@ -44,13 +44,13 @@ export const ResultsComparison = () => {
           {alternatives.map((alt, index) => (
             <Card key={index} className={`border border-gray-200 bg-white rounded-2xl ${
               alt.name === "TapBookr" 
-                ? "border-primary ring-2 ring-primary/20" 
+                ? "border-tapbookr-green ring-2 ring-tapbookr-green/20" 
                 : ""
             }`}>
               <CardContent className="p-8">
                 <div className="text-center mb-6">
                   <h3 className={`text-xl font-bold mb-2 ${
-                    alt.name === "TapBookr" ? "text-primary" : "text-gray-900"
+                    alt.name === "TapBookr" ? "text-tapbookr-green" : "text-gray-900"
                   }`}>
                     {alt.name}
                   </h3>
@@ -62,14 +62,14 @@ export const ResultsComparison = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-green-700 mb-2 flex items-center gap-2">
+                    <h4 className="font-semibold text-tapbookr-green mb-2 flex items-center gap-2">
                       <Check className="w-4 h-4" />
                       Voordelen
                     </h4>
                     <ul className="space-y-1">
                       {alt.pros.map((pro, i) => (
                         <li key={i} className="text-sm text-gray-700 flex items-center gap-2">
-                          <Check className="w-3 h-3 text-green-600" />
+                          <Check className="w-3 h-3 text-tapbookr-green" />
                           {pro}
                         </li>
                       ))}
@@ -94,7 +94,7 @@ export const ResultsComparison = () => {
 
                 {alt.name === "TapBookr" && (
                   <div className="mt-6 text-center">
-                    <Button asChild className="w-full bg-primary text-gray-900 font-semibold">
+                    <Button asChild variant="tapbookr" className="w-full font-semibold">
                       <Link to="/onboarding">Start gratis nu</Link>
                     </Button>
                   </div>

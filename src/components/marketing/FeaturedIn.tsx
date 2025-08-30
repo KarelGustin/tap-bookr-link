@@ -17,8 +17,8 @@ export const FeaturedIn = () => {
           <Button 
             asChild 
             size="lg" 
-            className="mb-16 rounded-full px-8 py-4 text-lg font-black text-white hover:scale-105 transition-all duration-200" 
-            style={{ backgroundColor: 'hsl(var(--primary))' }}
+            variant="tapbookr"
+            className="mb-16 rounded-full px-8 py-4 text-lg font-black hover:scale-105 transition-all duration-200" 
           >
             <Link to="/login">
               Bekijk alle abonnementen
@@ -39,11 +39,8 @@ export const FeaturedIn = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8 items-center">
             {logos.map((logo, index) => (
               <div key={index} className="flex items-center justify-center">
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                  style={{ backgroundColor: 'hsl(var(--muted))' }}
-                >
-                  <span className="text-lg font-black text-gray-700">{logo.abbr}</span>
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg bg-tapbookr-green-subtle border border-tapbookr-green-light">
+                  <span className="text-lg font-black text-tapbookr-green">{logo.abbr}</span>
                 </div>
               </div>
             ))}

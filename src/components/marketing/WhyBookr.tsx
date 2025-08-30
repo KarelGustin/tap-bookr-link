@@ -42,12 +42,12 @@ export const WhyBookr = () => {
             <Card key={index} className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
               <CardContent className="p-0">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-gray-100 rounded-lg border border-gray-200">
-                    <feature.icon className="w-6 h-6 text-gray-900" />
+                  <div className="p-3 bg-tapbookr-green-subtle rounded-lg border border-tapbookr-green-light">
+                    <feature.icon className="w-6 h-6 text-tapbookr-green" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">{feature.title}</h3>
-                    <p className="text-sm text-gray-700 font-medium bg-gray-100 px-2 py-1 rounded-full">{feature.stat}</p>
+                    <p className="text-sm text-tapbookr-green font-medium bg-tapbookr-green-subtle px-2 py-1 rounded-full">{feature.stat}</p>
                   </div>
                 </div>
                 <p className="text-gray-800 leading-relaxed">{feature.description}</p>

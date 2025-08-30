@@ -109,6 +109,14 @@ export default {
 				'step-blue': {
 					DEFAULT: 'hsl(var(--step-blue))',
 					foreground: 'hsl(var(--step-blue-foreground))'
+				},
+				// TapBookr brand colors
+				'tapbookr-green': {
+					DEFAULT: 'hsl(var(--tapbookr-green))',
+					foreground: 'hsl(var(--tapbookr-green-foreground))',
+					light: 'hsl(var(--tapbookr-green-light))',
+					dark: 'hsl(var(--tapbookr-green-dark))',
+					subtle: 'hsl(var(--tapbookr-green-subtle))'
 				}
 			},
 			borderRadius: {

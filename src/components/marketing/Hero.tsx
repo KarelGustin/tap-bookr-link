@@ -83,10 +83,10 @@ export const Hero = () => {
               
               {/* Desktop auth buttons */}
               <div className="hidden md:flex items-center gap-3">
-                <Button variant="ghost" asChild>
+                <Button variant="tapbookr-outline" asChild>
                   <a href="/login">Inloggen</a>
                 </Button>
-                <Button variant="default" asChild>
+                <Button variant="tapbookr" asChild>
                   <a href="/onboarding">Maak Account</a>
                 </Button>
               </div>
@@ -104,10 +104,10 @@ export const Hero = () => {
               <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium py-2 gamify-hover rounded-lg px-3">Prijzen</a>
               <div className="border-t border-gray-200 pt-4 mt-2">
                 <div className="flex flex-col gap-3">
-                  <Button variant="gameified-secondary" className="justify-start" asChild>
+                  <Button variant="tapbookr-outline" className="justify-start" asChild>
                     <a href="/login">Inloggen</a>
                   </Button>
-                  <Button variant="gameified-primary" className="justify-start" asChild>
+                  <Button variant="tapbookr" className="justify-start" asChild>
                     <a href="/onboarding">Maak Account</a>
                   </Button>
                 </div>
@@ -177,13 +177,13 @@ export const Hero = () => {
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-tapbookr-green focus:ring-2 focus:ring-tapbookr-green/30 outline-none transition-all"
                     maxLength={20}
                   />
                   {userInput && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       {isHandleAvailable ? (
-                        <CheckCircle className="w-5 h-5 text-green-400 animate-bounce" />
+                        <CheckCircle className="w-5 h-5 text-tapbookr-green animate-bounce" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-400" />
                       )}
@@ -192,7 +192,7 @@ export const Hero = () => {
                 </div>
                 
                 <Button 
-                  variant="gameified-primary"
+                  variant="tapbookr"
                   size="lg" 
                   className="px-8 shadow-xl"
                   disabled={!userInput || !isHandleAvailable}

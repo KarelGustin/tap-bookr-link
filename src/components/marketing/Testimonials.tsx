@@ -8,11 +8,8 @@ export const Testimonials = () => {
       <div className="container mx-auto px-2 md:px-3">
         <div className="max-w-5xl mx-auto text-center">
           {/* Simplified avatar */}
-          <div 
-            className="w-24 h-24 mx-auto mb-12 rounded-full flex items-center justify-center"
-            style={{ backgroundColor: 'hsl(var(--accent))' }}
-          >
-            <span className="text-3xl font-black text-gray-900">R</span>
+          <div className="w-24 h-24 mx-auto mb-12 rounded-full flex items-center justify-center bg-tapbookr-green-subtle border-4 border-tapbookr-green-light">
+            <span className="text-3xl font-black text-tapbookr-green">R</span>
           </div>
           
           <blockquote className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-12 leading-tight">

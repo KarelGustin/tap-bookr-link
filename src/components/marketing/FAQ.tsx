@@ -48,7 +48,7 @@ export const FAQ = () => {
                 value={`item-${index}`}
                 className="border border-gray-200 rounded-2xl px-8 py-4 bg-white"
               >
-                <AccordionTrigger className="text-left text-xl font-bold py-6 text-gray-900 hover:no-underline">
+                <AccordionTrigger className="text-left text-xl font-bold py-6 text-gray-900 hover:no-underline hover:text-tapbookr-green [&[data-state=open]]:text-tapbookr-green">
                   {faq.question}
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600 pb-6 leading-relaxed text-lg">

@@ -46,13 +46,13 @@ export const HowItWorks = () => {
           {steps.map((item, index) => (
             <Card key={item.step} className="relative p-8 text-center bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-step-pink text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+                <div className="bg-tapbookr-green text-tapbookr-green-foreground w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
                   {item.step}
                 </div>
               </div>
               
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gray-100 flex items-center justify-center border border-gray-200">
-                <item.icon className="w-8 h-8 text-gray-900" />
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-tapbookr-green-subtle flex items-center justify-center border border-tapbookr-green-light">
+                <item.icon className="w-8 h-8 text-tapbookr-green" />
               </div>
               
               <h3 className="text-xl font-bold text-gray-900 mb-3">
@@ -63,7 +63,7 @@ export const HowItWorks = () => {
                 {item.description}
               </p>
               
-              <div className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-medium border border-gray-200">
+              <div className="inline-block bg-tapbookr-green-subtle text-tapbookr-green px-4 py-2 rounded-full text-sm font-medium border border-tapbookr-green-light">
                 ⚡ {item.time}
               </div>
             </Card>
@@ -80,14 +80,14 @@ export const HowItWorks = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="gameified-secondary" size="lg" asChild>
+            <Button variant="tapbookr" size="lg" asChild>
               <a href="/onboarding">
                 ✨ Begin nu met bouwen
                 <ArrowRight className="w-6 h-6 ml-2" />
               </a>
             </Button>
-            <Button variant="gameified-outline" size="lg" asChild>
-              <a href="#demo">
+            <Button variant="tapbookr-outline" size="lg" asChild>
+              <a href="https://tapbookr.com/tapbookr" target="_blank" rel="noopener noreferrer">
                 👀 Bekijk live demo
                 <ExternalLink className="w-6 h-6 ml-2" />
               </a>

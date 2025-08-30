@@ -33,6 +33,10 @@ const buttonVariants = cva(
         "gameified-accent": "bg-step-yellow text-gray-900 hover:bg-step-peach font-semibold btn-gameified btn-gameified-yellow rounded-lg",
         "gameified-success": "bg-step-mint text-gray-900 hover:bg-step-teal font-semibold btn-gameified btn-gameified-mint rounded-lg",
         "gameified-outline": "border-2 border-step-pink bg-white text-gray-900 hover:bg-step-pink/10 font-semibold btn-gameified btn-gameified-pink rounded-lg",
+        // TapBookr green variants
+        "tapbookr": "bg-tapbookr-green text-tapbookr-green-foreground hover:bg-tapbookr-green-dark font-semibold",
+        "tapbookr-outline": "border-2 border-tapbookr-green bg-transparent text-tapbookr-green hover:bg-tapbookr-green hover:text-tapbookr-green-foreground",
+        "tapbookr-subtle": "bg-tapbookr-green-subtle text-tapbookr-green hover:bg-tapbookr-green-light",
       },
       size: {
         default: "h-10 px-4 py-2",
