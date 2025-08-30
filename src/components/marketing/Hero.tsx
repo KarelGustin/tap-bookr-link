@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, CheckCircle, XCircle, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Hero = () => {
   const [userInput, setUserInput] = useState("");
@@ -9,6 +10,7 @@ export const Hero = () => {
   const [debouncedHandle, setDebouncedHandle] = useState("check1");
   const [selectedCategory, setSelectedCategory] = useState("beauty");
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
+  const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const prefix = "bookr.nl/";
@@ -27,18 +29,61 @@ export const Hero = () => {
   const sanitizeHandle = (val: string) =>
     val.toLowerCase().replace(/^\s+|\s+$/g, "").replace(/[^a-z0-9-_]/g, "");
 
+  const checkHandleAvailability = async (handleToCheck: string) => {
+    if (!handleToCheck || handleToCheck.length < 3) {
+      setIsHandleAvailable(false);
+      return;
+    }
+
+    // Check if it's a reserved handle
+    const reservedHandles = ["admin", "login", "signup", "www", "api", "app", "bookr", "tapbookr"];
+    if (reservedHandles.includes(handleToCheck.toLowerCase())) {
+      setIsHandleAvailable(false);
+      return;
+    }
+
+    setIsCheckingHandle(true);
+    try {
+      const { data, error } = await supabase.rpc('is_handle_available', {
+        handle_to_check: handleToCheck
+      });
+
+      if (error) {
+        console.error('Error checking handle availability:', error);
+        setIsHandleAvailable(false);
+      } else {
+        setIsHandleAvailable(data || false);
+      }
+    } catch (error) {
+      console.error('Error checking handle availability:', error);
+      setIsHandleAvailable(false);
+    } finally {
+      setIsCheckingHandle(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const extracted = value.startsWith(prefix) ? value.slice(prefix.length) : value;
     setUserInput(extracted);
-    setHandle(sanitizeHandle(extracted) || "demo");
-    // Simple availability check (you can enhance this with actual API call)
-    setIsHandleAvailable(extracted.length > 2 && !["admin", "login", "signup", "www"].includes(extracted.toLowerCase()));
+    const sanitizedHandle = sanitizeHandle(extracted) || "demo";
+    setHandle(sanitizedHandle);
   };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedHandle(handle || "demo"), 300);
     return () => clearTimeout(t);
+  }, [handle]);
+
+  // Debounced handle availability check
+  useEffect(() => {
+    if (!handle || handle === "demo") return;
+    
+    const timer = setTimeout(() => {
+      checkHandleAvailability(handle);
+    }, 500); // Debounce for 500ms
+
+    return () => clearTimeout(timer);
   }, [handle]);
 
   useEffect(() => {
@@ -182,7 +227,9 @@ export const Hero = () => {
                   />
                   {userInput && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      {isHandleAvailable ? (
+                      {isCheckingHandle ? (
+                        <div className="w-5 h-5 border-2 border-tapbookr-green border-t-transparent rounded-full animate-spin" />
+                      ) : isHandleAvailable ? (
                         <CheckCircle className="w-5 h-5 text-green-400 animate-bounce" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-400" />
