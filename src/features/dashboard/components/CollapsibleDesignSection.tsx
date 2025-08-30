@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { useAutosave } from '@/hooks/use-autosave'
@@ -23,8 +22,6 @@ export function CollapsibleDesignSection({
   fieldName,
   defaultOpen = false 
 }: CollapsibleDesignSectionProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
-  
   const { status, debouncedSave, getStatusDisplay } = useAutosave({
     onSave,
     data,
@@ -39,7 +36,7 @@ export function CollapsibleDesignSection({
   }
 
   return (
-    <Accordion type="single" value={isOpen ? id : ''} onValueChange={(value) => setIsOpen(value === id)}>
+    <Accordion type="single" collapsible defaultValue={defaultOpen ? id : undefined}>
       <AccordionItem value={id} className="border rounded-lg">
         <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div]:bg-muted/50">
           <div className="flex items-center justify-between w-full mr-4">
