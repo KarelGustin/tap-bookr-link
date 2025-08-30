@@ -137,8 +137,6 @@ export default function Dashboard() {
     testimonials: [],
   })
   
-  const [testimonials, setTestimonials] = useState<Array<{ customer_name: string; review_title: string; review_text: string; image_url?: string }>>([])
-
   // Success message handling
   const success = searchParams.get('success')
   const subscriptionStatus = searchParams.get('subscription')
@@ -217,32 +215,75 @@ export default function Dashboard() {
     }
   }, [profile, navigate])
 
-  // Load design data from profile
+  // Load design data from profile with better data handling
   useEffect(() => {
     if (profile) {
+      console.log('Loading profile data:', profile)
+      
       const bannerData = (profile.banner as any) || {}
       const aboutData = (profile.about as any) || {}
       const mediaData = (profile.media as any) || { items: [] }
       const socialsData = (profile.socials as any) || {}
       const testimonialsData = (profile.testimonials as any) || []
 
-      // Convert socials object to array with IDs
-      const socialsArray = Object.entries(socialsData).map(([platform, data]: [string, any], index) => ({
-        id: `${platform}_${index}`,
-        title: data?.title || platform,
-        platform,
-        url: data?.url || ''
-      }))
+      // Handle banner URL - prioritize actual banner_url field first
+      let bannerUrl = ''
+      if (profile.banner_url) {
+        bannerUrl = profile.banner_url
+      } else if (bannerData.imageUrl) {
+        bannerUrl = bannerData.imageUrl
+      } else if (bannerData.url) {
+        bannerUrl = bannerData.url
+      }
 
-      // Convert media items to proper format
-      const mediaArray = (mediaData.items || []).map((item: any, index: number) => ({
-        id: `media_${index}`,
-        url: typeof item === 'string' ? item : item.imageUrl,
-        alt: typeof item === 'object' ? item.description : undefined
-      }))
+      // Convert socials object to array with proper IDs and data
+      const socialsArray = Object.entries(socialsData).map(([platform, data]: [string, any], index) => {
+        if (typeof data === 'string') {
+          // Handle simple string URLs
+          return {
+            id: `${platform}_${index}`,
+            title: platform.charAt(0).toUpperCase() + platform.slice(1),
+            platform,
+            url: data
+          }
+        } else if (typeof data === 'object' && data !== null) {
+          // Handle object format
+          return {
+            id: `${platform}_${index}`,
+            title: data.title || platform.charAt(0).toUpperCase() + platform.slice(1),
+            platform,
+            url: data.url || ''
+          }
+        }
+        return {
+          id: `${platform}_${index}`,
+          title: platform.charAt(0).toUpperCase() + platform.slice(1),
+          platform,
+          url: ''
+        }
+      })
 
-      setDesign({
-        bannerUrl: profile.banner_url || bannerData.imageUrl || '',
+      // Convert media items to proper format with better URL handling
+      const mediaArray = (mediaData.items || []).map((item: any, index: number) => {
+        let url = ''
+        let alt = ''
+        
+        if (typeof item === 'string') {
+          url = item
+        } else if (typeof item === 'object' && item !== null) {
+          url = item.imageUrl || item.url || ''
+          alt = item.description || item.alt || ''
+        }
+        
+        return {
+          id: `media_${index}`,
+          url,
+          alt
+        }
+      }).filter(item => item.url) // Only include items with valid URLs
+
+      const newDesignState = {
+        bannerUrl,
         bannerHeading: bannerData.heading || '',
         bannerSubheading: bannerData.subheading || '',
         bannerTextColor: bannerData.textColor || '#FFFFFF',
@@ -272,14 +313,10 @@ export default function Dashboard() {
           review_text: t.review_text || '',
           image_url: t.image_url
         }))
-      })
-      
-      setTestimonials(testimonialsData.map((t: any) => ({
-        customer_name: t.customer_name || '',
-        review_title: t.review_title || '',
-        review_text: t.review_text || '',
-        image_url: t.image_url
-      })))
+      }
+
+      console.log('Setting design state:', newDesignState)
+      setDesign(newDesignState)
     }
   }, [profile])
 
@@ -287,39 +324,70 @@ export default function Dashboard() {
     if (!profile) return
     
     setIsSaving(true)
+    console.log('Saving design state:', design)
+    
     try {
-      // Update profile with design changes
+      // Preserve existing profile data and merge with changes
+      const existingBanner = (profile.banner as any) || {}
+      const existingAbout = (profile.about as any) || {}
+      const existingMedia = (profile.media as any) || { items: [] }
+      
+      // Build banner data with all fields preserved
+      const bannerData = {
+        ...existingBanner,
+        heading: design.bannerHeading,
+        subheading: design.bannerSubheading,
+        textColor: design.bannerTextColor,
+        imageUrl: design.bannerUrl, // Also save in banner object for consistency
+      }
+
+      // Build about data with all fields preserved  
+      const aboutData = {
+        ...existingAbout,
+        title: design.aboutTitle,
+        description: design.aboutDescription,
+        testimonials: design.testimonials, // Use design.testimonials as single source
+      }
+
+      // Build media data preserving structure
+      const mediaData = {
+        ...existingMedia,
+        items: design.mediaOrder.map(item => ({
+          imageUrl: item.url,
+          url: item.url,
+          description: item.alt || '',
+          alt: item.alt || ''
+        }))
+      }
+
+      // Convert socials array back to object format for DB
+      const socialsData = design.socials.reduce((acc, social) => {
+        if (social.platform && social.url) {
+          acc[social.platform] = {
+            title: social.title,
+            url: social.url
+          }
+        }
+        return acc
+      }, {} as any)
+
       const updates = {
+        // Basic profile fields
         name: design.name,
         slogan: design.slogan,
         category: design.category,
-        banner_url: design.bannerUrl,
+        banner_url: design.bannerUrl, // Primary banner URL field
         avatar_url: design.avatarUrl,
-        banner: {
-          heading: design.bannerHeading,
-          subheading: design.bannerSubheading,
-          textColor: design.bannerTextColor,
-        },
-        about: {
-          title: design.aboutTitle,
-          description: design.aboutDescription,
-          socialLinks: design.socials,
-          testimonials: design.testimonials,
-        },
-        media: {
-          items: design.mediaOrder
-        },
-        socials: design.socials.reduce((acc, social) => {
-          if (social.platform) {
-            acc[social.platform] = {
-              title: social.title,
-              url: social.url
-            }
-          }
-          return acc
-        }, {} as any),
         booking_url: design.bookingUrl,
         booking_mode: design.bookingMode,
+        
+        // JSON fields with preserved data
+        banner: bannerData,
+        about: aboutData,
+        media: mediaData,
+        socials: socialsData,
+        
+        // Footer fields
         footer_business_name: design.footerBusinessName,
         footer_address: design.footerAddress,
         footer_email: design.footerEmail,
@@ -330,9 +398,13 @@ export default function Dashboard() {
         footer_terms_of_service: design.footerTermsOfService,
         footer_show_maps: design.footerShowMaps,
         footer_hours: design.footerHours,
-        testimonials: testimonials,
+        
+        // Use design.testimonials as single source of truth
+        testimonials: design.testimonials,
         updated_at: new Date().toISOString()
       }
+
+      console.log('Saving updates:', updates)
 
       const { error } = await supabase
         .from('profiles')
@@ -354,6 +426,7 @@ export default function Dashboard() {
         .single()
       
       if (data) {
+        console.log('Reloaded profile:', data)
         setProfile(data)
       }
     } catch (error) {
@@ -502,8 +575,8 @@ export default function Dashboard() {
 
             {/* Testimonials Section */}
             <TestimonialsSection
-              testimonials={testimonials}
-              onUpdate={setTestimonials}
+              testimonials={design.testimonials}
+              onUpdate={(testimonials) => setDesign(prev => ({ ...prev, testimonials }))}
             />
 
             {/* Booking */}

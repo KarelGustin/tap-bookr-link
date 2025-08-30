@@ -111,22 +111,33 @@ export function BannerSection({
 
           {/* Banner Preview */}
           <div className="relative h-32 rounded-lg overflow-hidden border flex items-center justify-center">
-            {bannerUrl && <img src={bannerUrl} alt="Banner preview" className="absolute inset-0 w-full h-full object-cover" onError={e => {
-            console.error('Banner image failed to load:', bannerUrl);
-            // Hide broken image on error
-            const target = e.currentTarget;
-            target.style.display = 'none';
-          }} onLoad={() => {
-            console.log('Banner image loaded successfully:', bannerUrl);
-          }} />}
-            
-            
-            {!bannerUrl && <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+            {bannerUrl ? (
+              <img 
+                src={bannerUrl} 
+                alt="Banner preview" 
+                className="absolute inset-0 w-full h-full object-cover" 
+                onError={(e) => {
+                  console.error('Banner image failed to load:', bannerUrl);
+                  // Set a fallback background instead of hiding
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.style.backgroundColor = '#6E56CF';
+                  }
+                }} 
+                onLoad={() => {
+                  console.log('Banner image loaded successfully:', bannerUrl);
+                }} 
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
                 <div className="text-center">
                   <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Geen banner geüpload</p>
                 </div>
-              </div>}
+              </div>
+            )}
           </div>
 
           {/* Banner Controls */}
