@@ -441,58 +441,7 @@ export default function PublicProfile() {
           </div>
         </section>
 
-                {/* Social Links Section */}
-        {(() => {
-          // Handle both array format (from Dashboard) and object format (legacy)
-          let socialLinks: { platform: string; url: string }[] = [];
-          
-          if (profile.socials && typeof profile.socials === 'object' && profile.socials !== null) {
-            if (Array.isArray(profile.socials)) {
-              socialLinks = profile.socials
-                .filter(social => social && typeof social === 'object' && 'title' in social && 'url' in social && social.title && social.url)
-                .map(social => ({
-                  platform: (social as any).title,
-                  url: (social as any).url
-                }));
-            } else {
-              socialLinks = Object.entries(profile.socials as Record<string, any>)
-                .filter(([_, value]) => {
-                  if (typeof value === 'string') return value.trim();
-                  if (typeof value === 'object' && value?.url) return value.url.trim();
-                  return false;
-                })
-                .map(([platform, value]) => ({
-                  platform: platform.charAt(0).toUpperCase() + platform.slice(1),
-                  url: typeof value === 'string' ? value : value.url
-                }));
-            }
-          }
-          
-          return socialLinks.length > 0 ? (
-            <section className="py-8 px-4" style={{ backgroundColor: '#FFFFFF' }}>
-              <div className="max-w-4xl mx-auto text-center">
-                <h3 className="text-2xl font-bold mb-6" style={{ color: '#1F2937' }}>Social Media</h3>
-                <div className="flex flex-wrap justify-center gap-4">
-                  {socialLinks.map((social, index) => (
-                    <a
-                      key={`${social.platform}-${index}`}
-                      href={social.url.startsWith('http') ? social.url : `https://${social.url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-6 py-3 rounded-lg transition-colors"
-                      style={{
-                        backgroundColor: 'hsl(var(--primary))',
-                        color: '#000000'
-                      }}
-                    >
-                      <span className="font-medium">{social.platform}</span>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : null;
-        })()}
+        {/* Social Links Section - Temporarily disabled */}
 
         {/* Media Gallery Section */}
         <section className="py-8 px-4" style={{ backgroundColor: '#fafafa' }}>

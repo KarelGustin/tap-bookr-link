@@ -701,7 +701,8 @@ export default function Dashboard() {
               />
             </CollapsibleDesignSection>
 
-            <CollapsibleDesignSection
+            {/* Social Media Section - Temporarily disabled */}
+            {/* <CollapsibleDesignSection
               id="socials"
               title="Sociale Media"
               onSave={() => handleSectionSave('socials')}
@@ -712,7 +713,7 @@ export default function Dashboard() {
                 socials={design.socials}
                 onUpdate={(socials) => setDesign(prev => ({ ...prev, socials }))}
               />
-            </CollapsibleDesignSection>
+            </CollapsibleDesignSection> */}
 
             <CollapsibleDesignSection
               id="media"

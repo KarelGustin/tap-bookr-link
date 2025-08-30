@@ -958,14 +958,24 @@ const Onboarding = () => {
         );
 
       case 6:
+        // Social Media & Testimonials step - temporarily disabled
+        // Skip directly to footer step
         return (
-          <Step5SocialTestimonials 
-            onNext={handleTestimonialsStep}
+          <Step6Footer 
+            onNext={handleStep6}
             onBack={goBack}
-            handle={onboardingData.handle}
             existingData={{
-              socialLinks: onboardingData.socialLinks || [],
-              testimonials: onboardingData.testimonials || [],
+              footerBusinessName: onboardingData.footerBusinessName,
+              footerEmail: onboardingData.footerEmail,
+              footerPhone: onboardingData.footerPhone,
+              footerAddress: onboardingData.footerAddress,
+              footerHours: onboardingData.footerHours,
+              footerNextAvailable: onboardingData.footerNextAvailable,
+              footerCancellationPolicy: onboardingData.footerCancellationPolicy,
+              footerPrivacyPolicy: onboardingData.footerPrivacyPolicy,
+              footerTermsOfService: onboardingData.footerTermsOfService,
+              footerShowMaps: onboardingData.footerShowMaps,
+              footerShowAttribution: onboardingData.footerShowAttribution,
             }}
           />
         );
