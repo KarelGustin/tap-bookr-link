@@ -227,7 +227,24 @@ export default function Dashboard() {
       const bannerData = (profile.banner as any) || {}
       const aboutData = (profile.about as any) || {}
       const mediaData = (profile.media as any) || { items: [] }
-      const socialsData = (profile.socials as any) || {}
+      // Parse socials data safely - fix for character-by-character parsing bug
+      let socialsData = {}
+      try {
+        const rawSocials = profile.socials
+        if (typeof rawSocials === 'string') {
+          socialsData = JSON.parse(rawSocials)
+        } else if (typeof rawSocials === 'object' && rawSocials !== null) {
+          socialsData = rawSocials
+        }
+        // Ensure we have an object, not an array or other type
+        if (Array.isArray(socialsData) || typeof socialsData !== 'object') {
+          socialsData = {}
+        }
+      } catch (error) {
+        console.error('Error parsing socials data:', error)
+        socialsData = {}
+      }
+
       const testimonialsData = (profile.testimonials as any) || []
 
       // Handle banner URL - prioritize actual banner_url field first
