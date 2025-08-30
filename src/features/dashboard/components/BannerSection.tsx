@@ -6,6 +6,7 @@ import { SectionCard } from './SectionCard';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 import { useImageUpload } from '@/hooks/use-image-upload';
 import { useToast } from '@/hooks/use-toast';
+import { sanitizeFilename } from '@/lib/utils';
 interface BannerSectionProps {
   bannerUrl: string;
   bannerHeading: string;
@@ -44,7 +45,8 @@ export function BannerSection({
   } = useToast();
   const handleImageUpload = async (file: File) => {
     try {
-      const result = await uploadImage(file, 'media', `banner/${Date.now()}_${file.name}`);
+      const sanitizedFilename = sanitizeFilename(file.name);
+      const result = await uploadImage(file, 'media', `banner/${Date.now()}_${sanitizedFilename}`);
       if (result) {
         onUpdate({
           bannerUrl: result.url
@@ -110,32 +112,56 @@ export function BannerSection({
           </div>
 
           {/* Banner Preview */}
-          <div className="relative h-32 rounded-lg overflow-hidden border flex items-center justify-center">
+          <div 
+            className="relative h-32 rounded-lg overflow-hidden border flex items-center justify-center cursor-pointer hover:bg-muted/70 transition-colors group"
+            onClick={() => fileInputRef.current?.click()}
+          >
             {bannerUrl ? (
-              <img 
-                src={bannerUrl} 
-                alt="Banner preview" 
-                className="absolute inset-0 w-full h-full object-cover" 
-                onError={(e) => {
-                  console.error('Banner image failed to load:', bannerUrl);
-                  // Set a fallback background instead of hiding
-                  const target = e.currentTarget;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.style.backgroundColor = '#6E56CF';
-                  }
-                }} 
-                onLoad={() => {
-                  console.log('Banner image loaded successfully:', bannerUrl);
-                }} 
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-                <div className="text-center">
-                  <ImageIcon className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Geen banner geüpload</p>
+              <>
+                <img 
+                  src={bannerUrl} 
+                  alt="Banner preview" 
+                  className="absolute inset-0 w-full h-full object-cover" 
+                  onError={(e) => {
+                    console.error('Banner image failed to load:', bannerUrl);
+                    // Set a fallback background instead of hiding
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.style.backgroundColor = 'hsl(var(--primary))';
+                    }
+                  }} 
+                  onLoad={() => {
+                    console.log('Banner image loaded successfully:', bannerUrl);
+                  }} 
+                />
+                {/* Upload overlay for existing banner */}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    disabled={isUploading}
+                    className="pointer-events-none"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {isUploading ? 'Uploaden...' : 'Wijzig Banner'}
+                  </Button>
                 </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/50">
+                <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground mb-3">Geen banner geüpload</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={isUploading}
+                  className="pointer-events-none"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isUploading ? 'Uploaden...' : 'Upload Banner'}
+                </Button>
               </div>
             )}
           </div>
