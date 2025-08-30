@@ -87,7 +87,7 @@ export const Hero = () => {
                   <a href="/login">Inloggen</a>
                 </Button>
                 <Button variant="default" asChild>
-                  <a href="/onboarding">🚀 Gratis beginnen</a>
+                  <a href="/onboarding">Maak Account</a>
                 </Button>
               </div>
             </div>
@@ -108,7 +108,7 @@ export const Hero = () => {
                     <a href="/login">Inloggen</a>
                   </Button>
                   <Button variant="celebration" className="justify-start" asChild>
-                    <a href="/onboarding">🚀 Gratis beginnen</a>
+                    <a href="/onboarding">Maak Account</a>
                   </Button>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export const Hero = () => {
               )}
               
               <p className="text-xs text-gray-600 bg-white/80 rounded-full px-4 py-2 backdrop-blur-sm text-center border border-gray-200">
-                ✨ Gratis • 💳 Geen creditcard vereist • ⚡ Direct live
+                 💳 Eerste maan €1 • ⚡ Direct live
               </p>
             </div>
           </div>
