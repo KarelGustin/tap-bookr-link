@@ -51,10 +51,10 @@ export const Hero = () => {
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow/20 via-step-teal/20 to-step-pink/20 bg-white">
+    <section className="relative min-h-screen overflow-hidden bg-gray-50">
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
-        <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 tilt-effect">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200">
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-8">
               <div className="font-black text-xl">
@@ -63,10 +63,10 @@ export const Hero = () => {
               
               {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-6">
-                <a href="#features" className="text-gray-700 hover:text-step-teal font-medium gamify-hover">Features</a>
-                <a href="#how-it-works" className="text-gray-700 hover:text-step-pink font-medium gamify-hover">Hoe het werkt</a>
-                <a href="#testimonials" className="text-gray-700 hover:text-step-lavender font-medium gamify-hover">Reviews</a>
-                <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium gamify-hover">Prijzen</a>
+                <a href="#features" className="text-gray-700 hover:text-gray-900 font-medium">Features</a>
+                <a href="#how-it-works" className="text-gray-700 hover:text-gray-900 font-medium">Hoe het werkt</a>
+                <a href="#testimonials" className="text-gray-700 hover:text-gray-900 font-medium">Reviews</a>
+                <a href="#pricing" className="text-gray-700 hover:text-gray-900 font-medium">Prijzen</a>
               </nav>
             </div>
             
@@ -86,7 +86,7 @@ export const Hero = () => {
                 <Button variant="ghost" asChild>
                   <a href="/login">Inloggen</a>
                 </Button>
-                <Button variant="celebration" asChild className="breathing-animation">
+                <Button variant="default" asChild>
                   <a href="/onboarding">🚀 Gratis beginnen</a>
                 </Button>
               </div>
@@ -123,16 +123,15 @@ export const Hero = () => {
           {/* Left Content */}
           <div className="flex-1 space-y-8 text-center lg:text-left max-w-2xl">
             <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-relaxed">
                 Elke{" "}
-                <span className="changing-word inline-block">
+                <span className="changing-word inline-block" style={{ minWidth: "200px" }}>
                   {professions.map((profession, index) => (
                     <span
                       key={profession}
-                      className={`word ${index === currentWordIndex ? 'active' : ''}`}
+                      className={`word ${index === currentWordIndex ? 'active' : ''} text-step-pink`}
                       style={{
-                        color: 'hsl(var(--step-pink))',
-                        fontWeight: 'black'
+                        fontWeight: 'bold'
                       }}
                     >
                       {profession}
@@ -142,7 +141,7 @@ export const Hero = () => {
                 <br />
                 heeft een boeking link.
                 <br />
-                <span className="bg-gradient-to-r from-step-peach to-step-mint bg-clip-text text-transparent">
+                <span className="text-step-purple">
                   Maak nu je eigen website!
                 </span>
               </h1>
@@ -178,7 +177,7 @@ export const Hero = () => {
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white/90 backdrop-blur-sm text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all gamify-hover"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all"
                     maxLength={20}
                   />
                   {userInput && (
@@ -193,7 +192,7 @@ export const Hero = () => {
                 </div>
                 
                 <Button 
-                  variant="celebration"
+                  variant="default"
                   size="lg" 
                   className="px-8 font-bold shadow-xl"
                   disabled={!userInput || !isHandleAvailable}
@@ -218,7 +217,7 @@ export const Hero = () => {
           <div className="flex-1 flex justify-center items-center mt-6 lg:mt-0">
             <div className="relative mx-auto w-full max-w-xs">
               {/* iPhone Frame */}
-              <div className="relative bg-background border-8 border-border rounded-[2.5rem] shadow-xl tilt-effect">
+              <div className="relative bg-background border-8 border-border rounded-[2.5rem] shadow-xl">
                 {/* Top Notch */}
                 <div className="absolute top-0 inset-x-0 flex justify-center">
                   <div className="bg-border h-6 w-32 rounded-b-2xl"></div>
