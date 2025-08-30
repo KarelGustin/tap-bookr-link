@@ -9,24 +9,24 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-gray-900 text-white hover:bg-gray-800",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        linktree: "bg-accent text-accent-foreground hover:bg-accent/90 rounded-full font-semibold",
-        accent: "bg-accent text-accent-foreground hover:bg-accent/80 rounded-full",
-        // Gamified variants
-        gamify: "bg-gradient-to-r from-step-yellow to-step-teal text-step-yellow-foreground hover:from-step-teal hover:to-step-pink gamify-hover gamify-press font-semibold",
-        celebration: "gamify-celebration text-white font-bold sparkle-effect animate-pulse",
-        pastel: "bg-step-pink text-step-pink-foreground hover:bg-step-lavender hover:text-step-lavender-foreground gamify-hover",
-        success: "bg-green-500 text-white hover:bg-green-600 gamify-hover gamify-press",
-        teal: "bg-step-teal text-step-teal-foreground hover:bg-step-mint hover:text-step-mint-foreground gamify-hover",
-        mint: "bg-step-mint text-step-mint-foreground hover:bg-step-peach hover:text-step-peach-foreground gamify-hover",
+          "bg-gray-100 text-gray-900 hover:bg-gray-200",
+        ghost: "hover:bg-gray-100 text-gray-900",
+        link: "text-gray-900 underline-offset-4 hover:underline",
+        linktree: "bg-step-pink text-gray-900 hover:bg-step-lavender rounded-full font-semibold",
+        accent: "bg-step-teal text-gray-900 hover:bg-step-mint rounded-full",
+        // Gamified variants with better contrast
+        gamify: "bg-step-yellow text-gray-900 hover:bg-step-peach font-semibold",
+        celebration: "bg-step-pink text-gray-900 hover:bg-step-lavender font-bold",
+        pastel: "bg-step-mint text-gray-900 hover:bg-step-teal",
+        success: "bg-green-500 text-white hover:bg-green-600",
+        teal: "bg-step-teal text-gray-900 hover:bg-step-mint",
+        mint: "bg-step-mint text-gray-900 hover:bg-step-peach",
       },
       size: {
         default: "h-10 px-4 py-2",
