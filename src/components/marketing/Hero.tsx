@@ -51,7 +51,7 @@ export const Hero = () => {
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-step-yellow/10">
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow/5 via-step-yellow/3 to-step-peach/8">
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200">
@@ -104,10 +104,10 @@ export const Hero = () => {
               <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium py-2 gamify-hover rounded-lg px-3">Prijzen</a>
               <div className="border-t border-gray-200 pt-4 mt-2">
                 <div className="flex flex-col gap-3">
-                  <Button variant="pastel" className="justify-start" asChild>
+                  <Button variant="gameified-secondary" className="justify-start" asChild>
                     <a href="/login">Inloggen</a>
                   </Button>
-                  <Button variant="celebration" className="justify-start" asChild>
+                  <Button variant="gameified-primary" className="justify-start" asChild>
                     <a href="/onboarding">Maak Account</a>
                   </Button>
                 </div>
@@ -192,9 +192,9 @@ export const Hero = () => {
                 </div>
                 
                 <Button 
-                  variant="default"
+                  variant="gameified-primary"
                   size="lg" 
-                  className="px-8 font-bold shadow-xl"
+                  className="px-8 shadow-xl"
                   disabled={!userInput || !isHandleAvailable}
                 >
                   🎯 Claim Nu

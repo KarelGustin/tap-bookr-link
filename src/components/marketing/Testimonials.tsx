@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export const Testimonials = () => {
   return (
-    <section id="testimonials" className="py-24 bg-step-peach/10">
+    <section id="testimonials" className="py-24 bg-gradient-to-br from-step-lavender/5 to-step-pink/8">
       <div className="container mx-auto px-2 md:px-3">
         <div className="max-w-5xl mx-auto text-center">
           {/* Simplified avatar */}

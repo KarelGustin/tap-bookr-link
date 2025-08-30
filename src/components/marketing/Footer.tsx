@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export const Footer = () => {
   const footerSections = [
@@ -49,7 +50,7 @@ export const Footer = () => {
   ];
 
   return (
-    <footer className="pt-24 pb-12 bg-gradient-to-b from-gray-50 to-white">
+    <footer className="pt-24 pb-12 bg-gradient-to-br from-step-peach/5 to-step-yellow/8">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Main footer content */}
         <div className="bg-white border border-gray-200 rounded-2xl p-12 mb-12">
@@ -85,20 +86,20 @@ export const Footer = () => {
             Sluit je aan bij duizenden bedrijven die hun boekingservaring al hebben getransformeerd met TapBookr.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/onboarding"
-              className="bg-primary text-gray-900 font-semibold px-8 py-3 rounded-xl text-lg"
-            >
-              Begin nu met bouwen
-            </Link>
-            <Link
-              to="https://tapbookr.com/check1"
-              target="_blank"
-              rel="noreferrer"
-              className="border-2 border-gray-300 text-gray-700 font-semibold px-8 py-3 rounded-xl text-lg"
-            >
-              Bekijk live demo
-            </Link>
+            <Button variant="gameified-accent" size="lg" asChild>
+              <Link to="/onboarding">
+                Begin nu met bouwen
+              </Link>
+            </Button>
+            <Button variant="gameified-outline" size="lg" asChild>
+              <Link
+                to="https://tapbookr.com/check1"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Bekijk live demo
+              </Link>
+            </Button>
           </div>
         </div>
         

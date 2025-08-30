@@ -31,7 +31,7 @@ export const HowItWorks = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-step-mint/10">
+    <section id="how-it-works" className="py-24 bg-gradient-to-br from-step-pink/5 to-step-lavender/8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -80,13 +80,13 @@ export const HowItWorks = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="default" size="lg" asChild>
+            <Button variant="gameified-secondary" size="lg" asChild>
               <a href="/onboarding">
                 ✨ Begin nu met bouwen
                 <ArrowRight className="w-6 h-6 ml-2" />
               </a>
             </Button>
-            <Button variant="outline" size="lg" asChild>
+            <Button variant="gameified-outline" size="lg" asChild>
               <a href="#demo">
                 👀 Bekijk live demo
                 <ExternalLink className="w-6 h-6 ml-2" />

@@ -293,6 +293,41 @@
   .sparkle-effect:hover::before {
     opacity: 1;
   }
+
+/* 3D Gameified Button Effects */
+.btn-gameified {
+  border-bottom: 4px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-gameified:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.btn-gameified:active {
+  transform: translateY(0px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom-width: 2px;
+}
+
+.btn-gameified-yellow {
+  border-bottom-color: hsl(var(--step-peach));
+}
+
+.btn-gameified-teal {
+  border-bottom-color: hsl(var(--step-mint));
+}
+
+.btn-gameified-pink {
+  border-bottom-color: hsl(var(--step-lavender));
+}
+
+.btn-gameified-mint {
+  border-bottom-color: hsl(var(--step-teal));
+}
 }
 
 @keyframes slide-up {

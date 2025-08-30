@@ -20,13 +20,19 @@ const buttonVariants = cva(
         link: "text-gray-900 underline-offset-4 hover:underline",
         linktree: "bg-step-pink text-gray-900 hover:bg-step-lavender rounded-full font-semibold",
         accent: "bg-step-teal text-gray-900 hover:bg-step-mint rounded-full",
-        // Gamified variants with better contrast
+        // Regular gamified variants with better contrast
         gamify: "bg-step-yellow text-gray-900 hover:bg-step-peach font-semibold",
         celebration: "bg-step-pink text-gray-900 hover:bg-step-lavender font-bold",
         pastel: "bg-step-mint text-gray-900 hover:bg-step-teal",
         success: "bg-green-500 text-white hover:bg-green-600",
         teal: "bg-step-teal text-gray-900 hover:bg-step-mint",
         mint: "bg-step-mint text-gray-900 hover:bg-step-peach",
+        // 3D Gameified variants
+        "gameified-primary": "bg-step-pink text-gray-900 hover:bg-step-lavender font-semibold btn-gameified btn-gameified-pink rounded-lg",
+        "gameified-secondary": "bg-step-teal text-gray-900 hover:bg-step-mint font-semibold btn-gameified btn-gameified-teal rounded-lg",
+        "gameified-accent": "bg-step-yellow text-gray-900 hover:bg-step-peach font-semibold btn-gameified btn-gameified-yellow rounded-lg",
+        "gameified-success": "bg-step-mint text-gray-900 hover:bg-step-teal font-semibold btn-gameified btn-gameified-mint rounded-lg",
+        "gameified-outline": "border-2 border-step-pink bg-white text-gray-900 hover:bg-step-pink/10 font-semibold btn-gameified btn-gameified-pink rounded-lg",
       },
       size: {
         default: "h-10 px-4 py-2",
