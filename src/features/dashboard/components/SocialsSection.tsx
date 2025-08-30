@@ -47,8 +47,10 @@ export function SocialsSection({ socials, onUpdate }: SocialsSectionProps) {
     )
     setLocalSocials(updated)
     
-    // Filter out empty socials before updating parent
-    const validSocials = updated.filter(social => social.title.trim() && social.url.trim())
+    // Only filter out completely empty socials (both title and URL empty)
+    const validSocials = updated.filter(social => 
+      social.title.trim() || social.url.trim()
+    )
     onUpdate(validSocials)
   }
 
