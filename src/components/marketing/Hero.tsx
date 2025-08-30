@@ -169,7 +169,7 @@ export const Hero = () => {
             <div className="space-y-4 max-w-md mx-auto lg:mx-0">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium pointer-events-none">
                     tapbookr.com/
                   </span>
                   <input
@@ -177,7 +177,7 @@ export const Hero = () => {
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all"
+                    className="w-full pl-[105px] pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-tapbookr-green focus:ring-2 focus:ring-tapbookr-green/30 outline-none transition-all"
                     maxLength={20}
                   />
                   {userInput && (
