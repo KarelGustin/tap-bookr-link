@@ -238,15 +238,15 @@ export const Hero = () => {
                   )}
                 </div>
                 
-                <Button 
-                  variant="default"
-                  size="lg" 
-                  className="px-8 font-bold shadow-xl"
-                  disabled={!userInput || !isHandleAvailable}
+                <Link
+                  to={`/login?handle=${encodeURIComponent(handle)}&signup=true`}
+                  className={`inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-xl ${
+                    !userInput || !isHandleAvailable ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
+                  }`}
                 >
                   🎯 Claim Nu
                   <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                </Link>
               </div>
               
               {userInput && !isHandleAvailable && (

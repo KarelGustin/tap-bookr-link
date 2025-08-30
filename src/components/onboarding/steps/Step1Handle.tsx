@@ -60,6 +60,17 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     return () => clearTimeout(timeoutId);
   }, [handle]);
 
+  // Check for handle from URL parameters (from Hero claim flow)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const handleFromUrl = urlParams.get('handle');
+    if (handleFromUrl) {
+      setHandle(handleFromUrl);
+      setUseExistingHandle(false); // Force new handle mode when coming from Hero
+      console.log('🔧 Handle prefilled from URL:', handleFromUrl);
+    }
+  }, []);
+
   // Load existing user handle from database
   useEffect(() => {
     const fetchUserHandle = async () => {
