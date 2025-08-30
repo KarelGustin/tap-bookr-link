@@ -49,7 +49,13 @@ export function FooterSection({
     sunday: { open: '10:00', close: '16:00', closed: true },
   }
 
-  const [hours, setHours] = useState<BusinessHours>(footerHours || defaultHours)
+  const [hours, setHours] = useState<BusinessHours>(() => {
+    // Check if footerHours has actual day data, not just empty object
+    if (footerHours && Object.keys(footerHours).length > 0 && footerHours.monday) {
+      return footerHours;
+    }
+    return defaultHours;
+  })
 
   const updateHours = (day: string, field: 'open' | 'close' | 'closed', value: string | boolean) => {
     const newHours = {

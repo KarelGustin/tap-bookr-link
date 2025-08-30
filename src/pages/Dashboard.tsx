@@ -536,7 +536,7 @@ export default function Dashboard() {
             {/* iPhone Mockup Preview */}
             <div className="mb-6">
               <PhoneMockup 
-                profileUrl={`https://tapbookr.com/${profile.handle || profile.id}`}
+                profileUrl={`/${profile.handle || profile.id}`}
                 userName={profile.name || undefined}
               />
             </div>
