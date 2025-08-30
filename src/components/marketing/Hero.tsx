@@ -209,7 +209,7 @@ export const Hero = () => {
               )}
               
               <p className="text-xs text-gray-600 bg-white/80 rounded-full px-4 py-2 backdrop-blur-sm text-center border border-gray-200">
-                 💳 Eerste maan €1 • ⚡ Direct live
+                 💳 Eerste maand €1 • ⚡ Direct live
               </p>
             </div>
           </div>
