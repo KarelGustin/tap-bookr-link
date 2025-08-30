@@ -202,20 +202,24 @@
   .changing-word {
     display: inline-block;
     position: relative;
-    min-width: 120px;
+    width: auto;
     text-align: left;
   }
 
   .changing-word .word {
     position: absolute;
+    left: 0;
+    top: 0;
     opacity: 0;
     transform: translateY(20px);
     transition: all 0.5s ease-in-out;
+    white-space: nowrap;
   }
 
   .changing-word .word.active {
     opacity: 1;
     transform: translateY(0);
+    position: relative;
   }
 
   .changing-word .word.exit {
