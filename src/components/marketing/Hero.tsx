@@ -51,7 +51,7 @@ export const Hero = () => {
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-step-yellow/5 via-step-yellow/3 to-step-peach/8">
+    <section className="relative min-h-screen overflow-hidden bg-gray-50">
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200">
@@ -83,10 +83,10 @@ export const Hero = () => {
               
               {/* Desktop auth buttons */}
               <div className="hidden md:flex items-center gap-3">
-                <Button variant="tapbookr-outline" asChild>
+                <Button variant="ghost" asChild>
                   <a href="/login">Inloggen</a>
                 </Button>
-                <Button variant="tapbookr" asChild>
+                <Button variant="default" asChild>
                   <a href="/onboarding">Maak Account</a>
                 </Button>
               </div>
@@ -104,10 +104,10 @@ export const Hero = () => {
               <a href="#pricing" className="text-gray-700 hover:text-step-mint font-medium py-2 gamify-hover rounded-lg px-3">Prijzen</a>
               <div className="border-t border-gray-200 pt-4 mt-2">
                 <div className="flex flex-col gap-3">
-                  <Button variant="tapbookr-outline" className="justify-start" asChild>
+                  <Button variant="pastel" className="justify-start" asChild>
                     <a href="/login">Inloggen</a>
                   </Button>
-                  <Button variant="tapbookr" className="justify-start" asChild>
+                  <Button variant="celebration" className="justify-start" asChild>
                     <a href="/onboarding">Maak Account</a>
                   </Button>
                 </div>
@@ -170,20 +170,20 @@ export const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
-                    bookr.nl/
+                    tapbookr.com/
                   </span>
                   <input
                     type="text"
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-tapbookr-green focus:ring-2 focus:ring-tapbookr-green/30 outline-none transition-all"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all"
                     maxLength={20}
                   />
                   {userInput && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       {isHandleAvailable ? (
-                        <CheckCircle className="w-5 h-5 text-tapbookr-green animate-bounce" />
+                        <CheckCircle className="w-5 h-5 text-green-400 animate-bounce" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-400" />
                       )}
@@ -192,9 +192,9 @@ export const Hero = () => {
                 </div>
                 
                 <Button 
-                  variant="tapbookr"
+                  variant="default"
                   size="lg" 
-                  className="px-8 shadow-xl"
+                  className="px-8 font-bold shadow-xl"
                   disabled={!userInput || !isHandleAvailable}
                 >
                   🎯 Claim Nu
