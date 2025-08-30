@@ -243,7 +243,7 @@ export default function Dashboard() {
       // Convert socials object to array with proper IDs and data
       const socialsArray = Object.entries(socialsData).map(([platform, data]: [string, any], index) => {
         if (typeof data === 'string') {
-          // Handle simple string URLs
+          // Handle simple string URLs (legacy format)
           return {
             id: `${platform}_${index}`,
             title: platform.charAt(0).toUpperCase() + platform.slice(1),
@@ -251,7 +251,7 @@ export default function Dashboard() {
             url: data
           }
         } else if (typeof data === 'object' && data !== null) {
-          // Handle object format
+          // Handle object format (current format)
           return {
             id: `${platform}_${index}`,
             title: data.title || platform.charAt(0).toUpperCase() + platform.slice(1),
@@ -265,7 +265,7 @@ export default function Dashboard() {
           platform,
           url: ''
         }
-      })
+      }).filter(social => social.url.trim()) // Filter out empty URLs
 
       // Convert media items to proper format with better URL handling
       const mediaArray = (mediaData.items || []).map((item: any, index: number) => {
@@ -355,11 +355,14 @@ export default function Dashboard() {
             ...updates,
             socials: JSON.stringify(
               design.socials.reduce((acc, social) => {
-                if (social.title && social.url) {
-                  acc[social.title.toLowerCase()] = social.url
+                if (social.platform && social.url) {
+                  acc[social.platform] = {
+                    title: social.title,
+                    url: social.url
+                  }
                 }
                 return acc
-              }, {} as Record<string, string>)
+              }, {} as any)
             ),
           }
           break
