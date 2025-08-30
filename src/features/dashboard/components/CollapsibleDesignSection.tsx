@@ -37,8 +37,8 @@ export function CollapsibleDesignSection({
 
   return (
     <Accordion type="single" collapsible defaultValue={defaultOpen ? id : undefined}>
-      <AccordionItem value={id} className="border rounded-lg">
-        <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>div]:bg-muted/50">
+      <AccordionItem value={id} className="border-0">
+        <AccordionTrigger className="px-0 py-2 hover:no-underline">
           <div className="flex items-center justify-between w-full mr-4">
             <span className="font-medium">{title}</span>
             {status !== 'idle' && (
@@ -49,11 +49,11 @@ export function CollapsibleDesignSection({
             )}
           </div>
         </AccordionTrigger>
-        <AccordionContent className="px-4 pb-4">
-          <div className="space-y-4">
+        <AccordionContent className="px-0 pb-2">
+          <div className="space-y-3">
             {children}
             
-            <div className="flex justify-end pt-4 border-t">
+            <div className="flex justify-end pt-2 border-t">
               <Button
                 onClick={handleSaveClick}
                 disabled={status === 'saving'}
