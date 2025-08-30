@@ -158,7 +158,7 @@ export default function Login() {
               )}
               <Button 
                 type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-gray-900 font-semibold py-3 rounded-xl transition-colors"
+                className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 rounded-xl transition-colors"
                 disabled={loading}
               >
                 {loading ? 'Even geduld...' : (isLogin ? 'Inloggen' : 'Account aanmaken')}
