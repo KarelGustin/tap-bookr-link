@@ -26,7 +26,7 @@ export const WhyBookr = () => {
   const pastelColors = ['from-step-pink/20 to-step-lavender/20', 'from-step-mint/20 to-step-peach/20', 'from-step-teal/20 to-step-blue/20'];
 
   return (
-    <section id="why-bookr" className="py-24 bg-step-mint/5">
+    <section id="why-bookr" className="py-24 bg-step-teal/10">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">

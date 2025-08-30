@@ -51,7 +51,7 @@ export const Hero = () => {
   const previewUrl = `https://tapbookr.com/tapbookr`;
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gray-50">
+    <section className="relative min-h-screen overflow-hidden bg-step-yellow/10">
       {/* Floating header */}
       <header className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4">
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200">

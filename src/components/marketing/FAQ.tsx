@@ -29,7 +29,7 @@ export const FAQ = () => {
   ];
 
   return (
-    <section id="faq" className="py-24 bg-gradient-to-b from-gray-50 to-white">
+    <section id="faq" className="py-24 bg-step-blue/10">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
