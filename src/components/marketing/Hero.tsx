@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, CheckCircle, XCircle, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Hero = () => {
   const [userInput, setUserInput] = useState("");
@@ -10,7 +9,6 @@ export const Hero = () => {
   const [debouncedHandle, setDebouncedHandle] = useState("check1");
   const [selectedCategory, setSelectedCategory] = useState("beauty");
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
-  const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const prefix = "bookr.nl/";
@@ -29,61 +27,18 @@ export const Hero = () => {
   const sanitizeHandle = (val: string) =>
     val.toLowerCase().replace(/^\s+|\s+$/g, "").replace(/[^a-z0-9-_]/g, "");
 
-  const checkHandleAvailability = async (handleToCheck: string) => {
-    if (!handleToCheck || handleToCheck.length < 3) {
-      setIsHandleAvailable(false);
-      return;
-    }
-
-    // Check if it's a reserved handle
-    const reservedHandles = ["admin", "login", "signup", "www", "api", "app", "bookr", "tapbookr"];
-    if (reservedHandles.includes(handleToCheck.toLowerCase())) {
-      setIsHandleAvailable(false);
-      return;
-    }
-
-    setIsCheckingHandle(true);
-    try {
-      const { data, error } = await supabase.rpc('is_handle_available', {
-        handle_to_check: handleToCheck
-      });
-
-      if (error) {
-        console.error('Error checking handle availability:', error);
-        setIsHandleAvailable(false);
-      } else {
-        setIsHandleAvailable(data || false);
-      }
-    } catch (error) {
-      console.error('Error checking handle availability:', error);
-      setIsHandleAvailable(false);
-    } finally {
-      setIsCheckingHandle(false);
-    }
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const extracted = value.startsWith(prefix) ? value.slice(prefix.length) : value;
     setUserInput(extracted);
-    const sanitizedHandle = sanitizeHandle(extracted) || "demo";
-    setHandle(sanitizedHandle);
+    setHandle(sanitizeHandle(extracted) || "demo");
+    // Simple availability check (you can enhance this with actual API call)
+    setIsHandleAvailable(extracted.length > 2 && !["admin", "login", "signup", "www"].includes(extracted.toLowerCase()));
   };
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedHandle(handle || "demo"), 300);
     return () => clearTimeout(t);
-  }, [handle]);
-
-  // Debounced handle availability check
-  useEffect(() => {
-    if (!handle || handle === "demo") return;
-    
-    const timer = setTimeout(() => {
-      checkHandleAvailability(handle);
-    }, 500); // Debounce for 500ms
-
-    return () => clearTimeout(timer);
   }, [handle]);
 
   useEffect(() => {
@@ -103,7 +58,7 @@ export const Hero = () => {
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-8">
               <div className="font-black text-xl">
-                Bookr<span className="text-step-pink">.</span>
+                TapBookr.<span className="text-step-pink">.</span>
               </div>
               
               {/* Desktop Navigation */}
@@ -214,22 +169,20 @@ export const Hero = () => {
             <div className="space-y-4 max-w-md mx-auto lg:mx-0">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium pointer-events-none">
-                    tapbookr.com/
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
+                    tapbookr.nl/
                   </span>
                   <input
                     type="text"
                     value={userInput}
                     onChange={handleInputChange}
                     placeholder="jouw-naam"
-                    className="w-full pl-[105px] pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-tapbookr-green focus:ring-2 focus:ring-tapbookr-green/30 outline-none transition-all"
+                    className="w-full pl-20 pr-4 py-3 rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder-gray-500 focus:border-step-peach focus:ring-2 focus:ring-step-peach/30 outline-none transition-all"
                     maxLength={20}
                   />
                   {userInput && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      {isCheckingHandle ? (
-                        <div className="w-5 h-5 border-2 border-tapbookr-green border-t-transparent rounded-full animate-spin" />
-                      ) : isHandleAvailable ? (
+                      {isHandleAvailable ? (
                         <CheckCircle className="w-5 h-5 text-green-400 animate-bounce" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-400" />
@@ -238,15 +191,15 @@ export const Hero = () => {
                   )}
                 </div>
                 
-                <Link
-                  to={`/login?handle=${encodeURIComponent(handle)}&signup=true`}
-                  className={`inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-bold px-8 py-3 rounded-lg hover:bg-primary/90 transition-all duration-300 shadow-xl ${
-                    !userInput || !isHandleAvailable ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
-                  }`}
+                <Button 
+                  variant="default"
+                  size="lg" 
+                  className="px-8 font-bold shadow-xl"
+                  disabled={!userInput || !isHandleAvailable}
                 >
                   🎯 Claim Nu
                   <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
+                </Button>
               </div>
               
               {userInput && !isHandleAvailable && (
