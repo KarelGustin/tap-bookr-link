@@ -11,7 +11,7 @@ export const Hero = () => {
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const prefix = "bookr.nl/";
+  const prefix = "tapbookr.nl/";
 
   const professions = ["Nailtech", "Kapper", "Tattoo artist", "Salon", "Masseur", "Schoonheidsspecialist"];
 
@@ -58,7 +58,7 @@ export const Hero = () => {
           <div className="flex items-center justify-between px-6 py-3">
             <div className="flex items-center gap-8">
               <div className="font-black text-xl">
-                TapBookr.<span className="text-step-pink">.</span>
+                Bookr<span className="text-step-pink">.</span>
               </div>
               
               {/* Desktop Navigation */}
@@ -170,7 +170,7 @@ export const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
-                    tapbookr.nl/
+                    bookr.nl/
                   </span>
                   <input
                     type="text"
