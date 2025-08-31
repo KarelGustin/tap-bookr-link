@@ -79,8 +79,8 @@ export const HeroNew = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Use local PublicProfile route with fallback to demo handle
-  const previewUrl = `/${debouncedHandle || 'demo'}`;
+  // Use external tapbookr.com URL for iframe
+  const previewUrl = 'https://tapbookr.com/tapbookr';
 
   return (
     <div className="min-h-screen bg-white">
