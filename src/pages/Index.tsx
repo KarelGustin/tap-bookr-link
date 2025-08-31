@@ -1,4 +1,4 @@
-import { Hero } from "@/components/marketing/Hero";
+import { HeroNew } from "@/components/marketing/HeroNew";
 import { WhyBookr } from "@/components/marketing/WhyBookr";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Testimonials } from "@/components/marketing/Testimonials";
@@ -15,7 +15,7 @@ const Index = () => {
 
       {/* Main content */}
       <main>
-        <Hero />
+        <HeroNew />
         <WhyBookr />
         <HowItWorks />
         <Testimonials />

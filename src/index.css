@@ -92,12 +92,29 @@
     --shadow-card: 0 8px 30px -10px hsl(220 8.9% 46.1% / 0.2);
     --shadow-button: 0 2px 8px -2px hsl(220.9 39.3% 11% / 0.3);
 
-    /* TapBookr Brand Colors */
-    --tapbookr-green: 158 64% 52%; /* #10B981 */
-    --tapbookr-green-foreground: 0 0% 100%;
-    --tapbookr-green-light: 158 64% 85%;
-    --tapbookr-green-dark: 158 64% 35%;
-    --tapbookr-green-subtle: 158 64% 96%;
+    /* TapBookr Brand Colors - Linktr.ee inspired */
+    --primary: 262 83% 58%; /* Modern purple/violet */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 262 83% 52%;
+    --primary-light: 262 83% 90%;
+    --primary-subtle: 262 83% 96%;
+
+    /* Modern neutrals - clean and minimal */
+    --gray-50: 0 0% 98%;
+    --gray-100: 0 0% 95%;
+    --gray-200: 0 0% 90%;
+    --gray-300: 0 0% 83%;
+    --gray-400: 0 0% 64%;
+    --gray-500: 0 0% 45%;
+    --gray-600: 0 0% 32%;
+    --gray-700: 0 0% 25%;
+    --gray-800: 0 0% 13%;
+    --gray-900: 0 0% 9%;
+
+    /* Modern gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(262 83% 58%), hsl(292 83% 58%));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--gray-50)), hsl(var(--gray-100)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--primary-light)), hsl(var(--primary-subtle)));
 
     /* Status Colors */
     --warning: 38 92% 50%;

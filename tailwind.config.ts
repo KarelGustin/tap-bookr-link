@@ -26,7 +26,10 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))',
+					light: 'hsl(var(--primary-light))',
+					subtle: 'hsl(var(--primary-subtle))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -110,13 +113,18 @@ export default {
 					DEFAULT: 'hsl(var(--step-blue))',
 					foreground: 'hsl(var(--step-blue-foreground))'
 				},
-				// TapBookr brand colors
-				'tapbookr-green': {
-					DEFAULT: 'hsl(var(--tapbookr-green))',
-					foreground: 'hsl(var(--tapbookr-green-foreground))',
-					light: 'hsl(var(--tapbookr-green-light))',
-					dark: 'hsl(var(--tapbookr-green-dark))',
-					subtle: 'hsl(var(--tapbookr-green-subtle))'
+				// Modern gray scale
+				gray: {
+					50: 'hsl(var(--gray-50))',
+					100: 'hsl(var(--gray-100))',
+					200: 'hsl(var(--gray-200))',
+					300: 'hsl(var(--gray-300))',
+					400: 'hsl(var(--gray-400))',
+					500: 'hsl(var(--gray-500))',
+					600: 'hsl(var(--gray-600))',
+					700: 'hsl(var(--gray-700))',
+					800: 'hsl(var(--gray-800))',
+					900: 'hsl(var(--gray-900))'
 				}
 			},
 			borderRadius: {
