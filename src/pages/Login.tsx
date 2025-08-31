@@ -15,7 +15,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, hasActiveSubscription, subscriptionLoading } = useAuth();
+  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -89,29 +89,19 @@ export default function Login() {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: isLogin ? "Ingelogd!" : "Account created!",
-          description: isLogin ? "Je wordt doorverwezen..." : "Please check your email to verify your account.",
-        });
-        
-        // Smart redirect logic
         if (isLogin) {
-          // Wait for subscription status to load, then redirect appropriately
-          const checkAndRedirect = () => {
-            if (!subscriptionLoading) {
-              if (hasActiveSubscription) {
-                navigate('/dashboard', { replace: true });
-              } else {
-                navigate('/onboarding', { replace: true });
-              }
-            } else {
-              // If still loading, check again in 100ms
-              setTimeout(checkAndRedirect, 100);
-            }
-          };
-          checkAndRedirect();
+          // For login, redirect to home page and let routing decide
+          toast({
+            title: "Ingelogd!",
+            description: "Je wordt doorverwezen...",
+          });
+          navigate('/', { replace: true });
         } else {
-          // For signup, always go to onboarding first
+          // For signup, redirect to onboarding
+          toast({
+            title: "Account created!",
+            description: "Please check your email to verify your account.",
+          });
           const prefillHandle = searchParams.get('handle');
           const target = prefillHandle ? `/onboarding?step=1&handle=${encodeURIComponent(prefillHandle)}` : '/onboarding?step=1';
           navigate(target);

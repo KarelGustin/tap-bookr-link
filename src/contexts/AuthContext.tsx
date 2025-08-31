@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useSubscriptionStatus } from '@/hooks/use-subscription-status';
 
 interface AuthContextType {
   user: User | null;
@@ -10,8 +9,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
-  subscriptionLoading: boolean;
-  hasActiveSubscription: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,7 +25,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isLoading: subscriptionLoading, allowed: hasActiveSubscription } = useSubscriptionStatus();
 
   useEffect(() => {
     let mounted = true;
@@ -149,8 +145,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     loading,
-    subscriptionLoading,
-    hasActiveSubscription,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
