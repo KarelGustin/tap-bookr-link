@@ -359,12 +359,12 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
                   <Input
                     id="address"
                     placeholder="Hoofdstraat 123, Stad, Provincie 1234 AB"
-                    value={addressSearchQuery || footerData.footerAddress}
+                    value={addressSearchQuery}
                     onChange={(e) => {
                       const value = e.target.value;
                       setAddressSearchQuery(value);
-                      // Don't update footerData immediately to prevent conflicts
-                      // Only update the search query for now
+                      // Update footerData immediately to enable next button
+                      updateField('footerAddress', value);
                     }}
                     onFocus={() => {
                       // Ensure popover opens and stays open
@@ -395,6 +395,8 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
                     value={addressSearchQuery}
                     onValueChange={(value) => {
                       setAddressSearchQuery(value);
+                      // Update footerData immediately to enable next button
+                      updateField('footerAddress', value);
                       // Start search after user stops typing
                       if (value.length >= 3) {
                         searchAddress(value);

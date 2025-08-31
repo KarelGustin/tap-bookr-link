@@ -120,8 +120,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-accent/10 px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-accent/10 px-4 py-8">
+      <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center">
@@ -139,7 +139,7 @@ export default function Login() {
         
         {/* Login/Signup Card */}
         <Card className="border border-gray-200 bg-white rounded-2xl shadow-sm">
-          <CardHeader className="space-y-3 pb-6">
+          <CardHeader className="space-y-3 pb-4">
             <CardTitle className="text-2xl font-bold text-center text-gray-900">
               {isLogin ? 'Welkom terug' : 'Maak een account'}
             </CardTitle>
@@ -150,7 +150,7 @@ export default function Login() {
               }
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
