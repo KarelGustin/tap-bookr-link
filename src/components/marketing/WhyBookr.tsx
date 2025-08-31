@@ -23,34 +23,34 @@ export const WhyBookr = () => {
     }
   ];
 
-  const pastelColors = ['from-step-pink/20 to-step-lavender/20', 'from-step-mint/20 to-step-peach/20', 'from-step-teal/20 to-step-blue/20'];
-
   return (
     <section id="why-bookr" className="py-24 bg-gradient-to-br from-emerald-400 to-teal-500">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             Waarom kiezen voor Bookr?
           </h2>
-          <p className="text-xl text-white/90 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
             De eenvoudigste manier om professioneel gevonden te worden en boekingen binnen te halen.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <Card key={index} className="p-6 bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+            <Card key={index} className="p-8 bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-2xl group">
               <CardContent className="p-0">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-tapbookr-green-subtle rounded-lg border border-tapbookr-green-light">
-                    <feature.icon className="w-6 h-6 text-tapbookr-green" />
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="p-4 bg-tapbookr-green-subtle rounded-2xl border border-tapbookr-green-light group-hover:scale-110 transition-transform duration-300">
+                    <feature.icon className="w-8 h-8 text-tapbookr-green" />
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{feature.title}</h3>
-                    <p className="text-sm text-tapbookr-green font-medium bg-tapbookr-green-subtle px-2 py-1 rounded-full">{feature.stat}</p>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-xl text-gray-900 mb-2 leading-tight">{feature.title}</h3>
+                    <div className="inline-block">
+                      <p className="text-sm text-tapbookr-green font-semibold bg-tapbookr-green-subtle px-3 py-1 rounded-full border border-tapbookr-green-light">{feature.stat}</p>
+                    </div>
                   </div>
                 </div>
-                <p className="text-gray-800 leading-relaxed">{feature.description}</p>
+                <p className="text-gray-700 leading-relaxed text-base">{feature.description}</p>
               </CardContent>
             </Card>
           ))}
