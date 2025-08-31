@@ -79,7 +79,8 @@ export const HeroNew = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const previewUrl = `https://tapbookr.com/tapbookr`;
+  // Use local PublicProfile route with fallback to demo handle
+  const previewUrl = `/${debouncedHandle || 'demo'}`;
 
   return (
     <div className="min-h-screen bg-white">
@@ -275,10 +276,11 @@ export const HeroNew = () => {
                   {/* Screen */}
                   <div className="bg-white rounded-[2rem] overflow-hidden h-[600px] relative">
                     <iframe
-                      src={`${previewUrl}?preview=${debouncedHandle}`}
+                      src={previewUrl}
                       className="w-full h-full border-0"
                       title="Live preview"
                       loading="lazy"
+                      sandbox="allow-same-origin allow-scripts allow-forms"
                     />
                   </div>
                 </div>
