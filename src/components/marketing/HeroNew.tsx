@@ -94,9 +94,36 @@ export const HeroNew = () => {
             
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-              <a href="#testimonials" className="text-gray-600 hover:text-gray-900 transition-colors">Reviews</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+              <a 
+                href="#why-bookr" 
+                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('why-bookr')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Features
+              </a>
+              <a 
+                href="#testimonials" 
+                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                Reviews
+              </a>
+              <a 
+                href="#faq" 
+                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                FAQ
+              </a>
             </nav>
           </div>
           
@@ -141,9 +168,39 @@ export const HeroNew = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 bg-white">
             <nav className="container mx-auto px-4 py-4 space-y-4">
-              <a href="#features" className="block text-gray-600 hover:text-gray-900 py-2">Features</a>
-              <a href="#testimonials" className="block text-gray-600 hover:text-gray-900 py-2">Reviews</a>
-              <a href="#pricing" className="block text-gray-600 hover:text-gray-900 py-2">Pricing</a>
+              <a 
+                href="#why-bookr" 
+                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('why-bookr')?.scrollIntoView({ behavior: 'smooth' });
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                Features
+              </a>
+              <a 
+                href="#testimonials" 
+                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                Reviews
+              </a>
+              <a 
+                href="#faq" 
+                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                FAQ
+              </a>
               <div className="pt-4 border-t border-gray-200 space-y-3">
                 {user ? (
                   <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
