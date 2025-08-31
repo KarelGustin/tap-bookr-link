@@ -26,13 +26,13 @@ export const WhyBookr = () => {
   const pastelColors = ['from-step-pink/20 to-step-lavender/20', 'from-step-mint/20 to-step-peach/20', 'from-step-teal/20 to-step-blue/20'];
 
   return (
-    <section id="why-bookr" className="py-24 bg-gradient-to-br from-step-teal/5 to-step-mint/8">
+    <section id="why-bookr" className="py-24 bg-gradient-to-br from-emerald-400 to-teal-500">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             Waarom kiezen voor Bookr?
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto">
             De eenvoudigste manier om professioneel gevonden te worden en boekingen binnen te halen.
           </p>
         </div>

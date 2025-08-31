@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 export const Testimonials = () => {
   return (
-    <section id="testimonials" className="py-24 bg-gradient-to-br from-step-lavender/5 to-step-pink/8">
+    <section id="testimonials" className="py-24 bg-gradient-to-br from-rose-400 to-pink-500">
       <div className="container mx-auto px-2 md:px-3">
         <div className="max-w-5xl mx-auto text-center">
           {/* Simplified avatar */}
@@ -12,13 +12,13 @@ export const Testimonials = () => {
             <span className="text-3xl font-black text-tapbookr-green">R</span>
           </div>
           
-          <blockquote className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 mb-12 leading-tight">
+          <blockquote className="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-12 leading-tight">
             "TapBookr maakte het zo makkelijk om een website voor mijn bedrijf te hebben. Het heeft ook mijn boekingen gestimuleerd en ik ben zo blij dat ik het heb gevonden!"
           </blockquote>
           
           <div className="mb-12">
-            <p className="text-xl font-bold text-gray-900 mb-2">Riley Lemon</p>
-            <p className="text-lg text-gray-600 font-semibold">Nagelstylist, Ondernemer</p>
+            <p className="text-xl font-bold text-white mb-2">Riley Lemon</p>
+            <p className="text-lg text-white/80 font-semibold">Nagelstylist, Ondernemer</p>
           </div>
           
           <div className="flex items-center justify-center gap-6">

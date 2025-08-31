@@ -31,13 +31,13 @@ export const HowItWorks = () => {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-gradient-to-br from-step-pink/5 to-step-lavender/8">
+    <section id="how-it-works" className="py-24 bg-gradient-to-br from-purple-500 to-indigo-600">
       <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             Hoe het werkt
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto">
             Van idee tot live website in slechts 3 eenvoudige stappen.
           </p>
         </div>

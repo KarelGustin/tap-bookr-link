@@ -29,13 +29,13 @@ export const ResultsComparison = () => {
   ];
 
   return (
-    <section className="py-24 bg-step-lavender/10">
+    <section className="py-24 bg-gradient-to-br from-blue-500 to-cyan-500">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             Vergelijk & kies
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-white/90 max-w-3xl mx-auto">
             Zie hoe TapBookr zich verhoudt tot alternatieven. Spoiler: we zijn sneller en goedkoper.
           </p>
         </div>
