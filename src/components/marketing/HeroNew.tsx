@@ -288,7 +288,7 @@ export const HeroNew = () => {
                 {/* Floating elements */}
                 <div className="absolute -left-4 top-1/4 bg-white rounded-2xl shadow-lg p-4 max-w-48">
                   <p className="text-sm font-medium text-gray-900">Live preview</p>
-                  <p className="text-xs text-gray-600">Typ jouw naam en zie direct het resultaat!</p>
+                  
                 </div>
               </div>
             </div>
