@@ -95,6 +95,48 @@ export default function PublicProfile() {
         setNotFound(true);
         return;
       }
+
+      // Handle demo case with fallback data
+      if (handle === 'demo') {
+        const demoProfile = {
+          id: 'demo',
+          handle: 'demo',
+          name: 'Sarah Johnson',
+          slogan: 'Professional Hair & Beauty Services',
+          category: 'Hair Stylist',
+          avatar_url: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=400&h=400&fit=crop&crop=face',
+          banner_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&h=600&fit=crop',
+          about: {
+            title: 'Welkom bij mijn salon',
+            description: 'Met meer dan 10 jaar ervaring help ik je om er op je best uit te zien. Van knipwerk tot kleuring, ik zorg ervoor dat je de salon verlaat met een glimlach.',
+            alignment: 'center'
+          },
+          media: [
+            { imageUrl: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&h=500&fit=crop' },
+            { imageUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?w=400&h=500&fit=crop' },
+            { imageUrl: 'https://images.unsplash.com/photo-1595475038665-8de52921c27c?w=400&h=500&fit=crop' }
+          ],
+          subscription_status: 'active',
+          status: 'published',
+          user_id: 'demo',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          footer_business_name: 'Sarah\'s Hair Studio',
+          footer_address: 'Hoofdstraat 123, 1000 AB Amsterdam',
+          footer_email: 'info@sarahhairstudio.nl',
+          footer_phone: '+31 20 123 4567',
+          footer_show_maps: true,
+          footer_show_attribution: true,
+          whatsapp_number: '+31612345678',
+          use_whatsapp: true,
+          booking_mode: 'whatsapp'
+        } as unknown as Profile;
+        
+        setProfile(demoProfile);
+        setNotFound(false);
+        setLoading(false);
+        return;
+      }
       
       const { data: profileData, error } = await supabase
         .from('profiles')
