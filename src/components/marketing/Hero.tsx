@@ -11,7 +11,7 @@ export const Hero = () => {
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const prefix = "tapbookr.nl/";
+  const prefix = "bookr.nl/";
 
   const professions = ["Nailtech", "Kapper", "Tattoo artist", "Salon", "Masseur", "Schoonheidsspecialist"];
 
@@ -170,7 +170,7 @@ export const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm font-medium">
-                    bookr.nl/
+                    tapbookr.nl/
                   </span>
                   <input
                     type="text"
