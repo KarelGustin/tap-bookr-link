@@ -3,8 +3,10 @@ import { CheckCircle, XCircle, ArrowRight, Star, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const HeroNew = () => {
+  const { user } = useAuth();
   const [userInput, setUserInput] = useState("");
   const [handle, setHandle] = useState("demo");
   const [debouncedHandle, setDebouncedHandle] = useState("demo");
@@ -110,15 +112,26 @@ export const HeroNew = () => {
             
             {/* Desktop auth buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" asChild>
-                <Link to="/login">Log in</Link>
-              </Button>
-              <Button 
-                className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full font-medium transition-all"
-                asChild
-              >
-                <Link to="/onboarding">Sign up free</Link>
-              </Button>
+              {user ? (
+                <Button 
+                  className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full font-medium transition-all"
+                  asChild
+                >
+                  <Link to="/dashboard">Ga naar dashboard</Link>
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" asChild>
+                    <Link to="/login">Log in</Link>
+                  </Button>
+                  <Button 
+                    className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full font-medium transition-all"
+                    asChild
+                  >
+                    <Link to="/onboarding">Sign up free</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -131,12 +144,20 @@ export const HeroNew = () => {
               <a href="#testimonials" className="block text-gray-600 hover:text-gray-900 py-2">Reviews</a>
               <a href="#pricing" className="block text-gray-600 hover:text-gray-900 py-2">Pricing</a>
               <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <Link to="/login">Log in</Link>
-                </Button>
-                <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
-                  <Link to="/onboarding">Sign up free</Link>
-                </Button>
+                {user ? (
+                  <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
+                    <Link to="/dashboard">Ga naar dashboard</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <Link to="/login">Log in</Link>
+                    </Button>
+                    <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
+                      <Link to="/onboarding">Sign up free</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
@@ -151,9 +172,9 @@ export const HeroNew = () => {
             <div className="flex-1 text-center lg:text-left max-w-2xl">
               <div className="space-y-8">
                 {/* Badge */}
-                <div className="inline-flex items-center gap-2 bg-primary-light text-primary-foreground px-4 py-2 rounded-full text-sm font-medium">
+                <div className="inline-flex items-center gap-2 bg-primary-light text-black px-4 py-2 rounded-full text-sm font-medium">
                   <Star className="w-4 h-4 fill-current" />
-                  #1 Booking Platform Nederland
+                  #1 kleine website builder
                 </div>
 
                 {/* Main Headline */}
@@ -172,7 +193,7 @@ export const HeroNew = () => {
 
                 {/* Subtitle */}
                 <p className="text-xl text-gray-600 max-w-lg mx-auto lg:mx-0">
-                  Krijg meer klanten met een professionele website die je booking link eindelijk eer aandoet.
+                  Krijg meer klanten met een professionele compacte website.
                 </p>
 
                 {/* Social Proof */}
@@ -226,7 +247,7 @@ export const HeroNew = () => {
                     disabled={!userInput || !isHandleAvailable}
                   >
                     <Link to={`/login?handle=${encodeURIComponent(handle)}&signup=true`}>
-                      Claim jouw website gratis
+                      Claim jouw website voor €1
                       <ArrowRight className="w-5 h-5 ml-2" />
                     </Link>
                   </Button>
@@ -240,7 +261,7 @@ export const HeroNew = () => {
 
                   {/* Trust indicators */}
                   <p className="text-xs text-gray-500 text-center">
-                    💳 Eerste maand gratis • ⚡ Instant online • 🚀 Geen setup kosten
+                    💳 Eerste maand €1 • ⚡ Instant online • 🚀 Geen setup kosten
                   </p>
                 </div>
               </div>
