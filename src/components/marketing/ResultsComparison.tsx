@@ -24,7 +24,7 @@ export const ResultsComparison = () => {
       pros: ["Live in minuten", "Mobiel geoptimaliseerd", "Boekingsintegratie", "Professionele uitstraling", "WhatsApp-eerst"],
       cons: ["Beperkt tot één pagina"],
       time: "5 minuten",
-      cost: "€9/maand"
+      cost: "€7/maand"
     }
   ];
 
