@@ -311,6 +311,7 @@ const Onboarding = () => {
         (payload) => {
           console.log('🔄 Profile updated:', payload);
           
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newData = payload.new as any;
           if (newData?.onboarding_completed === true) {
             console.log('🎉 Onboarding completed! Redirecting to dashboard...');

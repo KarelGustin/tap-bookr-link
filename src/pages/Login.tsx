@@ -95,7 +95,7 @@ export default function Login() {
             title: "Ingelogd!",
             description: "Je wordt doorverwezen...",
           });
-          navigate('/', { replace: true });
+          navigate('/dashboard', { replace: true });
         } else {
           // For signup, redirect to onboarding
           toast({

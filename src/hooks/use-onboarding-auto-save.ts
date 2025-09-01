@@ -10,6 +10,7 @@ interface AutoSaveOptions {
 
 export const useOnboardingAutoSave = (
   profileId: string | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onboardingData: any,
   options: AutoSaveOptions = {}
 ) => {

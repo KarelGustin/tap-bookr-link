@@ -9,7 +9,7 @@ export const HowItWorks = () => {
       icon: User,
       title: "Claim je handle",
       description: "Kies een unieke naam voor jouw booking pagina. Bijvoorbeeld: bookr.nl/jouw-naam",
-      time: "30 seconden",
+      time: "10 seconden",
       color: "from-step-yellow/20 to-step-peach/20"
     },
     {
