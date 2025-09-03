@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { useImageUpload } from '@/hooks/use-image-upload';
 
 import { OnboardingLayout } from '../OnboardingLayout';
-import { Upload } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 
 interface Step3BrandingProps {
   onNext: (data: { 
@@ -41,8 +43,11 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerTextColor, setBannerTextColor] = useState(existingData?.banner?.textColor || '#ffffff');
   const [bannerPreview, setBannerPreview] = useState<string | null>(existingData?.banner?.imageUrl || null);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(existingData?.banner?.imageUrl || null);
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const { uploadImage, isUploading } = useImageUpload();
+  const { toast } = useToast();
 
   // Update all fields when existing data changes
   useEffect(() => {
@@ -50,6 +55,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
     
     if (existingData?.banner?.imageUrl) {
       setBannerPreview(existingData.banner.imageUrl);
+      setBannerUrl(existingData.banner.imageUrl);
     }
     
     // Update all fields from existingData
@@ -59,15 +65,40 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
     setBannerTextColor(existingData?.banner?.textColor || '#ffffff');
   }, [existingData]);
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setBannerFile(file);
+      
+      // Create preview
       const reader = new FileReader();
       reader.onload = (e) => {
         setBannerPreview(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+
+      // Upload to Supabase
+      try {
+        const result = await uploadImage(file, 'media');
+        if (result) {
+          setBannerUrl(result.url);
+          toast({
+            title: "Banner geüpload",
+            description: "Je banner is succesvol geüpload.",
+          });
+        } else {
+          throw new Error('Upload failed');
+        }
+      } catch (error) {
+        console.error('Banner upload error:', error);
+        toast({
+          title: "Upload fout",
+          description: "Er is een fout opgetreden bij het uploaden van je banner.",
+          variant: "destructive",
+        });
+        // Keep the preview but clear the URL
+        setBannerUrl(null);
+      }
     }
   };
 
@@ -82,7 +113,7 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
       category: category || undefined,
       banner: {
         type: 'image',
-        imageUrl: bannerPreview || undefined,
+        imageUrl: bannerUrl || undefined,
         textColor: bannerTextColor
       },
     });
@@ -167,8 +198,20 @@ export const Step3Branding = ({ onNext, onBack, requiresName, existingData, hand
           <div className="space-y-2">
             <Label className="text-sm font-medium">Banner afbeelding</Label>
             <div className="flex items-center gap-3">
-              <Button type="button" variant="outline" onClick={() => bannerInputRef.current?.click()}>
-                {bannerPreview ? 'Banner wijzigen' : 'Banner uploaden'}
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  bannerPreview ? 'Banner wijzigen' : 'Banner uploaden'
+                )}
               </Button>
               <input
                 ref={bannerInputRef}
