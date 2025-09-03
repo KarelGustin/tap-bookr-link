@@ -519,7 +519,6 @@ const Onboarding = () => {
   };
 
   const handleStep4 = async (data: {
-    avatarFile?: File;
     avatarUrl?: string;
     aboutTitle?: string;
     aboutDescription?: string;
@@ -530,44 +529,52 @@ const Onboarding = () => {
     const updatedData = { ...onboardingData, ...data };
     setOnboardingData(updatedData);
     
-    // Handle avatar file upload
-    let avatarUrl = data.avatarUrl;
-    if (data.avatarFile && user?.id) {
-      console.log('🔧 Uploading avatar file:', data.avatarFile.name);
-      
-      try {
-        const uploadResult = await uploadImage(data.avatarFile, 'avatars', `${user.id}/avatar/${Date.now()}`);
-        if (uploadResult) {
-          avatarUrl = uploadResult.url;
-          console.log('✅ Successfully uploaded avatar:', avatarUrl);
-          
-          toast({
-            title: "Avatar opgeslagen",
-            description: "Je profielfoto is succesvol geüpload.",
-          });
-        }
-      } catch (error) {
-        console.error('❌ Error uploading avatar:', error);
-        toast({
-          title: "Upload mislukt",
-          description: "Fout bij het uploaden van je profielfoto. Probeer het opnieuw.",
-          variant: "destructive",
-        });
-      }
+    // Combine all updates into a single database call for better performance
+    const updateData: any = {
+      onboarding_step: 5,
+    };
+    
+    if (data.avatarUrl !== undefined) {
+      updateData.avatar_url = data.avatarUrl;
     }
     
-    // Save each field with step update
-    if (avatarUrl !== undefined) {
-      await patchFieldToDatabase('avatar_url', avatarUrl, 5);
-    }
     if (data.aboutTitle !== undefined || data.aboutDescription !== undefined) {
-      const aboutData = {
+      updateData.about = {
         title: data.aboutTitle || onboardingData.aboutTitle || '',
         description: data.aboutDescription || onboardingData.aboutDescription || '',
         alignment: 'center',
         socialLinks: onboardingData.socialLinks || [],
       };
-      await patchFieldToDatabase('about', aboutData, 5);
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', user?.id);
+      
+      if (error) {
+        console.error('Error updating step 4 data:', error);
+        toast({
+          title: "Opslaan mislukt",
+          description: "Kon gegevens niet opslaan. Probeer het opnieuw.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('✅ Successfully updated step 4 data');
+      
+    } catch (error) {
+      console.error('❌ Failed to update step 4 data:', error);
+      toast({
+        title: "Opslaan mislukt",
+        description: "Er ging iets mis bij het opslaan. Probeer het opnieuw.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
     }
     
     setIsLoading(false);
@@ -933,7 +940,6 @@ const Onboarding = () => {
             onBack={goBack}
             handle={onboardingData.handle}
             existingData={{
-              avatarFile: onboardingData.avatarFile,
               aboutTitle: onboardingData.aboutTitle,
               aboutDescription: onboardingData.aboutDescription,
               avatar_url: onboardingData.avatarUrl,
