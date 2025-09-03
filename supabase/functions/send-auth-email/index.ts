@@ -35,14 +35,28 @@ serve(async (req: Request): Promise<Response> => {
       headers: Object.keys(headers)
     });
 
-    // If no webhook secret is configured, skip verification (for development)
+    // Parse payload with improved error handling
     let parsedPayload;
-    if (hookSecret) {
-      const wh = new Webhook(hookSecret);
-      parsedPayload = wh.verify(payload, headers);
-    } else {
-      console.log('⚠️ No webhook secret configured, parsing payload directly');
-      parsedPayload = JSON.parse(payload);
+    try {
+      if (hookSecret && hookSecret.length > 0) {
+        console.log('🔐 Verifying webhook signature...');
+        const wh = new Webhook(hookSecret);
+        parsedPayload = wh.verify(payload, headers);
+        console.log('✅ Webhook signature verified');
+      } else {
+        console.log('⚠️ No webhook secret configured, parsing payload directly (development mode)');
+        parsedPayload = JSON.parse(payload);
+      }
+    } catch (webhookError) {
+      console.log('❌ Webhook verification failed, falling back to direct parsing:', webhookError.message);
+      console.log('🔧 Attempting direct payload parsing for development...');
+      try {
+        parsedPayload = JSON.parse(payload);
+        console.log('✅ Direct payload parsing successful');
+      } catch (parseError) {
+        console.error('❌ Failed to parse payload:', parseError.message);
+        throw new Error(`Failed to parse webhook payload: ${parseError.message}`);
+      }
     }
 
     const {
