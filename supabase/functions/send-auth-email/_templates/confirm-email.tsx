@@ -15,13 +15,11 @@ import * as React from 'npm:react@18.3.1';
 interface ConfirmEmailProps {
   userName: string;
   confirmUrl: string;
-  token: string;
 }
 
 export const ConfirmEmail = ({
   userName,
   confirmUrl,
-  token,
 }: ConfirmEmailProps) => (
   <Html>
     <Head />
@@ -46,14 +44,6 @@ export const ConfirmEmail = ({
           >
             Bevestig je account
           </Link>
-        </Section>
-
-        <Text style={text}>
-          Of kopieer en plak deze bevestigingscode:
-        </Text>
-        
-        <Section style={codeContainer}>
-          <Text style={code}>{token}</Text>
         </Section>
 
         <Hr style={hr} />

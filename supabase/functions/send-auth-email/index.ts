@@ -102,8 +102,7 @@ serve(async (req: Request): Promise<Response> => {
         html = await renderAsync(
           React.createElement(ConfirmEmail, {
             userName,
-            confirmUrl: `${site_url}/auth/confirm?token_hash=${token_hash}&type=${email_action_type}&redirect_to=${redirect_to}`,
-            token,
+            confirmUrl: `${redirect_to}/auth/confirm?token_hash=${token_hash}&type=${email_action_type}`,
           })
         );
         subject = 'Bevestig je TapBookr account';
