@@ -9,6 +9,7 @@ import { PrivateRoute } from "@/components/PrivateRoute";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Confirm from "./pages/Confirm";
 import Onboarding from "./pages/Onboarding";
 import Edit from "./pages/Edit";
 import Dashboard from "./pages/Dashboard";
@@ -28,6 +29,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/auth/confirm" element={<Confirm />} />
               <Route path="/onboarding" element={
                 <ProtectedRoute requireOnboarding={false}>
                   <Onboarding />
