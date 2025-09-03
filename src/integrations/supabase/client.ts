@@ -2,19 +2,51 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Use environment variables with fallbacks
+// Validate and use environment variables with fallbacks
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://rllgepvklxqyhegrqodw.supabase.co";
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJsbGdlcHZrbHhxeWhlZ3Jxb2R3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MTA1NzEsImV4cCI6MjA3MDQ4NjU3MX0.TyuQteVpZZCpcx9XO6qV48r4_bIn6eXWMo4HNKU1En8";
 
-// Log configuration for debugging (only in development)
+// Validate required configuration
+if (!SUPABASE_URL) {
+  console.error('❌ SUPABASE_URL is not configured');
+  throw new Error('SUPABASE_URL is required but not configured');
+}
+
+if (!SUPABASE_ANON_KEY) {
+  console.error('❌ SUPABASE_ANON_KEY is not configured');
+  throw new Error('SUPABASE_ANON_KEY is required but not configured');
+}
+
+// Validate API key format
+if (!SUPABASE_ANON_KEY.startsWith('eyJ')) {
+  console.error('❌ SUPABASE_ANON_KEY appears to be invalid (should start with "eyJ")');
+  throw new Error('SUPABASE_ANON_KEY appears to be in incorrect format');
+}
+
+// Enhanced logging for debugging (only in development)
 if (import.meta.env.DEV) {
   console.log('🔧 Supabase Client Configuration:', {
     url: SUPABASE_URL,
-    key: SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'NOT SET',
-    usingEnv: !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY,
-    envUrl: import.meta.env.VITE_SUPABASE_URL,
-    envKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'NOT SET'
+    keyLength: SUPABASE_ANON_KEY.length,
+    keyPreview: SUPABASE_ANON_KEY.substring(0, 20) + '...',
+    usingEnvVars: !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    envUrl: import.meta.env.VITE_SUPABASE_URL || 'USING_FALLBACK',
+    envKeySet: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    buildMode: import.meta.env.MODE,
+    timestamp: new Date().toISOString()
   });
+  
+  // Test basic API key validity
+  try {
+    const keyParts = SUPABASE_ANON_KEY.split('.');
+    if (keyParts.length !== 3) {
+      console.warn('⚠️ API key does not appear to be a valid JWT (should have 3 parts)');
+    } else {
+      console.log('✅ API key format validation passed');
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not validate API key format:', error.message);
+  }
 }
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
