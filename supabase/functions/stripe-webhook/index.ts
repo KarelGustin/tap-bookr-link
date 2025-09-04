@@ -16,10 +16,15 @@ serve(async (req)=>{
       headers: corsHeaders
     });
   }
+  
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`🔔 [${requestId}] Webhook received at ${new Date().toISOString()}`)
+  console.log(`🔔 [${requestId}] Headers:`, Object.fromEntries(req.headers.entries()))
+  
   try {
     const signature = req.headers.get('stripe-signature');
     if (!signature) {
-      console.error('❌ No Stripe signature found in headers');
+      console.error(`❌ [${requestId}] No Stripe signature found in headers`);
       throw new Error('No Stripe signature found');
     }
     // lees raw body als bytes

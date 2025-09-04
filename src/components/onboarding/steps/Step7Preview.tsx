@@ -171,6 +171,8 @@ export const Step7Preview = ({
 
     setIsSubscribing(true);
     try {
+      console.log('🚀 Starting subscription process...');
+      
       // Get profile ID from the database using the handle
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -186,19 +188,47 @@ export const Step7Preview = ({
         throw new Error('Om live te gaan moet je een whatsapp nummer invoeren of je boekings-URL toevoegen');
       }
 
-      // Use StripeService to redirect to checkout
+      console.log('🚀 Profile found, creating checkout session...');
+
+      // Use StripeService to redirect to checkout with improved error handling
       await StripeService.redirectToCheckout({
         profileId: profile.id,
-        successUrl: `${window.location.origin}/dashboard?success=true&subscription=active`,
-        cancelUrl: `${window.location.origin}/onboarding?step=7`,
+        successUrl: `https://tapbookr.com/dashboard?success=true&subscription=active`,
+        cancelUrl: `https://tapbookr.com/onboarding?step=7`,
       });
+      
+      console.log('🚀 Checkout redirect initiated');
+      
     } catch (error) {
-      console.error('Error starting subscription:', error);
+      console.error('❌ Error starting subscription:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Er is een fout opgetreden bij het starten van je abonnement. Probeer het opnieuw.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Profile niet gevonden')) {
+          errorMessage = 'Je profiel kon niet worden gevonden. Vernieuw de pagina en probeer opnieuw.';
+        } else if (error.message.includes('whatsapp nummer') || error.message.includes('boekings-URL')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('checkout')) {
+          errorMessage = 'Er is een probleem met de betalingsverwerking. Controleer je internetverbinding en probeer opnieuw.';
+        }
+      }
+      
       toast({
-        title: "Fout",
-        description: error instanceof Error ? error.message : "Er is een fout opgetreden bij het starten van je abonnement. Probeer het opnieuw.",
+        title: "Betaling Fout",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Log detailed error for debugging
+      console.error('Subscription error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        profileData: { handle: profileData.handle },
+        timestamp: new Date().toISOString()
+      });
+      
     } finally {
       setIsSubscribing(false);
     }

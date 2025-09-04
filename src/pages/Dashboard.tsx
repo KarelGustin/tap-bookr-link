@@ -17,6 +17,7 @@ import { FooterSection } from '@/features/dashboard/components/FooterSection'
 import { CollapsibleDesignSection } from '@/features/dashboard/components/CollapsibleDesignSection'
 import { PhoneMockup } from '@/components/PhoneMockup'
 import { PaidInvoicesSection } from '@/components/PaidInvoicesSection'
+import { DebugSubscription } from '@/components/DebugSubscription'
 import { 
   Palette, 
   CreditCard, 
@@ -141,9 +142,53 @@ export default function Dashboard() {
     testimonials: [],
   })
   
-  // Success message handling
+  // Success message handling and sync functionality
   const success = searchParams.get('success')
   const subscriptionStatus = searchParams.get('subscription')
+  const [isManualSyncing, setIsManualSyncing] = useState(false)
+
+  // Manual sync function for failed webhooks
+  const handleManualSync = async () => {
+    if (!user) return
+    
+    setIsManualSyncing(true)
+    try {
+      console.log('🔄 Starting manual subscription sync...')
+      const { data, error } = await supabase.functions.invoke('sync-subscription-status')
+      
+      if (error) {
+        console.error('Manual sync error:', error)
+        toast({
+          title: "Sync Fout",
+          description: "Kon abonnement status niet synchroniseren. Probeer het opnieuw.",
+          variant: "destructive",
+        })
+      } else {
+        console.log('Manual sync result:', data)
+        if (data.success) {
+          toast({
+            title: data.status === 'active' ? "✅ Abonnement Actief" : "ℹ️ Geen Actief Abonnement",
+            description: data.message,
+            variant: data.status === 'active' ? "default" : "destructive",
+          })
+          
+          // Reload profile data
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
+        }
+      }
+    } catch (error) {
+      console.error('Manual sync error:', error)
+      toast({
+        title: "Sync Fout",
+        description: "Er is een fout opgetreden bij het synchroniseren.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsManualSyncing(false)
+    }
+  }
 
   // Show success message when coming from successful subscription
   useEffect(() => {
@@ -152,34 +197,41 @@ export default function Dashboard() {
         if (!profile?.id) return
         
         try {
+          // Wait a bit for webhook to process
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          
           const { data, error } = await supabase.functions.invoke('handle-subscription-success', {
             body: { profileId: profile.id }
           })
           
           if (error) {
             console.error('Error handling subscription success:', error)
+            // Fallback to manual sync
+            handleManualSync()
+          } else {
+            toast({
+              title: "🎉 Betaling Succesvol!",
+              description: "Je abonnement is actief en je website is nu live op tapbookr.com!",
+              variant: "default",
+            })
+            
+            setTimeout(() => {
+              window.location.reload()
+            }, 2000)
           }
         } catch (error) {
           console.error('Error calling subscription success handler:', error)
+          // Fallback to manual sync
+          handleManualSync()
         }
       }
       
       handleSubscriptionSuccess()
       
-      toast({
-        title: "🎉 Betaling Succesvol!",
-        description: "Je abonnement is actief en je website is nu live op tapbookr.com!",
-        variant: "default",
-      })
-      
       const url = new URL(window.location.href)
       url.searchParams.delete('success')
       url.searchParams.delete('subscription')
       window.history.replaceState({}, '', url.toString())
-      
-      setTimeout(() => {
-        window.location.reload()
-      }, 2000)
     }
   }, [success, subscriptionStatus, toast, profile?.id])
 
@@ -805,12 +857,40 @@ export default function Dashboard() {
                 }
                     </p>
                   </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleManualSync}
+                      disabled={isManualSyncing}
+                    >
+                      {isManualSyncing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Synchroniseren...
+                        </>
+                      ) : (
+                        '🔄 Status Controleren'
+                      )}
+                    </Button>
+                    {profile.subscription_status === 'inactive' && (
+                      <Button
+                        size="sm"
+                        onClick={() => window.open('https://billing.stripe.com/p/login/6oUs02aOy3Dy3aeaSU7kc00', '_blank')}
+                      >
+                        💳 Abonnement Activeren
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Paid Invoices */}
             <PaidInvoicesSection profileId={profile.id} />
+
+            {/* Debug Subscription Component */}
+            <DebugSubscription profile={profile} />
           </div>
         )}
       </div>

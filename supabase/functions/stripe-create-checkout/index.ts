@@ -16,11 +16,20 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`🚀 [${requestId}] Stripe checkout request started at ${new Date().toISOString()}`)
+
   try {
     // Get the request body
     const { profileId, successUrl, cancelUrl } = await req.json()
 
-    console.log('🔧 Request body:', { profileId, successUrl, cancelUrl })
+    console.log(`🔧 [${requestId}] Request body:`, { 
+      profileId, 
+      successUrl, 
+      cancelUrl,
+      origin: req.headers.get('origin'),
+      userAgent: req.headers.get('user-agent')
+    })
 
     if (!profileId) {
       throw new Error('Profile ID is required')
@@ -140,6 +149,16 @@ serve(async (req) => {
       cancelUrl
     })
 
+    // Hardcoded success/cancel URLs voor betrouwbaarheid
+    const baseUrl = 'https://tapbookr.com'
+    const finalSuccessUrl = successUrl || `${baseUrl}/dashboard?success=true&subscription=active`
+    const finalCancelUrl = cancelUrl || `${baseUrl}/onboarding?step=7`
+
+    console.log(`🔧 [${requestId}] Final URLs:`, {
+      success: finalSuccessUrl,
+      cancel: finalCancelUrl
+    })
+
     // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -150,8 +169,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: successUrl || `${req.headers.get('origin')}/dashboard?success=true`,
-      cancel_url: cancelUrl || `${req.headers.get('origin')}/onboarding?step=7`,
+      success_url: finalSuccessUrl,
+      cancel_url: finalCancelUrl,
       
       // Add discount coupon for first month €1
       discounts: [
