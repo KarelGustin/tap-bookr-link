@@ -263,7 +263,7 @@ export const HeroNew = () => {
                     <span className="ml-1 font-medium">4.9/5</span>
                   </div>
                   <span>•</span>
-                  <span>500+ happy users</span>
+                  <span>500+ tevreden gebruikers</span>
                 </div>
 
                 {/* CTA Section */}
