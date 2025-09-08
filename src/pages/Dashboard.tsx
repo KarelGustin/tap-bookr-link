@@ -190,6 +190,22 @@ export default function Dashboard() {
     }
   }
 
+  const handleManageSubscription = async () => {
+    if (!profile?.id) return;
+    
+    try {
+      window.location.href = `https://billing.stripe.com/p/login/6oU28rfsE8nG5aUaSU7kc00`
+    }
+     catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast({
+        title: "Fout",
+        description: "Kan abonnementsbeheer niet openen",
+        variant: "destructive",
+      });
+    }
+  }
+
   // Show success message when coming from successful subscription
   useEffect(() => {
     if (success === 'true' && subscriptionStatus === 'active') {
@@ -861,7 +877,7 @@ export default function Dashboard() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleManualSync}
+                      onClick={handleManageSubscription}
                       disabled={isManualSyncing}
                     >
                       {isManualSyncing ? (
@@ -870,7 +886,7 @@ export default function Dashboard() {
                           Synchroniseren...
                         </>
                       ) : (
-                        '🔄 Status Controleren'
+                        '🔄 Abonnement wijzigen'
                       )}
                     </Button>
                     {profile.subscription_status === 'inactive' && (
