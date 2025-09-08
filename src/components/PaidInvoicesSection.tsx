@@ -42,11 +42,11 @@ export function PaidInvoicesSection({ profileId }: PaidInvoicesSectionProps) {
 
         if (error) {
           console.error('Error loading invoices:', error);
-          toast({
-            title: "Fout bij laden facturen",
-            description: "Kon facturen niet laden. Probeer het opnieuw.",
-            variant: "destructive",
-          });
+          // toast({
+          //   title: "Fout bij laden facturen",
+          //   description: "Kon facturen niet laden. Probeer het opnieuw.",
+          //   variant: "destructive",
+          // });
           return;
         }
 
