@@ -365,7 +365,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
         {/* About section */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">
-            {t('onboarding.step4.aboutYou.title')}
+            Voeg 6 foto's toe voor de slider (en je social links voor updates in de toekomst).
             {existingData?.aboutAlignment && (
               <span className="ml-2 text-sm text-muted-foreground">
                 {t('onboarding.step4.aboutYou.alreadySaved')}
