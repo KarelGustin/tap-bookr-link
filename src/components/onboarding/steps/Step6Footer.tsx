@@ -363,21 +363,21 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
                     onChange={(e) => {
                       const value = e.target.value;
                       setAddressSearchQuery(value);
-                      // Update footerData immediately to enable next button
                       updateField('footerAddress', value);
+                      
+                      // Automatisch zoeken na 3 karakters
+                      if (value.length >= 3) {
+                        searchAddress(value);
+                      }
                     }}
                     onFocus={() => {
-                      // Ensure popover opens and stays open
                       setIsAddressPopoverOpen(true);
-                      // Set search query to current address if empty
                       if (!addressSearchQuery && footerData.footerAddress) {
                         setAddressSearchQuery(footerData.footerAddress);
                       }
                     }}
                     onBlur={(e) => {
-                      // Small delay to allow clicking on suggestions
                       setTimeout(() => {
-                        // Only close if no suggestion was clicked
                         if (!e.relatedTarget || !e.relatedTarget.closest('[data-radix-popper-content-wrapper]')) {
                           setIsAddressPopoverOpen(false);
                         }
@@ -388,22 +388,8 @@ export const Step6Footer = ({ onNext, onBack, existingData, handle }: Step6Foote
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="w-[400px] p-0" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
+              <PopoverContent className="w-[400px] p-auto" align="start" onOpenAutoFocus={(e) => e.preventDefault()}>
                 <Command>
-                  <CommandInput 
-                    placeholder="Zoek naar een adres..." 
-                    value={addressSearchQuery}
-                    onValueChange={(value) => {
-                      setAddressSearchQuery(value);
-                      // Update footerData immediately to enable next button
-                      updateField('footerAddress', value);
-                      // Start search after user stops typing
-                      if (value.length >= 3) {
-                        searchAddress(value);
-                      }
-                    }}
-                    onFocus={(e) => e.preventDefault()}
-                  />
                   <CommandList>
                     {isAddressSearching && (
                       <div className="p-4 text-center text-sm text-muted-foreground">
