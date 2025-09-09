@@ -83,6 +83,7 @@ export const Step7Preview = ({
   const [previewKey, setPreviewKey] = useState(0);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [isStartingPreview, setIsStartingPreview] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
   // Initialize local state based on the prop
   useEffect(() => {
@@ -168,6 +169,7 @@ export const Step7Preview = ({
       });
       return;
     }
+      
 
     setIsSubscribing(true);
     try {
@@ -176,7 +178,7 @@ export const Step7Preview = ({
       // Get profile ID from the database using the handle
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('id, booking_url, whatsapp_number')
+        .select('id, booking_url, whatsapp_number, onboarding_completed')
         .eq('handle', profileData.handle)
         .maybeSingle();
       
@@ -186,6 +188,28 @@ export const Step7Preview = ({
 
       if (!profile.booking_url && !profile.whatsapp_number) {
         throw new Error('Om live te gaan moet je een whatsapp nummer invoeren of je boekings-URL toevoegen');
+      }
+
+      // Set onboarding_completed to true BEFORE redirecting to checkout
+      if (profile.onboarding_completed === false) {
+        console.log(' Setting onboarding_completed to true...');
+        
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            onboarding_completed: true,
+            onboarding_step: 8,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', profile.id);
+        
+        if (updateError) {
+          console.error('Error updating onboarding_completed:', updateError);
+          // Don't throw error here, just log it - the webhook will handle it
+        } else {
+          console.log('✅ onboarding_completed set to true');
+          setOnboardingCompleted(true);
+        }
       }
 
       console.log('🚀 Profile found, creating checkout session...');
@@ -236,7 +260,9 @@ export const Step7Preview = ({
 
   const handleNext = async () => {
     // Direct to subscription flow - "Ga live voor €1"
+
     await handleSubscribe();
+    
   };
 
   return (
