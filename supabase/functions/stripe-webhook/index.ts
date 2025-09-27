@@ -27,9 +27,9 @@ serve(async (req)=>{
       console.error(`❌ [${requestId}] No Stripe signature found in headers`);
       throw new Error('No Stripe signature found');
     }
-    // lees raw body als bytes
+    // Read raw body as bytes for signature verification
     const rawBody = new Uint8Array(await req.arrayBuffer());
-    console.log('📨 Received webhook body length:', rawBody.byteLength);
+    console.log(`📨 [${requestId}] Received webhook body length:`, rawBody.byteLength);
     // @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
@@ -46,18 +46,18 @@ serve(async (req)=>{
         throw new Error('Stripe secret key not configured');
       }
       const stripe = new Stripe(stripeSecretKey);
-      // async verificatie met bytes
+      // Async signature verification with raw bytes
       event = await stripe.webhooks.constructEventAsync(
         rawBody,
         signature,
         webhookSecret
       );
-      console.log('✅ Webhook signature verified successfully');
+      console.log(`✅ [${requestId}] Webhook signature verified successfully`);
     } catch (err) {
-      console.error('❌ Webhook signature verification failed:', err.message);
-      throw new Error('Invalid webhook signature');
+      console.error(`❌ [${requestId}] Webhook signature verification failed:`, err.message);
+      throw new Error(`Invalid webhook signature: ${err.message}`);
     }
-    console.log(' Processing webhook event:', {
+    console.log('🔄 Processing webhook event:', {
       type: event.type,
       id: event.id,
       created: event.created
@@ -116,13 +116,14 @@ serve(async (req)=>{
       status: 200
     });
   } catch (error) {
-    console.error('❌ Webhook error:', {
+    console.error(`❌ [${requestId}] Webhook error:`, {
       message: error.message,
       stack: error.stack,
       timestamp: new Date().toISOString()
     });
     return new Response(JSON.stringify({
       error: error.message,
+      requestId,
       timestamp: new Date().toISOString()
     }), {
       headers: {
