@@ -484,7 +484,8 @@ export const Step5Preview = ({
               </div>
             </div>
           </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Terms agreement */}
         <div className="space-y-3">
@@ -562,10 +563,6 @@ export const Step5Preview = ({
             Vul verplichte velden in om te publiceren
           </p>
         )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
       </div>
     </OnboardingLayout>
   );

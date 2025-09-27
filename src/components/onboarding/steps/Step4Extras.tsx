@@ -445,8 +445,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
                 </p>
               );
             })()}
-          </div>
-          
+
           <p className="text-sm text-muted-foreground">
             {existingData?.media?.items && existingData.media.items.length > 0 
               ? t('onboarding.step4.mediaGallery.existingDescription')
@@ -683,7 +682,6 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
         <p className="text-center text-sm text-muted-foreground">
           Je kunt je profiel wijzigen totdat je pagina wordt gepubliceerd.
         </p>
-      </div>
       </div>
     </OnboardingLayout>
   );

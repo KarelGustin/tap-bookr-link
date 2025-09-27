@@ -142,17 +142,32 @@ serve(async (req: Request): Promise<Response> => {
         subject = 'TapBookr authenticatie';
     }
 
-    const { error } = await resend.emails.send({
-      from: 'TapBookr <noreply@tapbookr.com>',
+    console.log('📧 Attempting to send email via Resend:', {
+      to: user.email,
+      subject,
+      hasHtml: !!html
+    });
+
+    const { data, error } = await resend.emails.send({
+      from: 'TapBookr <onboarding@resend.dev>', // Using Resend default domain for now
       to: [user.email],
       subject,
       html,
     });
 
     if (error) {
-      console.error('❌ Resend error:', error);
-      throw error;
+      console.error('❌ Resend API error:', {
+        error,
+        message: error.message,
+        name: error.name
+      });
+      throw new Error(`Resend API failed: ${error.message}`);
     }
+
+    console.log('✅ Email sent successfully via Resend:', {
+      emailId: data?.id,
+      to: user.email
+    });
 
     console.log('✅ Auth email sent successfully to:', user.email);
 
