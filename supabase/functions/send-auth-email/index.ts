@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
-import { Resend } from "npm:resend@4.0.0";
-import { renderAsync } from "npm:@react-email/components@0.0.22";
-import React from "npm:react@18.3.1";
+import { Resend } from "https://esm.sh/resend@4.0.0";
+import { renderAsync } from "https://esm.sh/@react-email/components@0.0.22";
+import React from "https://esm.sh/react@18.3.1";
 import { MagicLinkEmail } from "./_templates/magic-link.tsx";
 import { ConfirmEmail } from "./_templates/confirm-email.tsx";
 import { ResetPasswordEmail } from "./_templates/reset-password.tsx";
@@ -149,7 +149,7 @@ serve(async (req: Request): Promise<Response> => {
     });
 
     const { data, error } = await resend.emails.send({
-      from: 'TapBookr <onboarding@resend.dev>', // Using Resend default domain for now
+      from: 'TapBookr <no-reply@tapbookr.com>',
       to: [user.email],
       subject,
       html,
