@@ -557,7 +557,8 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             onChange={handleMediaChange}
             className="hidden"
           />
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Preview Section - Only show when there's content */}
         {(aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) && (
@@ -676,12 +677,6 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             (aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) ? "Verder gaan" : "Voltooien"
           )}
         </Button>
-          </CardContent>
-        </Card>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Je kunt je profiel wijzigen totdat je pagina wordt gepubliceerd.
-        </p>
       </div>
     </OnboardingLayout>
   );
