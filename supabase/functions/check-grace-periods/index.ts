@@ -1,6 +1,4 @@
-// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error -- Deno runtime environment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -85,7 +83,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error checking grace periods:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,

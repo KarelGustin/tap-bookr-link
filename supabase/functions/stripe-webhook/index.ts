@@ -1,9 +1,5 @@
-// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-// @ts-expect-error -- Deno runtime environment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// @ts-expect-error -- Deno runtime environment
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +26,6 @@ serve(async (req)=>{
     // Read raw body as bytes for signature verification
     const rawBody = new Uint8Array(await req.arrayBuffer());
     console.log(`📨 [${requestId}] Received webhook body length:`, rawBody.byteLength);
-    // @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
       console.error('❌ STRIPE_WEBHOOK_SECRET not configured');
@@ -39,7 +34,6 @@ serve(async (req)=>{
     // Verify webhook signature (IMPORTANT for production)
     let event;
     try {
-      // @ts-expect-error -- Deno runtime environment
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
       if (!stripeSecretKey) {
         console.error('❌ STRIPE_SECRET_KEY not configured');
@@ -54,8 +48,8 @@ serve(async (req)=>{
       );
       console.log(`✅ [${requestId}] Webhook signature verified successfully`);
     } catch (err) {
-      console.error(`❌ [${requestId}] Webhook signature verification failed:`, err.message);
-      throw new Error(`Invalid webhook signature: ${err.message}`);
+      console.error(`❌ [${requestId}] Webhook signature verification failed:`, (err as Error).message);
+      throw new Error(`Invalid webhook signature: ${(err as Error).message}`);
     }
     console.log('🔄 Processing webhook event:', {
       type: event.type,
@@ -63,9 +57,7 @@ serve(async (req)=>{
       created: event.created
     });
     // Initialize Supabase client
-    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('❌ Supabase environment variables not configured');
@@ -117,12 +109,12 @@ serve(async (req)=>{
     });
   } catch (error) {
     console.error(`❌ [${requestId}] Webhook error:`, {
-      message: error.message,
-      stack: error.stack,
+      message: (error as Error).message,
+      stack: (error as Error).stack,
       timestamp: new Date().toISOString()
     });
     return new Response(JSON.stringify({
-      error: error.message,
+      error: (error as Error).message,
       requestId,
       timestamp: new Date().toISOString()
     }), {
@@ -135,7 +127,7 @@ serve(async (req)=>{
   }
 });
 // Enhanced handler functions with better error handling and logging
-async function handleSubscriptionCreated(subscription, supabase) {
+async function handleSubscriptionCreated(subscription: any, supabase: any) {
   try {
     // Find or create profile based on customer ID
     const { data: profile, error: profileError } = await supabase
@@ -217,7 +209,7 @@ async function handleSubscriptionCreated(subscription, supabase) {
   }
 }
 // Subscription updated handler intentionally disabled per current requirements
-async function handleSubscriptionDeleted(subscription, supabase) {
+async function handleSubscriptionDeleted(subscription: any, supabase: any) {
   console.log(`🔧 Processing subscription deleted for subscription ${subscription.id}`);
   // Update subscription record
   const { error: subError } = await supabase.from('subscriptions').update({
@@ -255,7 +247,7 @@ async function handleSubscriptionDeleted(subscription, supabase) {
   }
 }
 
-async function handleSubscriptionUpdated(subscription, supabase) {
+async function handleSubscriptionUpdated(subscription: any, supabase: any) {
   console.log(`🔧 Processing subscription updated for subscription ${subscription.id}, status: ${subscription.status}`);
   
   try {
@@ -315,7 +307,7 @@ async function handleSubscriptionUpdated(subscription, supabase) {
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice, supabase) {
+async function handleInvoicePaymentSucceeded(invoice: any, supabase: any) {
   console.log(`🔧 Processing payment succeeded for customer ${invoice.customer}`);
   
   try {
@@ -361,7 +353,7 @@ async function handleInvoicePaymentSucceeded(invoice, supabase) {
   }
 }
 
-async function handleInvoicePaymentFailed(invoice, supabase) {
+async function handleInvoicePaymentFailed(invoice: any, supabase: any) {
   console.log(`🔧 Processing payment failed for customer ${invoice.customer}`);
   
   try {

@@ -1,6 +1,4 @@
-// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error -- Deno runtime environment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -16,9 +14,7 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase client with service role
-    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -109,7 +105,7 @@ serve(async (req) => {
         profile_published: profile.status === 'published',
         subscription_active: profile.subscription_status === 'active',
         onboarding_complete: profile.onboarding_completed,
-        issues: []
+        issues: [] as string[]
       }
     }
 
@@ -145,7 +141,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: (error as Error).message,
         timestamp: new Date().toISOString()
       }),
       {

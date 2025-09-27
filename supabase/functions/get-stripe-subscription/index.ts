@@ -1,8 +1,5 @@
-// @ts-expect-error - Deno runtime imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error - Deno runtime imports
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-// @ts-expect-error - Deno runtime imports
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
 
 const corsHeaders = {
@@ -39,9 +36,7 @@ serve(async (req) => {
     console.log('Processing profile ID:', profileId)
 
     // Get profile data to find subscription_id
-    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     console.log('Environment variables:', { 
@@ -96,7 +91,6 @@ serve(async (req) => {
     console.log('Found subscription ID:', profile.subscription_id)
 
     // Get Stripe subscription data
-    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     
     console.log('Has Stripe secret key:', !!stripeSecretKey)
@@ -140,21 +134,21 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in get-stripe-subscription:', error)
     console.error('Error type:', typeof error)
-    console.error('Error message:', error.message)
-    console.error('Error stack:', error.stack)
+    console.error('Error message:', (error as Error).message)
+    console.error('Error stack:', (error as Error).stack)
     
     // Better error handling
     let errorMessage = 'Internal server error'
     let statusCode = 500
     
-    if (error.message?.includes('No such subscription')) {
+    if ((error as Error).message?.includes('No such subscription')) {
       errorMessage = 'Subscription not found'
       statusCode = 404
-    } else if (error.message?.includes('Invalid API key')) {
+    } else if ((error as Error).message?.includes('Invalid API key')) {
       errorMessage = 'Server configuration error'
       statusCode = 500
-    } else if (error.message) {
-      errorMessage = error.message
+    } else if ((error as Error).message) {
+      errorMessage = (error as Error).message
     }
     
     console.log('Returning error response:', { errorMessage, statusCode })

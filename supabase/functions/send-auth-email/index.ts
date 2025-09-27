@@ -48,14 +48,14 @@ serve(async (req: Request): Promise<Response> => {
         parsedPayload = JSON.parse(payload);
       }
     } catch (webhookError) {
-      console.log('❌ Webhook verification failed, falling back to direct parsing:', webhookError.message);
+      console.log('❌ Webhook verification failed, falling back to direct parsing:', (webhookError as Error).message);
       console.log('🔧 Attempting direct payload parsing for development...');
       try {
         parsedPayload = JSON.parse(payload);
         console.log('✅ Direct payload parsing successful');
       } catch (parseError) {
-        console.error('❌ Failed to parse payload:', parseError.message);
-        throw new Error(`Failed to parse webhook payload: ${parseError.message}`);
+        console.error('❌ Failed to parse payload:', (parseError as Error).message);
+        throw new Error(`Failed to parse webhook payload: ${(parseError as Error).message}`);
       }
     }
 
@@ -184,8 +184,8 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: {
-          message: error.message,
-          code: error.code || 'UNKNOWN_ERROR'
+          message: (error as Error).message,
+          code: (error as any).code || 'UNKNOWN_ERROR'
         }
       }),
       {

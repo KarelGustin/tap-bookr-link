@@ -1,8 +1,5 @@
-// @ts-expect-error - Deno import
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-// @ts-expect-error - Deno import
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
-// @ts-expect-error - Deno import
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -36,9 +33,7 @@ serve(async (req) => {
     }
 
     // Initialize Supabase with service role for database operations
-    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    // @ts-expect-error -- Deno runtime environment  
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -84,7 +79,6 @@ serve(async (req) => {
     const priceId = 'price_1RyGZDFR5NTFUA4SSuJ0yKEw' // €7/month
     console.log('🔧 Price ID (€7/month):', priceId)
 
-    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
     console.log('🔧 Stripe Secret Key exists:', !!stripeSecretKey)
     

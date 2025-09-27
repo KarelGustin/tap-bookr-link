@@ -1,4 +1,3 @@
-// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -30,9 +29,7 @@ serve(async (req) => {
     console.log(`📝 [${requestId}] Body preview: ${body.substring(0, 200)}...`);
     
     // Check environment variables
-    // @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-    // @ts-expect-error -- Deno runtime environment  
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     
     console.log(`🔑 [${requestId}] Webhook secret configured: ${!!webhookSecret}`);
@@ -63,7 +60,7 @@ serve(async (req) => {
     console.error(`❌ [${requestId}] Debug webhook error:`, error);
     
     return new Response(JSON.stringify({
-      error: error.message,
+      error: (error as Error).message,
       requestId,
       timestamp: new Date().toISOString()
     }), {
