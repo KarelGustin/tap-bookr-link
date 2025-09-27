@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { Check, Copy, ExternalLink, Edit, Sparkles, User, Instagram, Facebook, Linkedin, Youtube, MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -161,99 +162,108 @@ export const Step5Preview = ({
     >
       <div className="space-y-8">
         {/* Mobile preview */}
-        <div className="mx-auto max-w-sm">
-          <div className="bg-background border-2 border-border rounded-[2rem] p-1">
-            <div className="bg-muted/30 rounded-[1.5rem] p-6 min-h-[400px]">
-              {/* Mock preview content */}
-              <div className="space-y-4">
-                <div className="h-20 bg-gradient-to-r from-primary to-accent rounded-lg"></div>
-                
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-muted rounded-full"></div>
-                  <div>
-                    <div className="font-semibold">{profileData.name || 'Je Naam'}</div>
-                     <div className="text-sm text-muted-foreground">
-                       TapBookr.com/{profileData.handle}
-                     </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="mx-auto max-w-sm">
+              <div className="bg-background border-2 border-border rounded-[2rem] p-1">
+                <div className="bg-muted/30 rounded-[1.5rem] p-6 min-h-[400px]">
+                  {/* Mock preview content */}
+                  <div className="space-y-4">
+                    <div className="h-20 bg-gradient-to-r from-primary to-accent rounded-lg"></div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-muted rounded-full"></div>
+                      <div>
+                        <div className="font-semibold">{profileData.name || 'Je Naam'}</div>
+                         <div className="text-sm text-muted-foreground">
+                           TapBookr.com/{profileData.handle}
+                         </div>
+                      </div>
+                    </div>
+
+                    <div className="h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-medium">
+                      Boek Nu
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-4 bg-muted rounded w-1/2"></div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="aspect-square bg-muted rounded-lg"></div>
+                      <div className="aspect-square bg-muted rounded-lg"></div>
+                      <div className="aspect-square bg-muted rounded-lg"></div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="h-10 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-medium">
-                  Boek Nu
-                </div>
-
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-4 bg-muted rounded w-1/2"></div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-muted rounded-lg"></div>
-                  <div className="aspect-square bg-muted rounded-lg"></div>
-                  <div className="aspect-square bg-muted rounded-lg"></div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         {/* Checklist */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-lg">Klaar om te lanceren</h3>
-          
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <Check className="w-5 h-5 text-green-600" />
-              <div>
-                <div className="font-medium">Handle vergrendeld</div>
-                <div className="text-sm text-muted-foreground">
-                  TapBookr.com/{profileData.handle}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <Check className="w-5 h-5 text-green-600" />
-              <div>
-                <div className="font-medium">Boekingslink ingesteld</div>
-                <div className="text-sm text-muted-foreground truncate">
-                  {new URL(profileData.bookingUrl).hostname}
-                </div>
-              </div>
-            </div>
-
-            {profileData.name ? (
-              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <h3 className="font-semibold text-lg">Klaar om te lanceren</h3>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <Check className="w-5 h-5 text-green-600" />
                 <div>
-                  <div className="font-medium">Naam ingesteld</div>
+                  <div className="font-medium">Handle vergrendeld</div>
                   <div className="text-sm text-muted-foreground">
-                    {profileData.name}
+                    TapBookr.com/{profileData.handle}
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="w-5 h-5 rounded-full border-2 border-orange-500"></div>
+
+              <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <Check className="w-5 h-5 text-green-600" />
                 <div>
-                  <div className="font-medium text-orange-700">Naam ontbreekt</div>
-                  <div className="text-sm text-orange-600">
-                    Aanbevolen voor professionele uitstraling
+                  <div className="font-medium">Boekingslink ingesteld</div>
+                  <div className="text-sm text-muted-foreground truncate">
+                    {new URL(profileData.bookingUrl).hostname}
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-        </div>
+
+              {profileData.name ? (
+                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <Check className="w-5 h-5 text-green-600" />
+                  <div>
+                    <div className="font-medium">Naam ingesteld</div>
+                    <div className="text-sm text-muted-foreground">
+                      {profileData.name}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="w-5 h-5 rounded-full border-2 border-orange-500"></div>
+                  <div>
+                    <div className="font-medium text-orange-700">Naam ontbreekt</div>
+                    <div className="text-sm text-orange-600">
+                      Aanbevolen voor professionele uitstraling
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Mobile Preview */}
-        <div className="space-y-3">
-          <Label className="text-base font-medium">
-            Eindvoorvertoning van je publieke pagina
-          </Label>
-          <p className="text-sm text-muted-foreground">
-            Deze voorvertoning toont hoe je complete Bookr pagina eruit zal zien voor bezoekers. Alle secties zijn inbegrepen: banner, profiel, over, sociale links, werkgalerij en boeken.
-          </p>
+        <Card>
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <Label className="text-base font-medium">
+                Eindvoorvertoning van je publieke pagina
+              </Label>
+              <p className="text-sm text-muted-foreground mt-1">
+                Deze voorvertoning toont hoe je complete Bookr pagina eruit zal zien voor bezoekers. Alle secties zijn inbegrepen: banner, profiel, over, sociale links, werkgalerij en boeken.
+              </p>
+            </div>
           <div className="border rounded-lg overflow-hidden bg-white">
             <div className="bg-gray-100 p-3 border-b">
               <div className="flex items-center justify-between">
@@ -552,6 +562,10 @@ export const Step5Preview = ({
             Vul verplichte velden in om te publiceren
           </p>
         )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       </div>
     </OnboardingLayout>
   );

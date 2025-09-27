@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -290,59 +291,65 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
       <div className="space-y-6">
         {/* Existing handle section */}
         {userHandle && !useExistingHandle && (
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <Check className="w-5 h-5 text-blue-600 mt-0.5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-blue-900 mb-2">
-                  Je hebt al een handle: @{userHandle}
-                </h3>
-                <p className="text-sm text-blue-700 mb-3">
-                  Wil je verder gaan met deze handle of een nieuwe kiezen?
-                </p>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleChooseExistingHandle}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Ja, gebruik mijn bestaande handle
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleChooseNewHandle}
-                  >
-                    Nee, ik wil een nieuwe
-                  </Button>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <Check className="w-5 h-5 text-green-600 mt-0.5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-foreground mb-2">
+                    Je hebt al een handle: @{userHandle}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Wil je verder gaan met deze handle of een nieuwe kiezen?
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleChooseExistingHandle}
+                      className="h-12"
+                      size="default"
+                    >
+                      Ja, gebruik mijn bestaande handle
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleChooseNewHandle}
+                      className="h-12"
+                      size="default"
+                    >
+                      Nee, ik wil een nieuwe
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Handle input section */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="handle" className="text-base font-medium">
-              Je handle
-            </Label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-500 sm:text-sm">tapbookr.com/</span>
+        <Card>
+          <CardContent className="p-6 space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="handle" className="text-base font-medium">
+                Je handle
+              </Label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-muted-foreground text-sm">tapbookr.com/</span>
+                </div>
+                <Input
+                  ref={handleInputRef}
+                  id="handle"
+                  type="text"
+                  value={handle}
+                  onChange={(e) => handleInputChange(e.target.value)}
+                  placeholder="jouw-naam"
+                  className={`pl-36 font-mono h-12 ${isHandleLocked ? 'bg-muted cursor-not-allowed' : ''}`}
+                  disabled={isHandleLocked}
+                  maxLength={30}
+                />
               </div>
-              <Input
-                ref={handleInputRef}
-                id="handle"
-                type="text"
-                value={handle}
-                onChange={(e) => handleInputChange(e.target.value)}
-                placeholder="jouw-naam"
-                className={`pl-36 font-mono ${isHandleLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                disabled={isHandleLocked}
-                maxLength={30}
-              />
-            </div>
             
             {/* Handle status and suggestions */}
             {handle.length >= 3 && (
@@ -372,39 +379,40 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
               </div>
             )}
 
-            {/* Suggestions */}
-            {handleStatus.suggestions.length > 0 && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600 mb-2">Suggesties:</p>
-                <div className="flex flex-wrap gap-2">
-                  {handleStatus.suggestions.map((suggestion) => (
-                    <Button
-                      key={suggestion}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setHandle(suggestion)}
-                      className="text-xs"
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
+              {/* Suggestions */}
+              {handleStatus.suggestions.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Suggesties:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {handleStatus.suggestions.map((suggestion) => (
+                      <Button
+                        key={suggestion}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHandle(suggestion)}
+                        className="h-8"
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <p className="text-sm text-muted-foreground">
-              Alleen kleine letters, cijfers en streepjes. Minimaal 3 karakters.
-            </p>
-          </div>
+              <p className="text-sm text-muted-foreground">
+                Alleen kleine letters, cijfers en streepjes. Minimaal 3 karakters.
+              </p>
+            </div>
 
-          {/* Important note */}
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-800">
-              <strong>Belangrijk:</strong> Je kunt je handle wijzigen totdat je pagina wordt gepubliceerd. 
-              Na publicatie is de handle definitief.
-            </p>
-          </div>
-        </div>
+            {/* Important note */}
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-700">
+                <strong>Belangrijk:</strong> Je kunt je handle wijzigen totdat je pagina wordt gepubliceerd. 
+                Na publicatie is de handle definitief.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
       </div>
     </OnboardingLayout>
