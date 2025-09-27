@@ -116,7 +116,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('❌ Error in handle-subscription-success:', error);
     return new Response(JSON.stringify({ 
-      error: (error as Error).message || 'Internal server error' 
+      error: error.message || 'Internal server error' 
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

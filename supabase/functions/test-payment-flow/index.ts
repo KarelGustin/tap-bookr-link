@@ -1,5 +1,8 @@
+// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-expect-error -- Deno runtime environment
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno'
+// @ts-expect-error -- Deno runtime environment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -18,7 +21,9 @@ serve(async (req) => {
 
   try {
     // Initialize Supabase client with service role
+    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -54,8 +59,8 @@ serve(async (req) => {
         stripe_webhook_secret: false,
         stripe_price_id: false
       },
-      issues: [] as string[],
-      recommendations: [] as string[]
+      issues: [],
+      recommendations: []
     }
 
     // Test 1: Check if profile exists
@@ -76,8 +81,11 @@ serve(async (req) => {
 
     // Test 2: Check environment variables
     console.log(`🧪 [${requestId}] Test 2: Checking environment variables`)
+    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
+    // @ts-expect-error -- Deno runtime environment
     const stripeWebhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')
+    // @ts-expect-error -- Deno runtime environment
     const stripePriceId = Deno.env.get('STRIPE_PRICE_ID')
 
     testResults.environment_variables.stripe_secret_key = !!stripeSecretKey
@@ -128,7 +136,7 @@ serve(async (req) => {
           }
 
         } catch (error) {
-          testResults.issues.push(`Stripe customer not found: ${(error as Error).message}`)
+          testResults.issues.push(`Stripe customer not found: ${error.message}`)
           testResults.recommendations.push('Customer may have been deleted from Stripe dashboard')
         }
       } else {
@@ -154,7 +162,7 @@ serve(async (req) => {
         testResults.recommendations.push('Check Supabase function deployment')
       }
     } catch (error) {
-      testResults.issues.push(`Webhook endpoint test failed: ${(error as Error).message}`)
+      testResults.issues.push(`Webhook endpoint test failed: ${error.message}`)
       testResults.recommendations.push('Verify Supabase function deployment and CORS configuration')
     }
 
@@ -173,7 +181,7 @@ serve(async (req) => {
         console.log(`🧪 [${requestId}] ✅ Database permissions OK`)
       }
     } catch (error) {
-      testResults.issues.push(`Database permission test failed: ${(error as Error).message}`)
+      testResults.issues.push(`Database permission test failed: ${error.message}`)
     }
 
     // Generate summary
@@ -226,7 +234,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: false,
       test_id: requestId,
-      error: (error as Error).message,
+      error: error.message,
       timestamp: new Date().toISOString()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

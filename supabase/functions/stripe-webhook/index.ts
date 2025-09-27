@@ -1,5 +1,9 @@
+// @ts-expect-error -- Deno runtime environment
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-expect-error -- Deno runtime environment
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// @ts-expect-error -- Deno runtime environment
 import Stripe from 'https://esm.sh/stripe@14.21.0?target=deno';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,9 +27,10 @@ serve(async (req)=>{
       console.error(`❌ [${requestId}] No Stripe signature found in headers`);
       throw new Error('No Stripe signature found');
     }
-    // Read raw body as bytes for signature verification
+    // lees raw body als bytes
     const rawBody = new Uint8Array(await req.arrayBuffer());
-    console.log(`📨 [${requestId}] Received webhook body length:`, rawBody.byteLength);
+    console.log('📨 Received webhook body length:', rawBody.byteLength);
+    // @ts-expect-error -- Deno runtime environment
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
       console.error('❌ STRIPE_WEBHOOK_SECRET not configured');
@@ -34,30 +39,33 @@ serve(async (req)=>{
     // Verify webhook signature (IMPORTANT for production)
     let event;
     try {
+      // @ts-expect-error -- Deno runtime environment
       const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
       if (!stripeSecretKey) {
         console.error('❌ STRIPE_SECRET_KEY not configured');
         throw new Error('Stripe secret key not configured');
       }
       const stripe = new Stripe(stripeSecretKey);
-      // Async signature verification with raw bytes
+      // async verificatie met bytes
       event = await stripe.webhooks.constructEventAsync(
         rawBody,
         signature,
         webhookSecret
       );
-      console.log(`✅ [${requestId}] Webhook signature verified successfully`);
+      console.log('✅ Webhook signature verified successfully');
     } catch (err) {
-      console.error(`❌ [${requestId}] Webhook signature verification failed:`, (err as Error).message);
-      throw new Error(`Invalid webhook signature: ${(err as Error).message}`);
+      console.error('❌ Webhook signature verification failed:', err.message);
+      throw new Error('Invalid webhook signature');
     }
-    console.log('🔄 Processing webhook event:', {
+    console.log(' Processing webhook event:', {
       type: event.type,
       id: event.id,
       created: event.created
     });
     // Initialize Supabase client
+    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('❌ Supabase environment variables not configured');
@@ -108,14 +116,13 @@ serve(async (req)=>{
       status: 200
     });
   } catch (error) {
-    console.error(`❌ [${requestId}] Webhook error:`, {
-      message: (error as Error).message,
-      stack: (error as Error).stack,
+    console.error('❌ Webhook error:', {
+      message: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString()
     });
     return new Response(JSON.stringify({
-      error: (error as Error).message,
-      requestId,
+      error: error.message,
       timestamp: new Date().toISOString()
     }), {
       headers: {
@@ -127,7 +134,7 @@ serve(async (req)=>{
   }
 });
 // Enhanced handler functions with better error handling and logging
-async function handleSubscriptionCreated(subscription: any, supabase: any) {
+async function handleSubscriptionCreated(subscription, supabase) {
   try {
     // Find or create profile based on customer ID
     const { data: profile, error: profileError } = await supabase
@@ -209,7 +216,7 @@ async function handleSubscriptionCreated(subscription: any, supabase: any) {
   }
 }
 // Subscription updated handler intentionally disabled per current requirements
-async function handleSubscriptionDeleted(subscription: any, supabase: any) {
+async function handleSubscriptionDeleted(subscription, supabase) {
   console.log(`🔧 Processing subscription deleted for subscription ${subscription.id}`);
   // Update subscription record
   const { error: subError } = await supabase.from('subscriptions').update({
@@ -247,7 +254,7 @@ async function handleSubscriptionDeleted(subscription: any, supabase: any) {
   }
 }
 
-async function handleSubscriptionUpdated(subscription: any, supabase: any) {
+async function handleSubscriptionUpdated(subscription, supabase) {
   console.log(`🔧 Processing subscription updated for subscription ${subscription.id}, status: ${subscription.status}`);
   
   try {
@@ -307,7 +314,7 @@ async function handleSubscriptionUpdated(subscription: any, supabase: any) {
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: any, supabase: any) {
+async function handleInvoicePaymentSucceeded(invoice, supabase) {
   console.log(`🔧 Processing payment succeeded for customer ${invoice.customer}`);
   
   try {
@@ -353,7 +360,7 @@ async function handleInvoicePaymentSucceeded(invoice: any, supabase: any) {
   }
 }
 
-async function handleInvoicePaymentFailed(invoice: any, supabase: any) {
+async function handleInvoicePaymentFailed(invoice, supabase) {
   console.log(`🔧 Processing payment failed for customer ${invoice.customer}`);
   
   try {

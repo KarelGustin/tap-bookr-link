@@ -3,9 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { OnboardingLayout } from '../OnboardingLayout';
-import { Upload, User, Loader2, Check } from 'lucide-react';
+import { Upload, User, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useImageUpload } from '@/hooks/use-image-upload';
 import { useToast } from '@/hooks/use-toast';
@@ -145,128 +144,122 @@ export const Step4PersonalImage = ({ onNext, onBack, existingData, handle }: Ste
       <div className="space-y-6">
     
         {/* Persoonlijke afbeelding */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="avatar" className="text-base font-medium">
-                Persoonlijke afbeelding
-              </Label>
-              <div className="flex items-center space-x-4">
-                {avatarPreview ? (
-                  <div className="relative">
-                    <img
-                      src={avatarPreview}
-                      alt="Avatar preview"
-                      className="w-24 h-24 object-cover border-2 border-border rounded-lg"
-                      onError={(e) => {
-                        console.error('🔧 Error loading avatar image:', e);
-                        setAvatarPreview(null);
-                      }}
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute -top-2 -right-2 w-8 h-8 p-0"
-                      onClick={() => {
-                        console.log('🔧 Removing avatar');
-                        setAvatarFile(null);
-                        setAvatarPreview(null);
-                      }}
-                    >
-                      ×
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="w-24 h-24 rounded-lg bg-muted border-2 border-dashed border-border flex items-center justify-center">
-                    <User className="w-8 h-8 text-muted-foreground" />
-                  </div>
-                )}
-                <div className="space-y-2">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="avatar" className="text-base font-medium">
+              Persoonlijke afbeelding
+            </Label>
+            <div className="flex items-center space-x-4">
+              {avatarPreview ? (
+                <div className="relative">
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="w-24 h-24 object-cover border-2 border-gray-200 rounded-lg"
+                    onError={(e) => {
+                      console.error('🔧 Error loading avatar image:', e);
+                      setAvatarPreview(null);
+                    }}
+                  />
                   <Button
-                    type="button"
+                    size="sm"
                     variant="outline"
-                    onClick={() => avatarInputRef.current?.click()}
-                    className="h-12"
-                    disabled={isUploading}
+                    className="absolute -top-2 -right-2 rounded-lg w-8 h-8 p-0"
+                    onClick={() => {
+                      console.log('🔧 Removing avatar');
+                      setAvatarFile(null);
+                      setAvatarPreview(null);
+                    }}
                   >
-                    {isUploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        {avatarPreview ? 'Wijzig foto' : 'Foto kiezen'}
-                      </>
-                    )}
+                    ×
                   </Button>
-                  <p className="text-sm text-muted-foreground">
-                    {avatarPreview ? 'Klik om je foto te wijzigen' : 'Upload een professionele foto van jezelf (optioneel)'}
-                  </p>
-                  {avatarPreview && !avatarFile && existingData?.avatar_url && (
-                    <div className="flex items-center gap-1 text-xs text-green-600">
-                      <Check className="w-3 h-3" />
-                      <span>Bestaande foto geladen uit database</span>
-                    </div>
-                  )}
-                  {avatarUrl && avatarFile && (
-                    <div className="flex items-center gap-1 text-xs text-green-600">
-                      <Check className="w-3 h-3" />
-                      <span>Nieuwe foto geüpload</span>
-                    </div>
-                  )}
                 </div>
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <User className="w-8 h-8 text-gray-400" />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="rounded-lg"
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {avatarPreview ? 'Wijzig foto' : 'Foto kiezen'}
+                    </>
+                  )}
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {avatarPreview ? 'Klik om je foto te wijzigen' : 'Upload een professionele foto van jezelf (optioneel)'}
+                </p>
+                {avatarPreview && !avatarFile && existingData?.avatar_url && (
+                  <p className="text-xs text-green-600">
+                    ✓ Bestaande foto geladen uit database
+                  </p>
+                )}
+                {avatarUrl && avatarFile && (
+                  <p className="text-xs text-green-600">
+                    ✓ Nieuwe foto geüpload
+                  </p>
+                )}
               </div>
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
             </div>
-          </CardContent>
-        </Card>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+        </div>
 
         {/* Over jou sectie */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="aboutTitle" className="text-base font-medium">
-                Over jou titel
-              </Label>
-              <Input
-                id="aboutTitle"
-                placeholder="Maak kennis met [jouw naam]"
-                value={aboutTitle}
-                onChange={(e) => setAboutTitle(e.target.value)}
-                className="h-12"
-                maxLength={60}
-              />
-              <p className="text-sm text-muted-foreground">
-                Een persoonlijke titel die klanten laat weten wie je bent
-              </p>
-            </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="aboutTitle" className="text-base font-medium">
+              Over jou titel
+            </Label>
+            <Input
+              id="aboutTitle"
+              placeholder="Maak kennis met [jouw naam]"
+              value={aboutTitle}
+              onChange={(e) => setAboutTitle(e.target.value)}
+              className="rounded-lg h-12"
+              maxLength={60}
+            />
+            <p className="text-sm text-muted-foreground">
+              Een persoonlijke titel die klanten laat weten wie je bent
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="aboutDescription" className="text-base font-medium">
-                Over jou beschrijving
-              </Label>
-              <Textarea
-                id="aboutDescription"
-                placeholder="Vertel kort iets over jezelf, je passie en waarom je doet wat je doet..."
-                value={aboutDescription}
-                onChange={(e) => setAboutDescription(e.target.value)}
-                className="min-h-[100px]"
-                maxLength={400}
-              />
-              <p className="text-sm text-muted-foreground">
-                {aboutDescription.length}/400 karakters
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="space-y-2">
+            <Label htmlFor="aboutDescription" className="text-base font-medium">
+              Over jou beschrijving
+            </Label>
+            <Textarea
+              id="aboutDescription"
+              placeholder="Vertel kort iets over jezelf, je passie en waarom je doet wat je doet..."
+              value={aboutDescription}
+              onChange={(e) => setAboutDescription(e.target.value)}
+              className="rounded-lg min-h-[100px]"
+              maxLength={400}
+            />
+            <p className="text-sm text-muted-foreground">
+              {aboutDescription.length}/400 karakters
+            </p>
+          </div>
+        </div>
 
 
               </div>

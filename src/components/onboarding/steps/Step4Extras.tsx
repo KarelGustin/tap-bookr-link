@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { Upload, User, Instagram, Facebook, Linkedin, Youtube, MessageCircle, GripVertical } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -362,80 +361,113 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
       handle={handle}
       canGoNext={canGoNext}
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* About section */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <h3 className="text-lg font-semibold">
-              Voeg 6 foto's toe voor de slider (en je social links voor updates in de toekomst).
-              {existingData?.aboutAlignment && (
-                <span className="ml-2 text-sm text-muted-foreground">
-                  {t('onboarding.step4.aboutYou.alreadySaved')}
-                </span>
-              )}
-            </h3>
-          </CardContent>
-        </Card>
-
-        {/* Social links */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <h3 className="text-lg font-semibold">
-              {t('onboarding.step4.socialLinks.title')}
-              {existingData?.socials && Object.values(existingData.socials).some(s => s) && (
-                <span className="ml-2 text-sm text-muted-foreground">
-                  {t('onboarding.step4.aboutYou.alreadySaved')}
-                </span>
-              )}
-            </h3>
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">
+            Voeg 6 foto's toe voor de slider (en je social links voor updates in de toekomst).
+            {existingData?.aboutAlignment && (
+              <span className="ml-2 text-sm text-muted-foreground">
+                {t('onboarding.step4.aboutYou.alreadySaved')}
+              </span>
+            )}
+          </h3>
+          
+          {/* About Photo */}
+          {/* <div className="space-y-2">
+            <Label className="text-base font-medium">
+              Upload een foto van jezelf
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Een foto van jezelf of je bedrijf. Zorgt ervoor dat je profiel meer persoonlijkheid krijgt.
+            </p>
             
-            <div className="grid gap-4">
-              {socialPlatforms.map(({ key, icon: Icon, label, placeholder }) => (
-                <div key={key} className="space-y-2">
-                  <Label className="text-base font-medium flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </Label>
-                  <Input
-                    placeholder={placeholder}
-                    value={socials[key]}
-                    onChange={(e) => handleSocialChange(key, e.target.value)}
-                    className="h-12"
+            {aboutPhotoPreview || existingData?.aboutPhotoFile ? (
+              <div className="space-y-2">
+                <div className="w-32 h-32 rounded-lg overflow-hidden border">
+                  <img 
+                    src={aboutPhotoPreview || (existingData?.aboutPhotoFile ? URL.createObjectURL(existingData.aboutPhotoFile) : '')} 
+                    alt="About photo preview" 
+                    className="w-full h-full object-cover"
                   />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Media gallery */}
-        <Card>
-          <CardContent className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {t('onboarding.step4.media.title')}
-                  {mediaPreviews.length > 0 && (
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      ({mediaPreviews.length} van 6)
-                    </span>
-                  )}
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {t('onboarding.step4.media.subtitle')}
-                </p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => aboutPhotoInputRef.current?.click()}
+                  >
+                    Verander foto
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setAboutPhotoFile(null);
+                      setAboutPhotoPreview(null);
+                    }}
+                  >
+                    Verwijder foto
+                  </Button>
+                </div>
               </div>
+            ) : (
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => mediaInputRef.current?.click()}
-                disabled={isUploadingMedia || mediaPreviews.length >= 6}
-                className="h-12"
+                onClick={() => aboutPhotoInputRef.current?.click()}
+                className="w-full h-12 border-dashed"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {t('onboarding.step4.media.addMedia')}
+                Upload een foto
               </Button>
-            </div>
+            )}
+            
+            <input
+              ref={aboutPhotoInputRef}
+              
+              type="file"
+              accept="image/*"
+              onChange={handleAboutPhotoChange}
+              className="hidden"
+            />
+          </div> */}
+        </div>
+
+        {/* Social links */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">
+            {t('onboarding.step4.socialLinks.title')}
+            {existingData?.socials && Object.values(existingData.socials).some(s => s) && (
+              <span className="ml-2 text-sm text-muted-foreground">
+                {t('onboarding.step4.aboutYou.alreadySaved')}
+              </span>
+            )}
+          </h3>
+          
+          <div className="grid gap-4">
+            {socialPlatforms.map(({ key, icon: Icon, label, placeholder }) => (
+              <div key={key} className="space-y-2">
+                <Label className="text-base font-medium flex items-center gap-2">
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Label>
+                <Input
+                  placeholder={placeholder}
+                  value={socials[key]}
+                  onChange={(e) => handleSocialChange(key, e.target.value)}
+                  className="rounded-lg h-12"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Media gallery */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">{t('onboarding.step4.mediaGallery.title')}</h3>
             {(() => {
               const totalMediaCount = mediaPreviews.length;
@@ -445,7 +477,8 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
                 </p>
               );
             })()}
-
+          </div>
+          
           <p className="text-sm text-muted-foreground">
             {existingData?.media?.items && existingData.media.items.length > 0 
               ? t('onboarding.step4.mediaGallery.existingDescription')
@@ -557,8 +590,7 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             onChange={handleMediaChange}
             className="hidden"
           />
-          </CardContent>
-        </Card>
+        </div>
 
         {/* Preview Section - Only show when there's content */}
         {(aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) && (
@@ -677,6 +709,10 @@ export const Step4Extras = ({ onNext, onBack, handle, existingData }: Step4Extra
             (aboutTitle || aboutDescription || aboutPhotoPreview || avatarUrl || mediaPreviews.length > 0 || Object.values(socials).some(s => s)) ? "Verder gaan" : "Voltooien"
           )}
         </Button>
+        
+        <p className="text-center text-sm text-muted-foreground">
+          Je kunt je profiel wijzigen totdat je pagina wordt gepubliceerd.
+        </p>
       </div>
     </OnboardingLayout>
   );

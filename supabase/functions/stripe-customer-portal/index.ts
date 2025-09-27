@@ -1,4 +1,6 @@
+// @ts-expect-error - Deno runtime imports
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+// @ts-expect-error - Deno runtime imports  
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -19,8 +21,11 @@ serve(async (req) => {
       throw new Error('Profile ID is required')
     }
 
+    // @ts-expect-error -- Deno runtime environment
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    // @ts-expect-error -- Deno runtime environment
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    // @ts-expect-error -- Deno runtime environment
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
