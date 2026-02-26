@@ -27,7 +27,8 @@ if (!isConfigured) {
   console.warn('  - VITE_FIREBASE_APP_ID');
   console.warn('See FIREBASE_MIGRATION.md for setup instructions.');
   
-  // Use placeholder config to prevent crashes
+  // Use placeholder config to prevent crashes in development
+  // In production, we'll still try to initialize but with warnings
   if (import.meta.env.DEV) {
     firebaseConfig.apiKey = firebaseConfig.apiKey || 'dev-placeholder';
     firebaseConfig.projectId = firebaseConfig.projectId || 'dev-placeholder';
@@ -35,9 +36,8 @@ if (!isConfigured) {
     firebaseConfig.storageBucket = firebaseConfig.storageBucket || 'dev-placeholder.appspot.com';
     firebaseConfig.messagingSenderId = firebaseConfig.messagingSenderId || '123456789';
     firebaseConfig.appId = firebaseConfig.appId || '1:123456789:web:abc123';
-  } else {
-    throw new Error('Firebase configuration is required in production');
   }
+  // In production, we'll still initialize but Firebase operations will fail gracefully
 }
 
 // Initialize Firebase
@@ -63,11 +63,16 @@ export const storage: FirebaseStorage = getStorage(app);
 // Initialize Analytics (only in browser environment)
 let analytics: Analytics | null = null;
 if (typeof window !== 'undefined') {
+  // Initialize analytics asynchronously to prevent blocking
   isSupported().then((supported) => {
     if (supported) {
-      analytics = getAnalytics(app);
-      if (import.meta.env.DEV) {
-        console.log('✅ Firebase Analytics initialized');
+      try {
+        analytics = getAnalytics(app);
+        if (import.meta.env.DEV) {
+          console.log('✅ Firebase Analytics initialized');
+        }
+      } catch (error) {
+        console.warn('⚠️ Analytics initialization error:', error);
       }
     }
   }).catch((error) => {

@@ -32,8 +32,6 @@ export default function Confirm() {
         }
 
         // Handle different types of verification
-        let result;
-        
         // Firebase handles email verification differently
         // The token_hash is actually an action code in Firebase
         if (type === 'signup' || type === 'email_change') {
@@ -47,10 +45,8 @@ export default function Confirm() {
         } else {
           throw new Error(`Onbekend verificatietype: ${type}`);
         }
-        
-        const result = { data: { user: auth.currentUser }, error: null };
 
-        console.log('✅ Verification successful:', result.data);
+        console.log('✅ Verification successful:', { user: auth.currentUser });
         
         setStatus('success');
         setMessage('Je account is succesvol geverifieerd!');
