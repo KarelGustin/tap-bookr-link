@@ -1,145 +1,64 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export const Footer = () => {
-  const footerSections = [
-    {
-      title: "Product",
-      links: [
-        { name: "Functies", href: "#features" },
-        { name: "Prijzen", href: "#pricing" },
-        { name: "Hoe het werkt", href: "#how-it-works" },
-        { name: "Voorbeelden", href: "#examples" },
-        { name: "Integraties", href: "#integrations" },
-        { name: "Mobiele App", href: "#mobile" }
-      ]
-    },
-    {
-      title: "Bedrijven", 
-      links: [
-        { name: "Beauty & Wellness", href: "#beauty" },
-        { name: "Fitness & Gezondheid", href: "#fitness" },
-        { name: "Professionele Diensten", href: "#services" },
-        { name: "Restaurants & Voeding", href: "#food" },
-        { name: "Retail & Winkelen", href: "#retail" },
-        { name: "Evenementen & Entertainment", href: "#events" }
-      ]
-    },
-    {
-      title: "Ondersteuning",
-      links: [
-        { name: "Helpcentrum", href: "#help" },
-        { name: "Aan de slag", href: "/onboarding" },
-        { name: "Veelgestelde vragen", href: "#faq" },
-        { name: "Contact ondersteuning", href: "#contact" },
-        { name: "Video tutorials", href: "#tutorials" },
-        { name: "API documentatie", href: "#api" }
-      ]
-    },
-    {
-      title: "Bedrijf",
-      links: [
-        { name: "Over TapBookr", href: "#about" },
-        { name: "Blog", href: "#blog" },
-        { name: "Pers", href: "#press" },
-        { name: "Vacatures", href: "#careers" },
-        { name: "Partners", href: "#partners" },
-        { name: "Contact", href: "#contact" }
-      ]
-    }
-  ];
-
-  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    if (href.startsWith('#')) {
-      const element = document.getElementById(href.substring(1));
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
-
   return (
-    <footer className="pt-24 pb-12 bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-      <div className="container mx-auto px-4 md:px-8 max-w-6xl">
-        {/* Main footer content */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-12 mb-12 backdrop-blur-sm">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {footerSections.map((section, index) => (
-              <div key={index}>
-                <h3 className="text-lg font-bold text-white mb-6">
-                  {section.title}
-                </h3>
-                <ul className="space-y-4">
-                  {section.links.map((link, linkIndex) => (
-                    <li key={linkIndex}>
-                      {link.href.startsWith('#') ? (
-                        <a
-                          href={link.href}
-                          onClick={(e) => handleSmoothScroll(e, link.href)}
-                          className="text-gray-300 hover:text-white transition-colors duration-200 text-base cursor-pointer hover:underline"
-                        >
-                          {link.name}
-                        </a>
-                      ) : (
-                        <Link
-                          to={link.href}
-                          className="text-gray-300 hover:text-white transition-colors duration-200 text-base hover:underline"
-                        >
-                          {link.name}
-                        </Link>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </div>
+    <footer>
+      {/* ─── FINAL CTA — dramatic gradient section ─── */}
+      <div className="relative overflow-hidden bg-gray-950 py-24 md:py-32">
+        {/* Ambient gradients */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-purple-500/15 via-pink-500/10 to-transparent rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-gradient-to-tr from-purple-500/10 to-transparent rounded-full blur-[80px] pointer-events-none" />
         
-        {/* CTA Section */}
-        <div className="bg-gradient-to-r from-tapbookr-green to-teal-500 border border-gray-700 rounded-2xl p-12 mb-12 text-center shadow-2xl">
-          <h3 className="text-3xl md:text-4xl font-bold text-white mb-6 leading-tight">
-            Klaar om je boekingen te stimuleren?
-          </h3>
-          <p className="text-white/90 mb-8 max-w-2xl mx-auto text-xl leading-relaxed">
-            Sluit je aan bij duizenden bedrijven die hun boekingservaring al hebben getransformeerd met TapBookr.
+        <div className="relative max-w-[1200px] mx-auto px-6 text-center">
+          <h2 className="text-[36px] md:text-[48px] font-extrabold text-white leading-[1.1] tracking-[-0.035em] mb-5">
+            Jouw beauty business
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400">
+              verdient dit.
+            </span>
+          </h2>
+          <p className="text-[16px] md:text-[17px] text-gray-400 leading-relaxed max-w-lg mx-auto mb-10">
+            Bouw vandaag nog je professionele boekingspagina. Je eerste maand is slechts €1.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" size="lg" className="bg-white text-tapbookr-green border-white hover:bg-gray-50 hover:scale-105 transition-all duration-200 font-semibold" asChild>
+          
+          <div className="inline-flex flex-col sm:flex-row items-center gap-4">
+            <Button
+              asChild
+              className="bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 text-white h-13 px-8 rounded-full text-[15px] font-semibold hover:opacity-90 transition-opacity"
+            >
               <Link to="/onboarding">
-                Begin nu met bouwen
+                Begin nu gratis
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105 transition-all duration-200 font-semibold" asChild>
-              <Link
-                to="https://tapbookr.com/tapbookr"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Bekijk live demo
-              </Link>
-            </Button>
+            <a
+              href="https://tapbookr.com/tapbookr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[14px] text-gray-500 hover:text-white transition-colors underline underline-offset-4 decoration-gray-700"
+            >
+              Bekijk live voorbeeld
+            </a>
           </div>
         </div>
-        
-        {/* Bottom section */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-gray-300">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-tapbookr-green flex items-center justify-center">
-              <span className="font-bold text-xl text-white">T</span>
-            </div>
-            <span className="font-bold text-2xl text-white">TapBookr</span>
+      </div>
+
+      {/* ─── BOTTOM BAR ─── */}
+      <div className="bg-gray-950 border-t border-white/[0.06]">
+        <div className="max-w-[1200px] mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-[14px] font-bold text-white tracking-tight">
+            TapBookr
+          </span>
+
+          <div className="flex items-center gap-6 text-[13px] text-gray-500">
+            <Link to="/terms" className="hover:text-gray-300 transition-colors">Voorwaarden</Link>
+            <Link to="/privacy" className="hover:text-gray-300 transition-colors">Privacy</Link>
           </div>
-          
-          <div className="flex items-center gap-8 text-base">
-            <Link to="/terms" className="hover:text-white transition-colors duration-200">Voorwaarden</Link>
-            <Link to="/privacy" className="hover:text-white transition-colors duration-200">Privacy</Link>
-            <Link to="/cookies" className="hover:text-white transition-colors duration-200">Cookies</Link>
-          </div>
-          
-          <p className="text-gray-400 text-base">
-            © 2024 TapBookr. Alle rechten voorbehouden.
+
+          <p className="text-[12px] text-gray-600">
+            © {new Date().getFullYear()} TapBookr
           </p>
         </div>
       </div>

@@ -1,58 +1,106 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Clock, Zap, TrendingUp } from "lucide-react";
+import { Palette, Zap, TrendingUp, Smartphone, Globe, BarChart3 } from "lucide-react";
 
 export const WhyBookr = () => {
   const features = [
     {
-      title: "Direct professioneel eruitzien",
-      description: "Voeg je naam, logo en een paar foto's toe. Bookr verandert je simpele boekingslink in een strakke website waar klanten op vertrouwen—geen webkennis nodig.",
-      icon: Clock,
-      stat: "+40% vertrouwen"
+      title: "Professionele uitstraling",
+      description: "Je pagina ziet eruit alsof een designer het heeft gemaakt. Klanten vertrouwen je sneller.",
+      icon: Palette,
+      stat: "+40% vertrouwen",
+      gradient: "from-purple-500 to-pink-500",
+      size: "large",
     },
     {
-      title: "Werkt met wat je al gebruikt",
-      description: "Plak je Salonized, Treatwell of Calendly link. We integreren het mooi in je pagina—geen code, geen setup, gewoon plakken en publiceren.",
+      title: "Plug & play boekingen",
+      description: "Salonized, Treatwell, Calendly — plak je link en het werkt.",
       icon: Zap,
-      stat: "0 setup tijd"
+      stat: "0 min setup",
+      gradient: "from-pink-500 to-amber-500",
+      size: "small",
     },
     {
-      title: "Meer boekingen, minder heen en weer",
-      description: "Duidelijke diensten, sociale links en een één-klik \"Boek nu.\" Minder DM's, minder no-shows, meer klanten in je agenda.",
+      title: "Mobiel-first design",
+      description: "95% van je klanten zit op hun telefoon. Je pagina is perfect geoptimaliseerd.",
+      icon: Smartphone,
+      stat: "100% responsive",
+      gradient: "from-amber-500 to-orange-500",
+      size: "small",
+    },
+    {
+      title: "Jouw eigen domein",
+      description: "tapbookr.com/jouw-naam — een professioneel adres dat je overal kunt delen.",
+      icon: Globe,
+      stat: "Unieke URL",
+      gradient: "from-blue-500 to-purple-500",
+      size: "small",
+    },
+    {
+      title: "Meer boekingen",
+      description: "Eén-klik boeken, WhatsApp integratie, en duidelijke diensten. Minder DM's, meer klanten.",
       icon: TrendingUp,
-      stat: "+21% boekingen"
-    }
+      stat: "+21% conversie",
+      gradient: "from-emerald-500 to-teal-500",
+      size: "small",
+    },
+    {
+      title: "Inzicht in je bezoekers",
+      description: "Zie hoeveel mensen je pagina bezoeken en op je boekingsknop klikken.",
+      icon: BarChart3,
+      stat: "Live analytics",
+      gradient: "from-violet-500 to-indigo-500",
+      size: "small",
+    },
   ];
 
   return (
-    <section id="why-bookr" className="py-24 bg-gradient-to-br from-emerald-400 to-teal-500">
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Waarom kiezen voor TapBookr?
+    <section id="why-bookr" className="py-24 md:py-32 relative">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 dot-pattern opacity-40 pointer-events-none" />
+      
+      <div className="relative max-w-[1200px] mx-auto px-6">
+        {/* Section header */}
+        <div className="max-w-2xl mx-auto text-center mb-16 md:mb-20">
+          <p className="text-[13px] font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 tracking-wide uppercase mb-4">
+            Features
+          </p>
+          <h2 className="text-[34px] md:text-[44px] font-extrabold text-gray-950 leading-[1.1] tracking-[-0.03em] mb-5">
+            Alles wat je nodig hebt
+            <br />
+            <span className="text-gray-400">om te stralen online.</span>
           </h2>
-          <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-            De eenvoudigste manier om professioneel gevonden te worden en boekingen binnen te halen.
+          <p className="text-[16px] md:text-[17px] text-gray-500 leading-relaxed">
+            Van link-in-bio tot professionele website — in 5 minuten.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* Bento Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature, index) => (
-            <Card key={index} className="p-8 bg-white border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-2xl group">
-              <CardContent className="p-0">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="p-4 bg-tapbookr-green-subtle rounded-2xl border border-tapbookr-green-light group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-8 h-8 text-tapbookr-green" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 leading-tight">{feature.title}</h3>
-                    <div className="inline-block">
-                      <p className="text-sm text-tapbookr-green font-semibold bg-tapbookr-green-subtle px-3 py-1 rounded-full border border-tapbookr-green-light">{feature.stat}</p>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-gray-700 leading-relaxed text-base">{feature.description}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={index}
+              className={`group relative bg-white rounded-2xl border border-gray-100 p-7 transition-colors hover:border-gray-200 ${
+                index === 0 ? "lg:col-span-2 lg:row-span-1" : ""
+              }`}
+            >
+              {/* Icon with gradient */}
+              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5`}>
+                <feature.icon className="w-5 h-5 text-white" />
+              </div>
+
+              {/* Content */}
+              <h3 className="text-[17px] font-bold text-gray-950 mb-2 tracking-[-0.01em]">
+                {feature.title}
+              </h3>
+              <p className="text-[14px] text-gray-500 leading-relaxed mb-4">
+                {feature.description}
+              </p>
+
+              {/* Stat pill */}
+              <div className={`inline-flex items-center gap-2 text-[12px] font-semibold px-3 py-1.5 rounded-full bg-gradient-to-r ${feature.gradient} bg-clip-text text-transparent border border-gray-100`}>
+                <span className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${feature.gradient}`} style={{ WebkitTextFillColor: 'initial' }} />
+                <span>{feature.stat}</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>

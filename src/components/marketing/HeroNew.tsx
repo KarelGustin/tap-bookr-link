@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, ArrowRight, Star, Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X, Sparkles, Calendar, Link2, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,6 @@ export const HeroNew = () => {
   const { user } = useAuth();
   const [userInput, setUserInput] = useState("");
   const [handle, setHandle] = useState("demo");
-  const [debouncedHandle, setDebouncedHandle] = useState("demo");
   const [isHandleAvailable, setIsHandleAvailable] = useState(true);
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,50 +24,29 @@ export const HeroNew = () => {
       setIsHandleAvailable(false);
       return;
     }
-
     const reservedHandles = ["admin", "login", "signup", "www", "api", "app", "bookr", "tapbookr"];
     if (reservedHandles.includes(handleToCheck.toLowerCase())) {
       setIsHandleAvailable(false);
       return;
     }
-
     setIsCheckingHandle(true);
     try {
-      const { data, error } = await supabase.rpc('is_handle_available', {
-        handle_to_check: handleToCheck
-      });
-
-      if (error) {
-        setIsHandleAvailable(false);
-      } else {
-        setIsHandleAvailable(data || false);
-      }
-    } catch (error) {
-      setIsHandleAvailable(false);
-    } finally {
-      setIsCheckingHandle(false);
-    }
+      const { data, error } = await supabase.rpc('is_handle_available', { handle_to_check: handleToCheck });
+      if (error) setIsHandleAvailable(false);
+      else setIsHandleAvailable(data || false);
+    } catch { setIsHandleAvailable(false); }
+    finally { setIsCheckingHandle(false); }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setUserInput(value);
-    const sanitizedHandle = sanitizeHandle(value) || "demo";
-    setHandle(sanitizedHandle);
+    setHandle(sanitizeHandle(value) || "demo");
   };
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedHandle(handle || "demo"), 300);
-    return () => clearTimeout(t);
-  }, [handle]);
-
-  useEffect(() => {
     if (!handle || handle === "demo") return;
-    
-    const timer = setTimeout(() => {
-      checkHandleAvailability(handle);
-    }, 500);
-
+    const timer = setTimeout(() => checkHandleAvailability(handle), 500);
     return () => clearTimeout(timer);
   }, [handle]);
 
@@ -79,84 +57,53 @@ export const HeroNew = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Use external tapbookr.com URL for iframe
-  const previewUrl = 'https://tapbookr.com/tapbookr';
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Simple, clean header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="text-2xl font-bold text-gray-900">
+      {/* ─── HEADER ─── */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/[0.04]">
+        <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-10">
+            <Link to="/" className="text-[15px] font-bold tracking-tight text-gray-950">
               TapBookr
             </Link>
-            
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              <a 
-                href="#why-bookr" 
-                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('why-bookr')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Features
-              </a>
-              <a 
-                href="#testimonials" 
-                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                Reviews
-              </a>
-              <a 
-                href="#faq" 
-                className="text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-              >
-                FAQ
-              </a>
+              {[
+                { label: "Features", href: "#why-bookr" },
+                { label: "Hoe het werkt", href: "#how-it-works" },
+                { label: "Reviews", href: "#testimonials" },
+                { label: "FAQ", href: "#faq" },
+              ].map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-[13px] text-gray-500 hover:text-gray-950 transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById(item.href.substring(1))?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  {item.label}
+                </a>
+              ))}
             </nav>
           </div>
           
-          <div className="flex items-center gap-4">
-            {/* Mobile menu button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
+          <div className="flex items-center gap-3">
+            <button className="md:hidden p-2 text-gray-600" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-            
-            {/* Desktop auth buttons */}
+            </button>
             <div className="hidden md:flex items-center gap-3">
               {user ? (
-                <Button 
-                  className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full font-medium transition-all"
-                  asChild
-                >
-                  <Link to="/dashboard">Ga naar dashboard</Link>
+                <Button className="bg-gray-950 text-white h-9 px-4 text-[13px] font-medium rounded-full" asChild>
+                  <Link to="/dashboard">Dashboard</Link>
                 </Button>
               ) : (
                 <>
-                  <Button variant="ghost" asChild>
-                    <Link to="/login">Log in</Link>
-                  </Button>
-                  <Button 
-                    className="bg-primary hover:bg-primary-hover text-white px-6 py-2 rounded-full font-medium transition-all"
-                    asChild
-                  >
-                    <Link to="/onboarding">Sign up free</Link>
+                  <Link to="/login" className="text-[13px] text-gray-500 hover:text-gray-950 transition-colors">
+                    Log in
+                  </Link>
+                  <Button className="bg-gray-950 text-white h-9 px-5 text-[13px] font-medium rounded-full hover:bg-gray-800 transition-colors" asChild>
+                    <Link to="/onboarding">Gratis beginnen</Link>
                   </Button>
                 </>
               )}
@@ -164,55 +111,31 @@ export const HeroNew = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile nav */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
-            <nav className="container mx-auto px-4 py-4 space-y-4">
-              <a 
-                href="#why-bookr" 
-                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('why-bookr')?.scrollIntoView({ behavior: 'smooth' });
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                Features
-              </a>
-              <a 
-                href="#testimonials" 
-                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                Reviews
-              </a>
-              <a 
-                href="#faq" 
-                className="block text-gray-600 hover:text-gray-900 py-2 cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' });
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                FAQ
-              </a>
-              <div className="pt-4 border-t border-gray-200 space-y-3">
+          <div className="md:hidden border-t border-black/[0.04] bg-white">
+            <nav className="max-w-[1200px] mx-auto px-6 py-4 space-y-1">
+              {[
+                { label: "Features", href: "#why-bookr" },
+                { label: "Hoe het werkt", href: "#how-it-works" },
+                { label: "Reviews", href: "#testimonials" },
+                { label: "FAQ", href: "#faq" },
+              ].map((item) => (
+                <a key={item.href} href={item.href} className="block text-[14px] text-gray-500 hover:text-gray-950 py-2 transition-colors"
+                  onClick={(e) => { e.preventDefault(); document.getElementById(item.href.substring(1))?.scrollIntoView({ behavior: 'smooth' }); setIsMobileMenuOpen(false); }}>
+                  {item.label}
+                </a>
+              ))}
+              <div className="pt-4 border-t border-black/[0.04] space-y-3">
                 {user ? (
-                  <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
-                    <Link to="/dashboard">Ga naar dashboard</Link>
+                  <Button className="w-full bg-gray-950 text-white h-10 text-[14px] rounded-full" asChild>
+                    <Link to="/dashboard">Dashboard</Link>
                   </Button>
                 ) : (
                   <>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
-                      <Link to="/login">Log in</Link>
-                    </Button>
-                    <Button className="w-full bg-primary hover:bg-primary-hover text-white" asChild>
-                      <Link to="/onboarding">Sign up free</Link>
+                    <Link to="/login" className="block text-[14px] text-gray-500 py-2">Log in</Link>
+                    <Button className="w-full bg-gray-950 text-white h-10 text-[14px] rounded-full" asChild>
+                      <Link to="/onboarding">Gratis beginnen</Link>
                     </Button>
                   </>
                 )}
@@ -222,132 +145,163 @@ export const HeroNew = () => {
         )}
       </header>
 
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex flex-col lg:flex-row items-center gap-12 min-h-[80vh]">
-            {/* Left Content */}
-            <div className="flex-1 text-center lg:text-left max-w-2xl">
-              <div className="space-y-8">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 bg-primary-light text-black px-4 py-2 rounded-full text-sm font-medium">
-                  <Star className="w-4 h-4 fill-current" />
-                  #1 kleine website builder
-                </div>
+      {/* ─── HERO ─── */}
+      <section className="relative pt-28 pb-0 md:pt-36 overflow-hidden">
+        {/* Ambient glow */}
+        <div className="absolute inset-0 glow-warm pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-purple-100/40 via-pink-100/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-                {/* Main Headline */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  Elke{" "}
-                  <span className="relative inline-block">
-                    <span className="text-primary">
-                      {professions[currentWordIndex]}
-                    </span>
-                  </span>
-                  {" "}verdient een 
-                  <span className="block text-primary">
-                    mooie website
-                  </span>
-                </h1>
-
-                {/* Subtitle */}
-                <p className="text-xl text-gray-600 max-w-lg mx-auto lg:mx-0">
-                  Krijg meer klanten met een professionele compacte website.
-                </p>
-
-                {/* Social Proof */}
-                <div className="flex items-center justify-center lg:justify-start gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                    <span className="ml-1 font-medium">4.9/5</span>
-                  </div>
-                  <span>•</span>
-                  <span>500+ tevreden gebruikers</span>
-                </div>
-
-                {/* CTA Section */}
-                <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-                  {/* Handle Input */}
-                  <div className="relative">
-                    <div className="flex rounded-2xl border-2 border-gray-200 bg-white focus-within:border-primary transition-colors">
-                      <span className="flex items-center pl-4 text-gray-500 text-sm font-medium">
-                        tapbookr.com/
-                      </span>
-                      <input
-                        type="text"
-                        value={userInput}
-                        onChange={handleInputChange}
-                        placeholder="jouw-naam"
-                        className="flex-1 px-2 py-4 text-gray-900 placeholder-gray-400 bg-transparent outline-none"
-                        maxLength={20}
-                      />
-                      {userInput && (
-                        <div className="flex items-center pr-4">
-                          {isCheckingHandle ? (
-                            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                          ) : isHandleAvailable ? (
-                            <CheckCircle className="w-5 h-5 text-green-500" />
-                          ) : (
-                            <XCircle className="w-5 h-5 text-red-500" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* CTA Button */}
-                  <Button
-                    asChild
-                    className={`w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-2xl font-semibold text-lg transition-all ${
-                      !userInput || !isHandleAvailable ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 hover:shadow-lg'
-                    }`}
-                    disabled={!userInput || !isHandleAvailable}
-                  >
-                    <Link to={`/login?handle=${encodeURIComponent(handle)}&signup=true`}>
-                      Claim jouw website voor €1
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Link>
-                  </Button>
-
-                  {/* Availability Message */}
-                  {userInput && !isHandleAvailable && (
-                    <p className="text-sm text-red-600 text-center bg-red-50 rounded-lg px-3 py-2">
-                      Deze naam is al bezet. Probeer een andere! 
-                    </p>
-                  )}
-
-                  {/* Trust indicators */}
-                  <p className="text-xs text-gray-500 text-center">
-                    💳 Eerste maand €1 • ⚡ Instant online • 🚀 Geen setup kosten
-                  </p>
-                </div>
-              </div>
+        <div className="relative max-w-[1200px] mx-auto px-6">
+          {/* Text content */}
+          <div className="max-w-3xl mx-auto text-center mb-14 md:mb-16">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 px-4 py-2 rounded-full text-[12px] font-semibold mb-8 tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <span className="text-gradient-purple">De #1 website builder voor beauty professionals</span>
             </div>
 
-            {/* Right Content - Phone Preview */}
-            <div className="flex-1 flex justify-center items-center">
-              <div className="relative w-full max-w-sm">
-                {/* Phone Frame */}
-                <div className="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl">
-                  {/* Screen */}
-                  <div className="bg-white rounded-[2rem] overflow-hidden h-[600px] relative">
-                    <iframe
-                      src={previewUrl}
-                      className="w-full h-full border-0"
-                      title="Live preview"
-                      loading="lazy"
-                      sandbox="allow-same-origin allow-scripts allow-forms"
-                    />
+            {/* Headline */}
+            <h1 className="text-[42px] md:text-[60px] lg:text-[72px] font-extrabold text-gray-950 leading-[1.05] tracking-[-0.04em] mb-6">
+              Jouw beauty business
+              <br />
+              <span className="text-gradient-purple relative inline-block changing-word">
+                {professions.map((word, index) => (
+                  <span key={word} className={`word ${index === currentWordIndex ? 'active' : ''}`}>
+                    {word}
+                  </span>
+                ))}
+              </span>
+              <br />
+              verdient dit.
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-[17px] md:text-[20px] text-gray-500 leading-[1.6] max-w-xl mx-auto mb-10">
+              Bouw een prachtige boekingspagina in minuten. Eén link voor je Instagram bio — professioneel, snel, van jou.
+            </p>
+
+            {/* CTA */}
+            <div className="max-w-md mx-auto space-y-3">
+              {/* Handle Input */}
+              <div className="flex items-center rounded-2xl border border-gray-200 bg-white focus-within:border-purple-300 focus-within:ring-4 focus-within:ring-purple-50 transition-all">
+                <span className="pl-5 text-[14px] text-gray-400 font-mono select-none">
+                  tapbookr.com/
+                </span>
+                <input
+                  type="text"
+                  value={userInput}
+                  onChange={handleInputChange}
+                  placeholder="jouw-naam"
+                  className="flex-1 px-1 py-4 text-[14px] text-gray-950 placeholder-gray-300 bg-transparent outline-none font-mono"
+                  maxLength={20}
+                />
+                {userInput && (
+                  <div className="flex items-center pr-4">
+                    {isCheckingHandle ? (
+                      <div className="w-4 h-4 border-2 border-purple-300 border-t-transparent rounded-full animate-spin" />
+                    ) : isHandleAvailable ? (
+                      <span className="text-[12px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Beschikbaar</span>
+                    ) : (
+                      <span className="text-[12px] font-semibold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">Bezet</span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* CTA Button — gradient */}
+              <Button
+                asChild
+                className={`w-full h-13 rounded-2xl text-[15px] font-semibold transition-all ${
+                  !userInput || !isHandleAvailable 
+                    ? 'bg-gray-200 text-gray-400 pointer-events-none' 
+                    : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white hover:opacity-90'
+                }`}
+                disabled={!userInput || !isHandleAvailable}
+              >
+                <Link to={`/login?handle=${encodeURIComponent(handle)}&signup=true`}>
+                  Claim jouw website voor €1
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Link>
+              </Button>
+
+              {/* Trust */}
+              <div className="flex items-center justify-center gap-4 text-[12px] text-gray-400 pt-1">
+                <span>Eerste maand €1</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                <span>Direct online</span>
+                <span className="w-1 h-1 rounded-full bg-gray-300" />
+                <span>Geen setup</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── PHONE + FLOATING FEATURES ─── */}
+          <div className="relative flex justify-center pb-0">
+            {/* Glow behind phone */}
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-gradient-to-b from-purple-200/30 via-pink-200/20 to-transparent rounded-full blur-[80px] pointer-events-none" />
+
+            <div className="relative">
+              {/* Floating feature cards — desktop only */}
+              <div className="hidden lg:block">
+                {/* Left floating card */}
+                <div className="absolute -left-52 top-24 animate-float" style={{ animationDelay: '0s' }}>
+                  <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 w-[200px]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <Calendar className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-[13px] font-semibold text-gray-900">Boekingen</span>
+                    </div>
+                    <p className="text-[12px] text-gray-500 leading-relaxed">Salonized, Treatwell, Calendly — alles werkt.</p>
                   </div>
                 </div>
-                
-                {/* Floating elements */}
-                <div className="absolute -left-4 top-1/4 bg-white rounded-2xl shadow-lg p-4 max-w-48">
-                  <p className="text-sm font-medium text-gray-900">Live preview</p>
-                  
+
+                {/* Right floating card */}
+                <div className="absolute -right-52 top-16 animate-float" style={{ animationDelay: '1s' }}>
+                  <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 w-[200px]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-amber-500 flex items-center justify-center">
+                        <Link2 className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-[13px] font-semibold text-gray-900">Link in Bio</span>
+                    </div>
+                    <p className="text-[12px] text-gray-500 leading-relaxed">Eén link. Al je diensten, info en boekingen.</p>
+                  </div>
+                </div>
+
+                {/* Bottom left floating card */}
+                <div className="absolute -left-44 top-[340px] animate-float" style={{ animationDelay: '2s' }}>
+                  <div className="bg-white rounded-2xl border border-gray-100 px-5 py-4 w-[190px]">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                        <Instagram className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-[13px] font-semibold text-gray-900">Instagram</span>
+                    </div>
+                    <p className="text-[12px] text-gray-500 leading-relaxed">Deel direct vanuit je profiel.</p>
+                  </div>
                 </div>
               </div>
+
+              {/* Phone Frame */}
+              <div className="relative bg-gray-950 rounded-[2.5rem] p-[5px] shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_30px_60px_-15px_rgba(0,0,0,0.2)]">
+                {/* Dynamic Island */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[100px] h-[24px] bg-gray-950 rounded-full z-10" />
+                {/* Screen */}
+                <div className="bg-white rounded-[2.2rem] overflow-hidden w-[280px] h-[560px] md:w-[320px] md:h-[640px] relative">
+                  <iframe
+                    src="https://tapbookr.com/tapbookr"
+                    className="w-full h-full border-0"
+                    title="Live preview"
+                    loading="lazy"
+                    sandbox="allow-same-origin allow-scripts allow-forms"
+                  />
+                </div>
+              </div>
+
+              {/* Gradient fade at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent pointer-events-none z-10" />
             </div>
           </div>
         </div>
