@@ -55,24 +55,40 @@ export const docToData = <T = DocumentData>(docSnap: QueryDocumentSnapshot): T =
 export const profilesCollection = collection(db, 'profiles');
 
 export const getProfile = async (profileId: string) => {
-  const docRef = doc(db, 'profiles', profileId);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) return null;
-  return docToData(docSnap);
+  try {
+    const docRef = doc(db, 'profiles', profileId);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return null;
+    return docToData(docSnap);
+  } catch (error) {
+    console.error('Error getting profile:', error);
+    return null;
+  }
 };
 
 export const getProfileByUserId = async (userId: string) => {
-  const q = query(profilesCollection, where('user_id', '==', userId), limit(1));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) return null;
-  return docToData(querySnapshot.docs[0]);
+  try {
+    const q = query(profilesCollection, where('user_id', '==', userId), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) return null;
+    return docToData(querySnapshot.docs[0]);
+  } catch (error) {
+    console.error('Error getting profile by user ID:', error);
+    return null;
+  }
 };
 
 export const getProfileByHandle = async (handle: string) => {
-  const q = query(profilesCollection, where('handle', '==', handle), limit(1));
-  const querySnapshot = await getDocs(q);
-  if (querySnapshot.empty) return null;
-  return docToData(querySnapshot.docs[0]);
+  try {
+    const q = query(profilesCollection, where('handle', '==', handle), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) return null;
+    return docToData(querySnapshot.docs[0]);
+  } catch (error) {
+    console.error('Error getting profile by handle:', error);
+    // Return null on error instead of throwing
+    return null;
+  }
 };
 
 export const createProfile = async (profileId: string, data: any) => {

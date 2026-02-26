@@ -32,10 +32,18 @@ export const HeroNew = () => {
     setIsCheckingHandle(true);
     try {
       // Check if handle exists in Firestore
-      const existingProfile = await getProfileByHandle(handleToCheck);
-      setIsHandleAvailable(!existingProfile); // Available if profile doesn't exist
-    } catch { 
-      setIsHandleAvailable(false); 
+      // Only check if Firebase is properly configured
+      if (import.meta.env.VITE_FIREBASE_PROJECT_ID && import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'dev-placeholder') {
+        const existingProfile = await getProfileByHandle(handleToCheck);
+        setIsHandleAvailable(!existingProfile); // Available if profile doesn't exist
+      } else {
+        // Firebase not configured - assume handle is available
+        setIsHandleAvailable(true);
+      }
+    } catch (error) {
+      console.error('Error checking handle availability:', error);
+      // On error, assume handle is available to not block user
+      setIsHandleAvailable(true);
     } finally { 
       setIsCheckingHandle(false); 
     }
@@ -49,8 +57,11 @@ export const HeroNew = () => {
 
   useEffect(() => {
     if (!handle || handle === "demo") return;
-    const timer = setTimeout(() => checkHandleAvailability(handle), 500);
-    return () => clearTimeout(timer);
+    // Only check handle availability if Firebase is configured
+    if (import.meta.env.VITE_FIREBASE_PROJECT_ID && import.meta.env.VITE_FIREBASE_PROJECT_ID !== 'dev-placeholder') {
+      const timer = setTimeout(() => checkHandleAvailability(handle), 500);
+      return () => clearTimeout(timer);
+    }
   }, [handle]);
 
   useEffect(() => {

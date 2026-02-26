@@ -54,22 +54,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log('🔧 Auth state change:', firebaseUser?.email, firebaseUser?.uid);
-      
+    // Only set up auth listener if Firebase is configured
+    if (!import.meta.env.VITE_FIREBASE_PROJECT_ID || import.meta.env.VITE_FIREBASE_PROJECT_ID === 'dev-placeholder') {
+      // Firebase not configured - set loading to false immediately
       if (mounted) {
-        const convertedUser = convertUser(firebaseUser);
-        setUser(convertedUser);
-        setSession(convertedUser ? { user: convertedUser } : null);
         setLoading(false);
       }
-    });
+      return;
+    }
 
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
+    // Set up auth state listener
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        console.log('🔧 Auth state change:', firebaseUser?.email, firebaseUser?.uid);
+        
+        if (mounted) {
+          const convertedUser = convertUser(firebaseUser);
+          setUser(convertedUser);
+          setSession(convertedUser ? { user: convertedUser } : null);
+          setLoading(false);
+        }
+      });
+
+      return () => {
+        mounted = false;
+        unsubscribe();
+      };
+    } catch (error) {
+      console.error('Error setting up auth listener:', error);
+      if (mounted) {
+        setLoading(false);
+      }
+    }
   }, []);
 
   const signUp = async (email: string, password: string) => {
