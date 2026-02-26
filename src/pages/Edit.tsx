@@ -7,9 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getProfileByUserId, updateProfile } from '@/integrations/firebase/db';
 import { useNavigate, Link } from 'react-router-dom';
-import { Database } from '@/integrations/supabase/types';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -39,7 +38,45 @@ import {
   Sparkles
 } from 'lucide-react';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+type Profile = {
+  id: string;
+  user_id: string;
+  handle: string | null;
+  name: string | null;
+  category: string | null;
+  slogan: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  about: any;
+  media: any;
+  socials: any;
+  contact: any;
+  banner: any;
+  footer: any;
+  booking_url: string | null;
+  booking_mode: string;
+  use_whatsapp: boolean | null;
+  whatsapp_number: string | null;
+  footer_business_name: string | null;
+  footer_address: string | null;
+  footer_email: string | null;
+  footer_phone: string | null;
+  footer_hours: any;
+  footer_next_available: string | null;
+  footer_cancellation_policy: string | null;
+  footer_privacy_policy: string | null;
+  footer_terms_of_service: string | null;
+  footer_show_maps: boolean | null;
+  footer_show_attribution: boolean | null;
+  testimonials: any;
+  media: any;
+  accent_color: string | null;
+  theme_mode: string;
+  status: string;
+  onboarding_completed: boolean | null;
+  created_at: string;
+  updated_at: string;
+};
 
 const categories = [
   'Consultant',
@@ -106,27 +143,16 @@ export default function Edit() {
       // Add a small delay to ensure profile is saved after onboarding
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const profileData = await getProfileByUserId(user.id);
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Profile data:', data);
-
-      if (!data) {
+      if (!profileData) {
         console.log('No profile found, redirecting to onboarding');
         navigate('/onboarding');
         return;
       }
 
-      console.log('Profile loaded successfully:', data.handle);
-      setProfile(data);
+      console.log('Profile loaded successfully:', profileData.handle);
+      setProfile(profileData as Profile);
     } catch (error) {
       console.error('Profile loading error:', error);
       const errorMessage = error instanceof Error ? error.message : "Failed to load profile";
@@ -153,42 +179,37 @@ export default function Edit() {
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: profile.name,
-          category: profile.category,
-          slogan: profile.slogan,
-          about: profile.about,
-          booking_url: profile.booking_url,
-          booking_mode: profile.booking_mode,
-          use_whatsapp: profile.use_whatsapp,
-          whatsapp_number: profile.whatsapp_number,
-          socials: profile.socials,
-          contact: profile.contact,
-          banner: profile.banner,
-          footer: profile.footer,
-          footer_business_name: profile.footer_business_name,
-          footer_address: profile.footer_address,
-          footer_email: profile.footer_email,
-          footer_phone: profile.footer_phone,
-          footer_hours: profile.footer_hours,
-          footer_next_available: profile.footer_next_available,
-          footer_cancellation_policy: profile.footer_cancellation_policy,
-          footer_privacy_policy: profile.footer_privacy_policy,
-          footer_terms_of_service: profile.footer_terms_of_service,
-          footer_show_maps: profile.footer_show_maps,
-          footer_show_attribution: profile.footer_show_attribution,
-          testimonials: profile.testimonials,
-          media: profile.media,
-          accent_color: profile.accent_color,
-          theme_mode: profile.theme_mode,
-          avatar_url: profile.avatar_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
+      await updateProfile(profile.id, {
+        name: profile.name,
+        category: profile.category,
+        slogan: profile.slogan,
+        about: profile.about,
+        booking_url: profile.booking_url,
+        booking_mode: profile.booking_mode,
+        use_whatsapp: profile.use_whatsapp,
+        whatsapp_number: profile.whatsapp_number,
+        socials: profile.socials,
+        contact: profile.contact,
+        banner: profile.banner,
+        footer: profile.footer,
+        footer_business_name: profile.footer_business_name,
+        footer_address: profile.footer_address,
+        footer_email: profile.footer_email,
+        footer_phone: profile.footer_phone,
+        footer_hours: profile.footer_hours,
+        footer_next_available: profile.footer_next_available,
+        footer_cancellation_policy: profile.footer_cancellation_policy,
+        footer_privacy_policy: profile.footer_privacy_policy,
+        footer_terms_of_service: profile.footer_terms_of_service,
+        footer_show_maps: profile.footer_show_maps,
+        footer_show_attribution: profile.footer_show_attribution,
+        testimonials: profile.testimonials,
+        media: profile.media,
+        accent_color: profile.accent_color,
+        theme_mode: profile.theme_mode,
+        avatar_url: profile.avatar_url,
+        updated_at: new Date().toISOString(),
+      });
 
       toast({
         title: "Saved!",
@@ -211,12 +232,7 @@ export default function Edit() {
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'published' })
-        .eq('id', profile.id);
-
-      if (error) throw error;
+      await updateProfile(profile.id, { status: 'published' });
 
       setProfile({ ...profile, status: 'published' });
       toast({

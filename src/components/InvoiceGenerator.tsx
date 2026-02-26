@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Printer } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
+// Profile type - using any for now since we migrated from Supabase types
+type Profile = any;
 
 interface SubscriptionData {
   id: string;

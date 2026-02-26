@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ref, uploadBytes, getDownloadURL, UploadResult } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/integrations/firebase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { getProfileByUserId } from '@/integrations/firebase/db';
 import { useNavigate } from 'react-router-dom';
 
 export const useOnboardingStatus = () => {
@@ -20,17 +20,7 @@ export const useOnboardingStatus = () => {
       console.log('🔧 Checking onboarding status for user:', user.id);
 
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('onboarding_completed, onboarding_step, status')
-          .eq('user_id', user.id)
-          .maybeSingle(); // Use maybeSingle to handle case where profile might not exist yet
-
-        if (error) {
-          console.error('🔧 Error checking onboarding status:', error);
-          setIsLoading(false);
-          return;
-        }
+        const profile = await getProfileByUserId(user.id);
 
         if (profile) {
           console.log('🔧 Profile found:', { 
@@ -52,7 +42,7 @@ export const useOnboardingStatus = () => {
     };
 
     checkOnboardingStatus();
-  }, [user?.id]); // Only depend on user.id, not navigate
+  }, [user?.id]);
 
   return { 
     isLoading, 

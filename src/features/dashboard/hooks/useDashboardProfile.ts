@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { getProfileByUserId } from '@/integrations/firebase/db'
 import { useAuth } from '@/contexts/AuthContext'
-import type { Database } from '@/integrations/supabase/types'
 
-type Profile = Database['public']['Tables']['profiles']['Row']
+type Profile = {
+  id: string;
+  user_id: string;
+  [key: string]: any;
+}
 
 export function useDashboardProfile() {
   const { user } = useAuth()
@@ -12,9 +15,15 @@ export function useDashboardProfile() {
 
   const loadProfile = useCallback(async () => {
     if (!user?.id) { setLoading(false); return }
-    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle()
-    if (!error) setProfile(data as Profile | null)
-    setLoading(false)
+    try {
+      const profileData = await getProfileByUserId(user.id)
+      setProfile(profileData as Profile | null)
+    } catch (error) {
+      console.error('Error loading profile:', error)
+      setProfile(null)
+    } finally {
+      setLoading(false)
+    }
   }, [user?.id])
 
   useEffect(() => { loadProfile() }, [loadProfile])

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { getProfileByUserId, updateProfile } from '@/integrations/firebase/db'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -154,7 +154,8 @@ export default function Dashboard() {
     setIsManualSyncing(true)
     try {
       console.log('🔄 Starting manual subscription sync...')
-      const { data, error } = await supabase.functions.invoke('sync-subscription-status')
+      // Cloud Functions migration pending - using placeholder
+      const { data, error } = { data: null, error: { message: 'Cloud Functions migration in progress' } }
       
       if (error) {
         console.error('Manual sync error:', error)
@@ -216,9 +217,8 @@ export default function Dashboard() {
           // Wait a bit for webhook to process
           await new Promise(resolve => setTimeout(resolve, 3000))
           
-          const { data, error } = await supabase.functions.invoke('handle-subscription-success', {
-            body: { profileId: profile.id }
-          })
+          // Cloud Functions migration pending - using placeholder
+          const { data, error } = { data: null, error: { message: 'Cloud Functions migration in progress' } }
           
           if (error) {
             console.error('Error handling subscription success:', error)
@@ -257,14 +257,11 @@ export default function Dashboard() {
       if (!user) return
       
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single()
-        
-        if (error) throw error
-        setProfile(data)
+        const profileData = await getProfileByUserId(user.id)
+        if (!profileData) {
+          throw new Error('Profile not found')
+        }
+        setProfile(profileData as Profile)
       } catch (error) {
         console.error('Error loading profile:', error)
         toast({
@@ -489,22 +486,14 @@ export default function Dashboard() {
           break
       }
 
-      const { error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profile.id)
-
-      if (error) throw error
+      await updateProfile(profile.id, updates)
       
       // Reload profile to get fresh data
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profile.id)
-        .single()
-      
-      if (data) {
-        setProfile(data)
+      if (profile?.id) {
+        const updatedProfile = await getProfile(profile.id)
+        if (updatedProfile) {
+          setProfile(updatedProfile as Profile)
+        }
       }
     } catch (error) {
       console.error('Error saving profile section:', error)

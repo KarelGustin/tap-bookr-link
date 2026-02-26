@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Download, ExternalLink, Receipt, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { db } from '@/integrations/firebase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface PaidInvoice {
@@ -32,13 +33,16 @@ export function PaidInvoicesSection({ profileId }: PaidInvoicesSectionProps) {
       try {
         setIsLoading(true);
         
-        // Fetch only paid invoices for this profile
-        const { data, error } = await supabase
-          .from('invoices')
-          .select('*')
-          .eq('profile_id', profileId)
-          .eq('status', 'paid')
-          .order('paid_at', { ascending: false });
+        // Fetch only paid invoices for this profile from Firestore
+        const invoicesRef = collection(db, 'profiles', profileId, 'invoices');
+        const q = query(
+          invoicesRef,
+          where('status', '==', 'paid'),
+          orderBy('paid_at', 'desc')
+        );
+        const querySnapshot = await getDocs(q);
+        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const error = null;
 
         if (error) {
           console.error('Error loading invoices:', error);

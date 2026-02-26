@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDown, Bug, Loader2 } from 'lucide-react'
-import { supabase } from '@/integrations/supabase/client'
+// Cloud Functions not yet migrated - using placeholder
 import { useToast } from '@/hooks/use-toast'
 
 interface DebugSubscriptionProps {
@@ -20,7 +20,9 @@ export const DebugSubscription = ({ profile }: DebugSubscriptionProps) => {
   const runDebug = async () => {
     setIsLoading(true)
     try {
-      const { data, error } = await supabase.functions.invoke('debug-subscription')
+      // Cloud Functions migration pending
+      const data = null;
+      const error = { message: 'Cloud Functions not yet migrated to Firebase' };
       
       if (error) {
         toast({

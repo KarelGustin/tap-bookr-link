@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client'
+import { auth } from '@/integrations/firebase/client'
 
 export interface StripeCheckoutParams {
   profileId: string
@@ -17,40 +17,12 @@ export class StripeService {
     functionName: string,
     params: Record<string, unknown>
   ): Promise<T> {
-    const { data: auth } = await supabase.auth.getUser()
-    const email = auth?.user?.email || undefined
+    const user = auth.currentUser
+    const email = user?.email || undefined
 
-    const { data, error } = await supabase.functions.invoke(functionName, {
-      body: params,
-      headers: email ? { 'x-user-email': email } : undefined,
-    })
-
-    if (error) {
-      // Surface detailed error returned by the Edge Function
-      let detailedMessage = error.message || `Edge Function returned a non-2xx status code`
-      const ctx: { response?: Response } | undefined = (error as unknown as { context?: { response?: Response } }).context
-      const resp = ctx?.response
-      if (resp && typeof resp.text === 'function') {
-        try {
-          const text = await resp.text()
-          try {
-            const json = JSON.parse(text)
-            detailedMessage = json?.error || detailedMessage
-            console.error(`Edge Function '${functionName}' error:`, { status: resp.status, body: json })
-          } catch {
-            detailedMessage = text || detailedMessage
-            console.error(`Edge Function '${functionName}' error:`, { status: resp.status, body: text })
-          }
-        } catch {
-          // no-op
-        }
-      } else {
-        console.error(`Edge Function '${functionName}' error:`, error)
-      }
-      throw new Error(detailedMessage)
-    }
-
-    return data as T
+    // Cloud Functions migration pending
+    // For now, return placeholder error
+    throw new Error(`Cloud Function '${functionName}' migration in progress. Please configure Firebase Cloud Functions.`)
   }
 
   /**

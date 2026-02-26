@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Sanitizes a filename to be safe for Supabase Storage
+ * Sanitizes a filename to be safe for Firebase Storage
  * Removes or replaces unsafe characters that can cause InvalidKey errors
  */
 export function sanitizeFilename(filename: string): string {

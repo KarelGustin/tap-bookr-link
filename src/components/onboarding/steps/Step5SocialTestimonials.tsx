@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X, Star, MessageCircle, Share2, Upload, User } from 'lucide-react';
 import { OnboardingLayout } from '../OnboardingLayout';
-import { supabase } from '../../../integrations/supabase/client';
+import { storage } from '../../../integrations/firebase/client';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useToast } from '../../../hooks/use-toast';
 import { sanitizeFilename } from '../../../lib/utils';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -343,25 +344,10 @@ export const Step5SocialTestimonials = ({ onNext, onBack, existingData, handle }
           final: fileName
         });
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(fileName, file);
-
-        if (uploadError) {
-          console.error('❌ Error uploading testimonial image:', uploadError);
-          setIsSaving(false);
-          toast({
-            title: "Upload mislukt",
-            description: "Kon foto niet uploaden. Probeer het opnieuw.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(uploadData.path);
+        // Upload to Firebase Storage
+        const storageRef = ref(storage, `media/${fileName}`);
+        await uploadBytes(storageRef, file);
+        const publicUrl = await getDownloadURL(storageRef);
 
         // Update testimonial with image URL
         updated[index] = { 

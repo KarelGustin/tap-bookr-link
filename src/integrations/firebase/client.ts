@@ -13,15 +13,30 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Validate required configuration
-if (!firebaseConfig.apiKey) {
-  console.error('❌ VITE_FIREBASE_API_KEY is not configured');
-  throw new Error('VITE_FIREBASE_API_KEY is required but not configured');
-}
+// Validate required configuration - but don't crash in development
+const isConfigured = firebaseConfig.apiKey && firebaseConfig.projectId;
 
-if (!firebaseConfig.projectId) {
-  console.error('❌ VITE_FIREBASE_PROJECT_ID is not configured');
-  throw new Error('VITE_FIREBASE_PROJECT_ID is required but not configured');
+if (!isConfigured) {
+  console.warn('⚠️ Firebase configuration missing. Please set environment variables:');
+  console.warn('  - VITE_FIREBASE_API_KEY');
+  console.warn('  - VITE_FIREBASE_PROJECT_ID');
+  console.warn('  - VITE_FIREBASE_AUTH_DOMAIN');
+  console.warn('  - VITE_FIREBASE_STORAGE_BUCKET');
+  console.warn('  - VITE_FIREBASE_MESSAGING_SENDER_ID');
+  console.warn('  - VITE_FIREBASE_APP_ID');
+  console.warn('See FIREBASE_MIGRATION.md for setup instructions.');
+  
+  // Use placeholder config to prevent crashes
+  if (import.meta.env.DEV) {
+    firebaseConfig.apiKey = firebaseConfig.apiKey || 'dev-placeholder';
+    firebaseConfig.projectId = firebaseConfig.projectId || 'dev-placeholder';
+    firebaseConfig.authDomain = firebaseConfig.authDomain || 'dev-placeholder.firebaseapp.com';
+    firebaseConfig.storageBucket = firebaseConfig.storageBucket || 'dev-placeholder.appspot.com';
+    firebaseConfig.messagingSenderId = firebaseConfig.messagingSenderId || '123456789';
+    firebaseConfig.appId = firebaseConfig.appId || '1:123456789:web:abc123';
+  } else {
+    throw new Error('Firebase configuration is required in production');
+  }
 }
 
 // Initialize Firebase

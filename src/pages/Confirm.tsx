@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { auth } from '@/integrations/firebase/client';
+import { applyActionCode, verifyPasswordResetCode, confirmPasswordReset } from 'firebase/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -33,37 +34,21 @@ export default function Confirm() {
         // Handle different types of verification
         let result;
         
+        // Firebase handles email verification differently
+        // The token_hash is actually an action code in Firebase
         if (type === 'signup' || type === 'email_change') {
-          // Email confirmation
-          result = await supabase.auth.verifyOtp({
-            token_hash,
-            type: 'email'
-          });
+          // Email confirmation - apply action code
+          await applyActionCode(auth, token_hash);
         } else if (type === 'recovery') {
-          // Password recovery - redirect to reset password page
-          const { data, error } = await supabase.auth.verifyOtp({
-            token_hash,
-            type: 'recovery'
-          });
-          
-          if (error) throw error;
-          
-          // User is now authenticated, redirect to password reset
-          navigate('/reset-password', { replace: true });
+          // Password recovery - verify code and redirect to reset
+          await verifyPasswordResetCode(auth, token_hash);
+          navigate('/reset-password', { replace: true, state: { actionCode: token_hash } });
           return;
-        } else if (type === 'magiclink') {
-          // Magic link authentication
-          result = await supabase.auth.verifyOtp({
-            token_hash,
-            type: 'magiclink'
-          });
         } else {
           throw new Error(`Onbekend verificatietype: ${type}`);
         }
-
-        if (result.error) {
-          throw result.error;
-        }
+        
+        const result = { data: { user: auth.currentUser }, error: null };
 
         console.log('✅ Verification successful:', result.data);
         

@@ -1,13 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Database } from '@/integrations/supabase/types';
+import { getProfileByHandle } from '@/integrations/firebase/db';
 import { Button } from '@/components/ui/button';
 import NotFound from './NotFound';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 
-type Profile = Database['public']['Tables']['profiles']['Row'] & {
+type Profile = {
+  id: string;
+  user_id: string;
+  handle: string;
+  name: string | null;
+  slogan: string | null;
+  category: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  about: any;
+  media: any;
+  socials: any;
+  subscription_status: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  footer_business_name?: string | null;
+  footer_address?: string | null;
+  footer_email?: string | null;
+  footer_phone?: string | null;
+  footer_show_maps?: boolean | null;
+  footer_show_attribution?: boolean | null;
+  whatsapp_number?: string | null;
+  use_whatsapp?: boolean | null;
+  booking_mode?: string;
+} & {
   testimonials?: Testimonial[];
   footer_business_name?: string;
   footer_address?: string;
@@ -138,13 +162,9 @@ export default function PublicProfile() {
         return;
       }
       
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('handle', handle)
-        .maybeSingle();
+      const profileData = await getProfileByHandle(handle);
 
-      if (error || !profileData) {
+      if (!profileData) {
         setNotFound(true);
         return;
       }

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { OnboardingLayout } from '../OnboardingLayout';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/integrations/supabase/client';
+import { getProfileByHandle, createProfile, updateProfile } from '@/integrations/firebase/db';
 import { Check, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -112,54 +112,29 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     setHandleStatus(prev => ({ ...prev, checking: true }));
 
     try {
-      // Use the database function for consistent handle checking
-      const { data: isAvailable, error } = await supabase
-        .rpc('is_handle_available', { 
-          handle_to_check: handleToCheck.toLowerCase(),
-          user_id_to_exclude: user?.id || null
-        });
+      // Check handle availability using Firebase
+      const existingProfile = await getProfileByHandle(handleToCheck.toLowerCase());
 
-      if (error) {
-        console.error('Error checking handle availability:', error);
-        setHandleStatus(prev => ({ ...prev, checking: false }));
-        return;
-      }
-
-      if (isAvailable) {
+      if (!existingProfile || (existingProfile.user_id === user?.id)) {
+        // Handle is available or belongs to current user
         setHandleStatus({
           available: true,
           checking: false,
           suggestions: [],
         });
       } else {
-        // Check if it's the user's own handle
-        const { data: existingProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, handle, user_id')
-          .eq('handle', handleToCheck.toLowerCase())
-          .maybeSingle();
+        // Handle is taken by another user, generate suggestions
+        const suggestions = [
+          `${handleToCheck}-nl`,
+          `${handleToCheck}-amsterdam`,
+          `${handleToCheck}-${Math.floor(Math.random() * 999) + 1}`,
+        ];
 
-        if (!profileError && existingProfile && existingProfile.user_id === user?.id) {
-          // Dit is de eigen handle van de gebruiker
-          setHandleStatus({
-            available: true,
-            checking: false,
-            suggestions: [],
-          });
-        } else {
-          // Handle is door iemand anders in gebruik, genereer suggesties
-          const suggestions = [
-            `${handleToCheck}-nl`,
-            `${handleToCheck}-amsterdam`,
-            `${handleToCheck}-${Math.floor(Math.random() * 999) + 1}`,
-          ];
-
-          setHandleStatus({
-            available: false,
-            checking: false,
-            suggestions,
-          });
-        }
+        setHandleStatus({
+          available: false,
+          checking: false,
+          suggestions,
+        });
       }
     } catch (error) {
       console.error('Error checking handle availability:', error);
@@ -173,21 +148,8 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
     
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ handle: handleToSave.toLowerCase() })
-        .eq('id', existingData.profileId);
-      
-      if (error) {
-        console.error('❌ Failed to save handle:', error);
-        toast({
-          title: "Opslaan mislukt",
-          description: "Handle kon niet worden opgeslagen. Probeer het opnieuw.",
-          variant: "destructive",
-        });
-      } else {
-        console.log('✅ Handle saved to database:', handleToSave);
-      }
+      await updateProfile(existingData.profileId, { handle: handleToSave.toLowerCase() });
+      console.log('✅ Handle saved to database:', handleToSave);
     } catch (error) {
       console.error('❌ Error saving handle:', error);
     } finally {
@@ -247,16 +209,8 @@ export const Step1Handle = ({ onNext, onBack, existingData, handle: propHandle }
       
       // Also update the onboarding step to 2
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ onboarding_step: 2 })
-          .eq('id', existingData.profileId);
-        
-        if (error) {
-          console.error('Failed to update onboarding step:', error);
-        } else {
-          console.log('✅ Updated onboarding step to 2');
-        }
+        await updateProfile(existingData.profileId, { onboarding_step: 2 });
+        console.log('✅ Updated onboarding step to 2');
       } catch (error) {
         console.error('Error updating onboarding step:', error);
       }

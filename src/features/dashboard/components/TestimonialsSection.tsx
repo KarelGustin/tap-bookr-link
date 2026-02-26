@@ -7,7 +7,8 @@ import { SectionCard } from './SectionCard'
 import { Plus, X, Star, Upload, User } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/integrations/supabase/client'
+import { storage } from '@/integrations/firebase/client'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { sanitizeFilename } from '@/lib/utils'
 
 interface Testimonial {
@@ -65,23 +66,10 @@ export function TestimonialsSection({ testimonials, onUpdate }: TestimonialsSect
         const sanitizedName = sanitizeFilename(file.name)
         const fileName = `${user.id}/testimonial-${Date.now()}-${sanitizedName}`
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(fileName, file)
-
-        if (uploadError) {
-          console.error('❌ Error uploading testimonial image:', uploadError)
-          toast({
-            title: "Upload mislukt",
-            description: "Kon foto niet uploaden. Probeer het opnieuw.",
-            variant: "destructive",
-          })
-          return
-        }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(uploadData.path)
+        // Upload to Firebase Storage
+        const storageRef = ref(storage, `media/${fileName}`);
+        await uploadBytes(storageRef, file);
+        const publicUrl = await getDownloadURL(storageRef);
 
         const updated = [...testimonials]
         updated[index] = { 

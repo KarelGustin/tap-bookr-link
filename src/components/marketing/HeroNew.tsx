@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Menu, X, Sparkles, Calendar, Link2, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getProfileByHandle } from "@/integrations/firebase/db";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const HeroNew = () => {
@@ -31,11 +31,14 @@ export const HeroNew = () => {
     }
     setIsCheckingHandle(true);
     try {
-      const { data, error } = await supabase.rpc('is_handle_available', { handle_to_check: handleToCheck });
-      if (error) setIsHandleAvailable(false);
-      else setIsHandleAvailable(data || false);
-    } catch { setIsHandleAvailable(false); }
-    finally { setIsCheckingHandle(false); }
+      // Check if handle exists in Firestore
+      const existingProfile = await getProfileByHandle(handleToCheck);
+      setIsHandleAvailable(!existingProfile); // Available if profile doesn't exist
+    } catch { 
+      setIsHandleAvailable(false); 
+    } finally { 
+      setIsCheckingHandle(false); 
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

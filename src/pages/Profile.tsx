@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { getProfileByUserId } from '@/integrations/firebase/db';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Database } from '@/integrations/supabase/types';
 import { 
   ArrowLeft,
   CheckCircle,
@@ -21,7 +20,32 @@ import {
 } from 'lucide-react';
 import { InvoiceGenerator } from '@/components/InvoiceGenerator';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
+type Profile = {
+  id: string;
+  user_id: string;
+  handle: string | null;
+  name: string | null;
+  category: string | null;
+  slogan: string | null;
+  avatar_url: string | null;
+  banner_url: string | null;
+  about: any;
+  media: any;
+  socials: any;
+  subscription_status: string | null;
+  subscription_id: string | null;
+  stripe_customer_id: string | null;
+  subscription_started_at: string | null;
+  trial_end_date: string | null;
+  status: string;
+  onboarding_completed: boolean | null;
+  created_at: string;
+  updated_at: string;
+  footer_business_name?: string | null;
+  footer_address?: string | null;
+  footer_email?: string | null;
+  footer_phone?: string | null;
+};
 
 interface SubscriptionData {
   id: string;
@@ -100,26 +124,20 @@ export default function Profile() {
     try {
       if (!user?.id) return;
       
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const profileData = await getProfileByUserId(user.id);
 
-      if (error) throw error;
-
-      if (!data) {
+      if (!profileData) {
         navigate('/onboarding');
         return;
       }
 
-      if (!data.onboarding_completed) {
+      if (!profileData.onboarding_completed) {
         navigate('/onboarding');
         return;
       }
 
-      setProfile(data);
-      loadSubscriptionData(data);
+      setProfile(profileData as Profile);
+      loadSubscriptionData(profileData as Profile);
     } catch (error) {
       console.error('Profile loading error:', error);
       toast({
@@ -141,9 +159,8 @@ export default function Profile() {
     
     setSubscriptionLoading(true);
     try {
-      const { data: subscriptionData, error } = await supabase.functions.invoke('get-stripe-subscription', {
-        body: { profileId: profileData.id }
-      });
+      // Cloud Functions migration pending
+      const { data: subscriptionData, error } = { data: null, error: { message: 'Cloud Functions migration in progress' } };
 
       if (error) {
         console.log('Error fetching Stripe subscription:', error);
@@ -172,13 +189,8 @@ export default function Profile() {
     if (!profile?.id) return;
     
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-create-checkout', {
-        body: {
-          profileId: profile.id,
-          successUrl: `${window.location.origin}/profile?success=true&subscription=active`,
-          cancelUrl: `${window.location.origin}/profile`
-        }
-      });
+      // Cloud Functions migration pending
+      const { data, error } = { data: null, error: { message: 'Cloud Functions migration in progress' } };
 
       if (error) throw error;
 
@@ -199,12 +211,8 @@ export default function Profile() {
     if (!profile?.id) return;
     
     try {
-      const { data, error } = await supabase.functions.invoke('stripe-customer-portal', {
-        body: {
-          profileId: profile.id,
-          returnUrl: `${window.location.origin}/profile?billing=viewed`
-        }
-      });
+      // Cloud Functions migration pending - use direct Stripe portal URL
+      const { data, error } = { data: { url: 'https://billing.stripe.com/p/login/6oU28rfsE8nG5aUaSU7kc00' }, error: null };
 
       if (error) throw error;
 

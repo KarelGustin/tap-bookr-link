@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { updateProfile } from '@/integrations/firebase/db';
 import { useToast } from '@/hooks/use-toast';
 
 interface ThemeSelectorProps {
@@ -41,10 +41,7 @@ export default function ThemeSelector({
     if (!isPreview) {
       setIsUpdating(true);
       try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ accent_color: themes[themeName as keyof typeof themes]?.colors.primary || '#6E56CF' })
-          .eq('id', profileId);
+        await updateProfile(profileId, { accent_color: themes[themeName as keyof typeof themes]?.colors.primary || '#6E56CF' });
 
         if (error) {
           throw error;

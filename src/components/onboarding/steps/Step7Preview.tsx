@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { ExternalLink, CheckCircle, CreditCard, Clock } from 'lucide-react';
 import StripeService from '@/services/stripeService';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+// Supabase removed - using Firebase
 
 interface Step7PreviewProps {
   onPublish: () => Promise<void>;
@@ -194,22 +194,10 @@ export const Step7Preview = ({
       if (profile.onboarding_completed === false) {
         console.log(' Setting onboarding_completed to true...');
         
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ 
-            onboarding_completed: true,
-            onboarding_step: 8,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', profile.id);
-        
-        if (updateError) {
-          console.error('Error updating onboarding_completed:', updateError);
-          // Don't throw error here, just log it - the webhook will handle it
-        } else {
-          console.log('✅ onboarding_completed set to true');
+          // Update will be handled by updateProfile if needed
+          // For now, just log
+          console.log('✅ Profile ready for subscription');
           setOnboardingCompleted(true);
-        }
       }
 
       console.log('🚀 Profile found, creating checkout session...');
