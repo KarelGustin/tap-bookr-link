@@ -1,10 +1,25 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { 
+  User as FirebaseUser,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  sendEmailVerification,
+  AuthError
+} from 'firebase/auth';
+import { auth } from '@/integrations/firebase/client';
+
+// Create Supabase-compatible User type
+interface User {
+  id: string;
+  email: string | null;
+  [key: string]: any;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: { user: User } | null;
   signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
@@ -23,119 +38,71 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<{ user: User } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Convert Firebase user to Supabase-compatible format
+  const convertUser = (firebaseUser: FirebaseUser | null): User | null => {
+    if (!firebaseUser) return null;
+    return {
+      id: firebaseUser.uid,
+      email: firebaseUser.email,
+      ...firebaseUser
+    };
+  };
 
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener first
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔧 Auth state change:', event, session?.user?.email, session?.expires_at ? new Date(session.expires_at * 1000) : 'no expiry');
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          
-          // Only stop loading if we have a definitive auth state
-          if (event !== 'INITIAL_SESSION' || session !== null) {
-            setLoading(false);
-          }
-        }
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      console.log('🔧 Auth state change:', firebaseUser?.email, firebaseUser?.uid);
+      
+      if (mounted) {
+        const convertedUser = convertUser(firebaseUser);
+        setUser(convertedUser);
+        setSession(convertedUser ? { user: convertedUser } : null);
+        setLoading(false);
       }
-    );
-
-    // Then get initial session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-        }
-        
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error in initializeAuth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
+    });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, []);
-
-  // Set up real-time database updates for profile changes
-  useEffect(() => {
-    if (!user?.id) return;
-
-    console.log('🔧 Setting up real-time profile updates for user:', user.id);
-
-    // Subscribe to profile changes
-    const profileSubscription = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('🔧 Profile updated in real-time:', payload);
-          // This will trigger a re-render and the ProtectedRoute will check the new status
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('🔧 Cleaning up profile subscription');
-      profileSubscription.unsubscribe();
-    };
-  }, [user?.id]);
 
   const signUp = async (email: string, password: string) => {
     console.log('🔧 Starting signup process for:', email);
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Send email verification
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
+        console.log('🔧 Signup successful, verification email sent');
       }
-    });
-    
-    if (error) {
+      
+      return { error: null };
+    } catch (error) {
       console.error('🔧 Signup error:', error);
-    } else {
-      console.log('🔧 Signup successful, profile will be created by database trigger');
+      return { error: error as AuthError };
     }
-    
-    return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { error: null };
+    } catch (error) {
+      console.error('🔧 Signin error:', error);
+      return { error: error as AuthError };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await firebaseSignOut(auth);
   };
 
   const value = {

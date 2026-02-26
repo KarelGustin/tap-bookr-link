@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { ref, uploadBytes, getDownloadURL, UploadResult } from 'firebase/storage';
+import { storage } from '@/integrations/firebase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { sanitizeFilename } from '@/lib/utils';
@@ -34,55 +35,51 @@ export const useImageUpload = () => {
       // Sanitize the filename to prevent InvalidKey errors
       const sanitizedName = sanitizeFilename(file.name);
       const fileExtension = sanitizedName.split('.').pop();
-      const fileName = path || `${user.id}/${Date.now()}_${sanitizedName}`;
+      // Use user.id (which maps to user.uid in Firebase) for compatibility
+      const userId = user.id;
+      const fileName = path || `${userId}/${Date.now()}_${sanitizedName}`;
+      const fullPath = `${bucket}/${fileName}`;
 
       console.log('🔧 Uploading image:', {
         bucket,
         fileName,
+        fullPath,
         fileSize: file.size,
         fileType: file.type,
         originalName: file.name,
         sanitizedName
       });
 
-      // Upload file to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucket)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
+      // Create storage reference
+      const storageRef = ref(storage, fullPath);
 
-      if (error) {
-        console.error('❌ Upload error:', error);
-        toast({
-          title: "Upload mislukt",
-          description: error.message,
-          variant: "destructive",
-        });
-        return null;
-      }
+      // Upload file to Firebase Storage
+      const snapshot = await uploadBytes(storageRef, file, {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: user.id,
+          originalName: file.name,
+        }
+      });
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(data.path);
+      // Get download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
       console.log('✅ Upload successful:', {
-        path: data.path,
-        url: urlData.publicUrl
+        path: fullPath,
+        url: downloadURL
       });
 
       return {
-        url: urlData.publicUrl,
-        path: data.path
+        url: downloadURL,
+        path: fullPath
       };
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Upload error:', error);
       toast({
         title: "Upload mislukt",
-        description: "Er is een fout opgetreden bij het uploaden van de afbeelding.",
+        description: error.message || "Er is een fout opgetreden bij het uploaden.",
         variant: "destructive",
       });
       return null;
@@ -91,28 +88,8 @@ export const useImageUpload = () => {
     }
   };
 
-  const deleteImage = async (bucket: 'avatars' | 'media', path: string): Promise<boolean> => {
-    try {
-      const { error } = await supabase.storage
-        .from(bucket)
-        .remove([path]);
-
-      if (error) {
-        console.error('❌ Delete error:', error);
-        return false;
-      }
-
-      console.log('✅ Image deleted:', path);
-      return true;
-    } catch (error) {
-      console.error('❌ Delete error:', error);
-      return false;
-    }
-  };
-
   return {
     uploadImage,
-    deleteImage,
-    isUploading
+    isUploading,
   };
 };
